@@ -233,9 +233,9 @@ export default class FlyingObjectControls extends AbstractControls {
     _updateAxesHelper(size) {
         size = size || 1;
 
-        const objectPosX = this.gameObject.object3d.position.x,
-              objectPosY = this.gameObject.object3d.position.y,
-              objectPosZ = this.gameObject.object3d.position.z;
+        const objectPosX = this.gameObject.position.x,
+              objectPosY = this.gameObject.position.y,
+              objectPosZ = this.gameObject.position.z;
 
         const vertices = [
             objectPosX, objectPosY, objectPosZ,    this.controlX.x * size, this.controlX.y * size, this.controlX.z * size,

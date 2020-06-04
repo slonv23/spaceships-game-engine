@@ -82,6 +82,7 @@ export default class FlyingObject extends AbstractObject {
 
         /** Update object3d */
         this.object3d.matrix.makeBasis(this.nx, this.ny, this.nz);
+        this.object3d.position.copy(this.position);
         // this.object3d.matrix.makeRotationFromQuaternion(this.quaternion);
 
         this.object3d.matrix.setPosition(this.position);

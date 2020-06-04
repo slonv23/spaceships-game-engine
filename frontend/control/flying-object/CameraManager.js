@@ -75,7 +75,7 @@ export default class CameraManager {
         this.cameraQuaternion.normalize();
 
         // update camera position
-        this.camera.position.copy(this.gameObject.object3d.position.clone().add(this.cameraZ.clone().multiplyScalar(self.lenBtwCameraAndPosLookAt)));
+        this.camera.position.copy(this.gameObject.position.clone().add(this.cameraZ.clone().multiplyScalar(self.lenBtwCameraAndPosLookAt)));
 
         let diffX = -cameraAndObjectDirectionsDiff.dot(this.cameraX);
         let diffY = cameraAndObjectDirectionsDiff.dot(this.cameraY);
@@ -106,7 +106,7 @@ export default class CameraManager {
     }
 
     _calcPosLookAt() {
-        return this.gameObject.object3d.position.clone().addScaledVector(this.gameObject.nz, -self.lenBtwSpaceshipAndPosLookAt)
+        return this.gameObject.position.clone().addScaledVector(this.gameObject.nz, -self.lenBtwSpaceshipAndPosLookAt)
     }
 
 }
