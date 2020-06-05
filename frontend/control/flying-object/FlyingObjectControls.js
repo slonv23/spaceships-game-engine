@@ -3,7 +3,7 @@
  * @typedef {import('../../input/Mouse').default} Mouse
  * @typedef {import('../../input/Keyboard').default} Keyboard
  * @typedef {import('./CameraManager').default} CameraManager
- * @typedef {import('../../../Engine').default} Engine
+ * @typedef {import('../../Renderer').default} Renderer
  */
 
 import * as THREE from "three";
@@ -17,9 +17,6 @@ export default class FlyingObjectControls extends AbstractControls {
     /** determines how fast yaw and pitch speeds are converge to their target values
      * target values are calculated based on current mouse position */
     static angularVelocityConvergeSpeed = 0.000001;
-
-    /** @type {Engine} */
-    engine;
 
     /** @type {Mouse} */
     mouse;
@@ -59,7 +56,7 @@ export default class FlyingObjectControls extends AbstractControls {
     rotationSpeed = 0;
 
      /**
-      * @param {Mouse} mouseInterface 
+      * @param {Mouse} mouseInterface
       * @param {Keyboard} keyboardInterface
       * @param {CameraManager} flyingObjectCameraManager
       */
@@ -79,17 +76,16 @@ export default class FlyingObjectControls extends AbstractControls {
     }
 
     /**
-     * @param {THREE.PerspectiveCamera} camera 
+     * @param {THREE.PerspectiveCamera} camera
      * @param {FlyingObject} gameObject
-     * @param {Engine} engine
+     * @param {Renderer} renderer
      */
-    init(camera, gameObject, engine) {
-        super.init(camera, gameObject);
+    init(camera, gameObject, renderer) {
+        super.init(camera, gameObject, renderer);
         this.cameraManager.init(camera, gameObject, this);
         this.controlX = gameObject.nx;
         this.controlY = gameObject.ny;
         this.controlZ = gameObject.nz;
-        this.engine = engine;
 
         if (this.enableAxesHelper) {
             const size = 8;
@@ -117,13 +113,13 @@ export default class FlyingObjectControls extends AbstractControls {
     _onUpdated() {}
 
     _updateControlAxes(delta) {
-        this._adjustControlsToObjectDirection();
+        //this._adjustControlsToObjectDirection();
         this._applyUserInputForRotation(delta);
 
-        this.controlQuaternion.normalize();
+        /*this.controlQuaternion.normalize();
         this.controlX.set(1, 0, 0).applyQuaternion(this.controlQuaternion);
         this.controlY.set(0, 1, 0).applyQuaternion(this.controlQuaternion);
-        this.controlZ.set(0, 0, 1).applyQuaternion(this.controlQuaternion);
+        this.controlZ.set(0, 0, 1).applyQuaternion(this.controlQuaternion);*/
     }
 
     _adjustControlsToObjectDirection() {
@@ -144,7 +140,13 @@ export default class FlyingObjectControls extends AbstractControls {
         }
 
         let multiplier = 0.5 * delta;
-        this.controlQuaternion.multiply(new THREE.Quaternion(0, 0, this.rotationSpeed * multiplier, 1));
+        const rotQuaternion = new THREE.Quaternion(0, 0, this.rotationSpeed * multiplier, 1);
+        this.controlX.applyQuaternion(rotQuaternion);
+        this.controlX.normalize();
+
+        this.controlY.crossVectors(this.controlZ, this.controlX);
+        this.controlY.normalize();
+        // this.controlQuaternion.multiply(new THREE.Quaternion(0, 0, this.rotationSpeed * multiplier, 1));
     }
 
     // eslint-disable-next-line no-unused-vars
@@ -161,11 +163,16 @@ export default class FlyingObjectControls extends AbstractControls {
         const angleChange = -targetSideAngle - currentSideAngle;
         this.gameObject.rollOnAngle(angleChange);
 
+        const gameObjectNxProj = new THREE.Vector3(this.gameObject.nx.x, this.gameObject.nx.y, 0);
+        const gameObjectNyProj = new THREE.Vector3(this.gameObject.ny.x, this.gameObject.ny.y, 0);
+        gameObjectNxProj.normalize();
+        gameObjectNyProj.normalize();
+
         // controlX, controlY and gameObject.ny, gameObject.nx are lie in the same plane
         const rotationDirection = this.controlX.clone().multiplyScalar(this.wYawTarget).add(this.controlY.clone().multiplyScalar(this.wPitchTarget));
 
-        let wPitchNew = this.gameObject.ny.dot(rotationDirection),
-            wYawNew = this.gameObject.nx.dot(rotationDirection);
+        let wPitchNew = 0, //gameObjectNxProj.dot(rotationDirection), // this.gameObject.ny.dot(rotationDirection),
+            wYawNew = 0; // gameObjectNxProj.dot(rotationDirection); // this.gameObject.nx.dot(rotationDirection);
 
         this.gameObject.angularVelocity.y = wPitchNew;
         this.gameObject.angularVelocity.x = wYawNew;
@@ -205,29 +212,29 @@ export default class FlyingObjectControls extends AbstractControls {
 
     _initializeAxesHelper(size) {
         size = size || 1;
-    
+
         const vertices = [
             0, 0, 0,    size, 0, 0,
             0, 0, 0,    0, size, 0,
             0, 0, 0,    0, 0, size
         ];
-    
+
         const colors = [
             1, 0, 0,    1, 0.6, 0,
             0, 1, 0,    0.6, 1, 0,
             0, 0, 1,    0, 0.6, 1
         ];
-    
+
         var geometry = new THREE.BufferGeometry();
         this.helperGeometry = geometry;
 
         this.axesHelperBuffer = new THREE.Float32BufferAttribute(vertices, 3);
         geometry.setAttribute('position', this.axesHelperBuffer);
         geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-    
+
         const material = new THREE.LineBasicMaterial({vertexColors: THREE.VertexColors});
 
-        this.engine.scene.add(new THREE.LineSegments(geometry, material));
+        this.renderer.scene.add(new THREE.LineSegments(geometry, material));
     }
 
     _updateAxesHelper(size) {
@@ -244,7 +251,7 @@ export default class FlyingObjectControls extends AbstractControls {
         ];
 
         this.axesHelperBuffer.set(vertices);
-        this.helperGeometry.attributes['position'].needsUpdate = true; 
+        this.helperGeometry.attributes['position'].needsUpdate = true;
     }
 
 }

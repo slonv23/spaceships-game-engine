@@ -45,8 +45,8 @@ export default class FlyingObject extends AbstractObject {
     angleChange = new THREE.Vector3(0, 0, 0);
 
      /**
-      * @param {*} id 
-      * @param {THREE.Object3D} object3d 
+      * @param {*} id
+      * @param {THREE.Object3D} object3d
       */
     constructor(id, object3d) {
         super(id, object3d);

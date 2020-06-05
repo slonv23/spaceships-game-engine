@@ -55,7 +55,7 @@ export default class FrontendFacade {
         }
         this.delta += timestamp - this.lastFrameTimeMs;
         this.lastFrameTimeMs = timestamp;
-    
+
         while (this.delta >= this.timestep) {
             this.stateManager.update(this.timestep);
             this._controls.updateCameraAndControlParams(this.timestep);
@@ -81,7 +81,7 @@ export default class FrontendFacade {
     }
 
     /**
-     * @param {string} spriteName 
+     * @param {string} spriteName
      * @returns {Promise<THREE.Sprite>}
      */
     async createSprite(spriteName) {
@@ -92,8 +92,8 @@ export default class FrontendFacade {
     }
 
     /**
-     * @param {string|symbol} ref 
-     * @param {AbstractObject} gameObject 
+     * @param {string|symbol} ref
+     * @param {AbstractObject} gameObject
      */
     async switchControls(ref, gameObject) {
         let controls = await this.diContainer.get(ref);
@@ -105,8 +105,8 @@ export default class FrontendFacade {
             throw new Error('Class must be inherited from AbstractControls');
         }
 
-        controls.init(this.renderer.camera, gameObject, this);
-        
+        controls.init(this.renderer.camera, gameObject, this.renderer);
+
         this._controls = controls;
     }
 
