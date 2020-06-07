@@ -53,18 +53,20 @@ export default class CameraManager {
     }
 
     updateCamera(wYawTarget, wPitchTarget, delta) {
-        let cameraAndObjectDirectionsDiff = this.controls.controlZ.clone().sub(this.cameraZ);
+        let cameraAndObjectDirectionsDiff = this.controls.gameObject.nz.clone().sub(this.cameraZ);
 
         this.cameraQuaternion.multiplyQuaternions(createQuaternionForRotation(this.cameraZ, this.controls.gameObject.nz), this.cameraQuaternion);
-        this.cameraZ.set(0, 0, 1).applyQuaternion(this.cameraQuaternion);
+        // this.cameraZ.set(0, 0, 1).applyQuaternion(this.cameraQuaternion);
+        this.cameraZ.copy(this.controls.gameObject.nz);
         this.cameraY.set(0, 1, 0).applyQuaternion(this.cameraQuaternion);
         this.cameraX.set(1, 0, 0).applyQuaternion(this.cameraQuaternion);
-        
-        const angleBtwControlAndCameraAxes = this.cameraY.angleTo(this.controls.controlY);
+
+        const rotationDirectionBasedOnCameraAxes = this.cameraX.clone().multiplyScalar(this.controls.wYawTarget).add(this.cameraY.clone().multiplyScalar(this.controls.wPitchTarget));
+        const angleBtwControlAndCameraAxes = rotationDirectionBasedOnCameraAxes.angleTo(this.controls.rotationDirection);
 
         // rotate camera
         if (Math.abs(angleBtwControlAndCameraAxes) > 0.0001) {
-            const direction = Math.sign(this.cameraY.dot(this.controls.controlX));
+            const direction = -Math.sign(rotationDirectionBasedOnCameraAxes.dot(this.controls.normalToRotationDirection));
             const acceleration = this.controls.rotationSpeed !== 0 ? 5e-7 : 1e-6;
             
             const result = linearTransition(direction * angleBtwControlAndCameraAxes, this.rotationSpeed, acceleration, delta);

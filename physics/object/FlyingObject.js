@@ -25,28 +25,16 @@ export default class FlyingObject extends AbstractObject {
     /** @type {THREE.Vector3} normal to the top of the ship, local y-axis */
     ny = new THREE.Vector3(0, 1, 0);
 
-    nxFake = new THREE.Vector3(1, 0, 0);
-
-    nyFake = new THREE.Vector3(0, 1, 0);
-
     /** @type {THREE.Vector3} */
     velocity = new THREE.Vector3(0, 0, -0.005);
 
     position = new THREE.Vector3(0, 0, 0);
 
-    rotAccChangeDirectionDt = 0;
-
-    rotAccStopDt = 0;
-
-    rotTargetAngleChange = 0;
-
     rollAngleChange = 0;
-
-    angleChange = new THREE.Vector3(0, 0, 0);
 
      /**
       * @param {*} id
-      * @param {THREE.Object3D} object3d
+      * @param {THREE.Object3D} [object3d]
       */
     constructor(id, object3d) {
         super(id, object3d);
@@ -63,7 +51,6 @@ export default class FlyingObject extends AbstractObject {
         // slow down simulation for debugging:
         // delta = delta / 20;
         const angleChange = this._updateAngularVelocityAndAcceleration(dt);
-        this.angleChange = angleChange;
 
         /** Update quaternion */
         this.quaternion.multiply(new THREE.Quaternion(angleChange.y * 0.5,

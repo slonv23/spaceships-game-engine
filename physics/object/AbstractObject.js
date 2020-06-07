@@ -12,7 +12,7 @@ export default class AbstractObject {
 
      /**
       * @param {*} id 
-      * @param {Object3D} object3d 
+      * @param {Object3D} [object3d]
       */
     constructor(id, object3d) {
         this.id = id;
