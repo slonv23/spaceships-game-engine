@@ -1,21 +1,20 @@
 /**
  * @typedef {import('three')} THREE
- * @typedef {import('../../input/Mouse').default} Mouse
- * @typedef {import('../../input/Keyboard').default} Keyboard
- * @typedef {import('./CameraManager').default} CameraManager
- * @typedef {import('../../Renderer').default} Renderer
+ * @typedef {import('../../frontend/input/Mouse').default} Mouse
+ * @typedef {import('../../frontend/input/Keyboard').default} Keyboard
+ * @typedef {import('../../frontend/Renderer').default} Renderer
  */
 
 import * as THREE from "three";
-import FlyingObject from "../../../physics/object/FlyingObject";
-import browserKeycodes from "../../../util/browser-keycodes";
+import FlyingObject from "../../physics/object/FlyingObject";
+import browserKeycodes from "../../util/browser-keycodes";
 import AbstractControls from "../AbstractControls";
-import {createQuaternionForRotation} from "../../../util/math";
+import {createQuaternionForRotation} from "../../util/math";
 
 export default class FlyingObjectControls extends AbstractControls {
 
     /** determines how fast yaw and pitch speeds are converge to their target values
-     * target values are calculated based on current mouse position */
+     * target values are calculated based on current mouse position (NOT USED, TODO add acceleration for yaw and pitch)*/
     static angularVelocityConvergeSpeed = 0.000001;
 
     /** @type {Mouse} */
@@ -27,8 +26,8 @@ export default class FlyingObjectControls extends AbstractControls {
     /** @type {FlyingObject} */
     gameObject
 
-    /** @type {THREE.Vector3} */
-    gameObjectPrevDirection;
+    /** @type {Renderer} */
+    renderer;
 
     /** user can change yaw and pitch by moving cursor to desired direction,
      * but only in specified limits */
@@ -53,9 +52,6 @@ export default class FlyingObjectControls extends AbstractControls {
     /** @type {THREE.Quaternion} used to convert control axes from local spaceship coordinate system (CS) to world CS */
     controlsQuaternion = new THREE.Quaternion();
 
-    /** @type {CameraManager} */
-    cameraManager;
-
     /** @type {number} */
     wPitchTarget = 0;
     /** @type {number} */
@@ -66,14 +62,12 @@ export default class FlyingObjectControls extends AbstractControls {
      /**
       * @param {Mouse} mouseInterface
       * @param {Keyboard} keyboardInterface
-      * @param {CameraManager} flyingObjectCameraManager
       */
-    constructor(mouseInterface, keyboardInterface, flyingObjectCameraManager) {
+    constructor(mouseInterface, keyboardInterface) {
         super();
 
         this.mouse = mouseInterface;
         this.keyboard = keyboardInterface;
-        this.cameraManager = flyingObjectCameraManager;
 
         this.controlCircleRadius = Math.min(window.innerWidth, window.innerHeight) * 0.2;
         this.controlCircleRadiusSq = this.controlCircleRadius ** 2;
@@ -84,13 +78,12 @@ export default class FlyingObjectControls extends AbstractControls {
     }
 
     /**
-     * @param {THREE.PerspectiveCamera} camera
      * @param {FlyingObject} gameObject
      * @param {Renderer} renderer
      */
-    init(camera, gameObject, renderer) {
-        super.init(camera, gameObject, renderer);
-        this.cameraManager.init(camera, gameObject, this);
+    init(gameObject, renderer) {
+        super.init(gameObject);
+        this.renderer = renderer;
         this.controlZInWorldCoords = gameObject.nz;
 
         /*if (this.enableAxesHelper) {
@@ -105,22 +98,23 @@ export default class FlyingObjectControls extends AbstractControls {
     /**
      * @param {number} delta
      */
-    updateCameraAndControlParams(delta) {
-        this._updateControlAxes(delta);
+    updateControlParams(delta) {
+        this._applyUserInputForRotation();
+
+        this._updateControlsQuaternion();
+        this._rotateControlAxes(delta);
+
+        // this._updateControlAxes(delta);
         this._updateYawAndPitchVelocities(delta);
-        // TODO move next call to other component because this class will be also used on backend
-        this.cameraManager.updateCamera(this.wYawTarget, this.wPitchTarget, delta);
-
-        this.camera.matrixWorldInverse.getInverse(this.camera.matrixWorld);
-
-        this._onUpdated();
+        //this._onUpdated();
     }
 
-    _onUpdated() {}
+    //_onUpdated() {}
 
     _updateControlAxes(delta) {
         this._updateControlsQuaternion();
         this._applyUserInputForRotation(delta);
+        this._rotateControlAxes();
     }
 
     _updateControlsQuaternion() {
@@ -137,13 +131,15 @@ export default class FlyingObjectControls extends AbstractControls {
             this.rotationSpeed = 0.0006;
         } else if (pressedKey === browserKeycodes.ARROW_RIGHT) {
             this.rotationSpeed = -0.0006;
-        } else {
-            return;
         }
+    }
 
-        this.controlX.add(this.controlY.multiplyScalar(this.rotationSpeed * delta));
-        this.controlX.normalize();
-        this.controlY.crossVectors(this.controlZ, this.controlX);
+    _rotateControlAxes(delta) {
+        if (this.rotationSpeed !== 0) {
+            this.controlX.add(this.controlY.multiplyScalar(this.rotationSpeed * delta));
+            this.controlX.normalize();
+            this.controlY.crossVectors(this.controlZ, this.controlX);
+        }
     }
 
     // eslint-disable-next-line no-unused-vars

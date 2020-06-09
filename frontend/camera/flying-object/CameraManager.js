@@ -1,7 +1,7 @@
 /**
  * @typedef {import('three')} THREE
  * @typedef {import('../../../physics/object/FlyingObject').default} FlyingObject
- * @typedef {import('./FlyingObjectControls').default} FlyingObjectControls
+ * @typedef {import('../../../object-control/flying-object/FlyingObjectControls').default} FlyingObjectControls
  */
 
 import * as THREE from 'three';
@@ -52,7 +52,7 @@ export default class CameraManager {
         this.camera.matrixWorld.extractBasis(this.cameraX, this.cameraY, this.cameraZ);
     }
 
-    updateCamera(wYawTarget, wPitchTarget, delta) {
+    updateCamera(delta) {
         let cameraAndObjectDirectionsDiff = this.controls.gameObject.nz.clone().sub(this.cameraZ);
 
         this.cameraQuaternion.multiplyQuaternions(createQuaternionForRotation(this.cameraZ, this.controls.gameObject.nz), this.cameraQuaternion);
@@ -105,6 +105,7 @@ export default class CameraManager {
         const matrixWorld = this.camera.matrixWorld;
         matrixWorld.makeBasis(this.cameraX, this.cameraY, this.cameraZ);
         matrixWorld.setPosition(this.camera.position);
+        this.camera.matrixWorldInverse.getInverse(this.camera.matrixWorld);
     }
 
     _calcPosLookAt() {

@@ -3,9 +3,10 @@
  * @typedef {import('./asset-managment/AssetManager').default} AssetManager
  * @typedef {import('../state/StateManager').default} StateManager
  * @typedef {import('./Renderer').default} Renderer
+ * @typedef {import('./camera/flying-object/CameraManager').default} CameraManager
  */
 
-import AbstractControls from "./control/AbstractControls";
+import AbstractControls from "../object-control/AbstractControls";
 import AbstractObject from "../physics/object/AbstractObject";
 
 export default class FrontendFacade {
@@ -27,7 +28,12 @@ export default class FrontendFacade {
 
     /** @type {AbstractControls} */
     _controls = {
-        updateCameraAndControlParams: () => {}
+        updateControlParams: () => {}
+    };
+
+    /** @type {CameraManager} TODO use abstract base class */
+    _cameraManager = {
+        updateCamera: () => {}
     };
 
     constructor(assetManager, stateManager, renderer, diContainer) {
@@ -58,7 +64,8 @@ export default class FrontendFacade {
 
         while (this.delta >= this.timestep) {
             this.stateManager.update(this.timestep);
-            this._controls.updateCameraAndControlParams(this.timestep);
+            this._controls.updateControlParams(this.timestep);
+            this._cameraManager.updateCamera(this.timestep);
             this.delta -= this.timestep;
         }
 
@@ -95,19 +102,36 @@ export default class FrontendFacade {
      * @param {string|symbol} ref
      * @param {AbstractObject} gameObject
      */
-    async switchControls(ref, gameObject) {
-        let controls = await this.diContainer.get(ref);
+    async attachControls(ref, gameObject) {
+        const controls = await this.diContainer.get(ref);
         if (!controls) {
             throw new Error('Component not found');
         }
 
-        if(!(controls instanceof AbstractControls)) {
+        if (!(controls instanceof AbstractControls)) {
             throw new Error('Class must be inherited from AbstractControls');
         }
 
-        controls.init(this.renderer.camera, gameObject, this.renderer);
+        controls.init(gameObject, this.renderer);
 
         this._controls = controls;
+    }
+
+    async attachCameraManager(ref) {
+        /** @type {CameraManager} */
+        const cameraManager = await this.diContainer.get(ref);
+        if (!cameraManager) {
+            throw new Error('Component not found');
+        }
+
+        // TODO add base class check
+        /*if (!(cameraManager instanceof AbstractCameraManager)) {
+            throw new Error('Class must be inherited from AbstractCameraManager');
+        }*/
+
+        cameraManager.init(this.renderer.camera, this._controls.gameObject, this._controls);
+
+        this._cameraManager = cameraManager;
     }
 
 }
