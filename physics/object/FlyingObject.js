@@ -30,7 +30,7 @@ export default class FlyingObject extends AbstractObject {
 
     position = new THREE.Vector3(0, 0, 0);
 
-    rollAngleChange = 0;
+    rollAngleTarget = 0;
 
      /**
       * @param {*} id
@@ -44,7 +44,7 @@ export default class FlyingObject extends AbstractObject {
     }
 
     rollOnAngle(angleChange) {
-        this.rollAngleChange = angleChange;
+        this.rollAngleTarget = angleChange;
     }
 
     update(dt) {
@@ -58,11 +58,7 @@ export default class FlyingObject extends AbstractObject {
                                                       angleChange.z * 0.5,
                                                       1));
         this.quaternion.normalize();
-
-        /** Update axes */
-        this.nx = (new THREE.Vector3(1, 0, 0)).applyQuaternion(this.quaternion);
-        this.ny = (new THREE.Vector3(0, 1, 0)).applyQuaternion(this.quaternion);
-        this.nz = (new THREE.Vector3(0, 0, 1)).applyQuaternion(this.quaternion);
+        this.updateAxes();
 
         /** Update position */
         this.position.addScaledVector(this.nz, this.velocity.z * dt);
@@ -75,6 +71,12 @@ export default class FlyingObject extends AbstractObject {
         this.object3d.matrix.setPosition(this.position);
     }
 
+    updateAxes() {
+        this.nx = (new THREE.Vector3(1, 0, 0)).applyQuaternion(this.quaternion);
+        this.ny = (new THREE.Vector3(0, 1, 0)).applyQuaternion(this.quaternion);
+        this.nz = (new THREE.Vector3(0, 0, 1)).applyQuaternion(this.quaternion);
+    }
+
     /**
      * @param {number} dt - timestep
      * @returns {THREE.Vector3} angle change
@@ -84,11 +86,12 @@ export default class FlyingObject extends AbstractObject {
 
         angleChange.x = (this.angularVelocity.x + (dt * this.angularAcceleration.x) / 2) * dt;
         angleChange.y = (this.angularVelocity.y + (dt * this.angularAcceleration.y) / 2) * dt;
-        if (Math.abs(this.rollAngleChange) > 0.0001) {
-            const result = linearTransition(this.rollAngleChange, this.angularVelocity.z, self.angularAccelerationAbs.z, dt);
+        if (Math.abs(this.rollAngleTarget) > 0.0001) {
+            const result = linearTransition(this.rollAngleTarget, this.angularVelocity.z, self.angularAccelerationAbs.z, dt);
             this.angularVelocity.z = result.speed;
             this.angularAcceleration.z = result.acceleration;
             angleChange.z = result.distanceChange;
+            this.rollAngleTarget -= result.distanceChange;
         } else {
             this.angularVelocity.z = 0;
             this.angularAcceleration.z = 0;

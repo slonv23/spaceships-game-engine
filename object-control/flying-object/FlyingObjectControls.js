@@ -8,23 +8,15 @@
 import * as THREE from "three";
 import FlyingObject from "../../physics/object/FlyingObject";
 import browserKeycodes from "../../util/browser-keycodes";
-import AbstractControls from "../AbstractControls";
-import {createQuaternionForRotation} from "../../util/math";
+import FlyingObjectBaseControls from './FlyingObjectBaseControls';
 
-export default class FlyingObjectControls extends AbstractControls {
-
-    /** determines how fast yaw and pitch speeds are converge to their target values
-     * target values are calculated based on current mouse position (NOT USED, TODO add acceleration for yaw and pitch)*/
-    static angularVelocityConvergeSpeed = 0.000001;
+export default class FlyingObjectControls extends FlyingObjectBaseControls {
 
     /** @type {Mouse} */
     mouse;
 
     /** @type {Keyboard} */
     keyboard;
-
-    /** @type {FlyingObject} */
-    gameObject
 
     /** @type {Renderer} */
     renderer;
@@ -35,29 +27,7 @@ export default class FlyingObjectControls extends AbstractControls {
     controlCircleRadiusSq;
 
     /** @type {THREE.Vector3} */
-    controlX = new THREE.Vector3(1, 0, 0);
-    /** @type {THREE.Vector3} */
-    controlY = new THREE.Vector3(0, 1, 0);
-    /** @type {THREE.Vector3} */
-    controlZ = new THREE.Vector3(0, 0, 1);
-    /** @type {THREE.Vector3} */
-    controlZInWorldCoords = new THREE.Vector3();
-
-    /** @type {THREE.Vector3} */
     normalToRotationDirection;
-
-    /** @type {THREE.Vector3} */
-    rotationDirection;
-
-    /** @type {THREE.Quaternion} used to convert control axes from local spaceship coordinate system (CS) to world CS */
-    controlsQuaternion = new THREE.Quaternion();
-
-    /** @type {number} */
-    wPitchTarget = 0;
-    /** @type {number} */
-    wYawTarget = 0;
-
-    rotationSpeed = 0;
 
      /**
       * @param {Mouse} mouseInterface
@@ -101,29 +71,14 @@ export default class FlyingObjectControls extends AbstractControls {
     updateControlParams(delta) {
         this._applyUserInputForRotation();
 
-        this._updateControlsQuaternion();
-        this._rotateControlAxes(delta);
+        super.updateControlParams(delta);
 
-        // this._updateControlAxes(delta);
+        //this._updateControlAxes(delta);
         this._updateYawAndPitchVelocities(delta);
         //this._onUpdated();
     }
 
-    //_onUpdated() {}
-
-    _updateControlAxes(delta) {
-        this._updateControlsQuaternion();
-        this._applyUserInputForRotation(delta);
-        this._rotateControlAxes();
-    }
-
-    _updateControlsQuaternion() {
-        this.controlsQuaternion.multiplyQuaternions(createQuaternionForRotation(this.controlZInWorldCoords, this.gameObject.nz), this.controlsQuaternion);
-        this.controlsQuaternion.normalize();
-        this.controlZInWorldCoords.set(0, 0, 1).applyQuaternion(this.controlsQuaternion);
-    }
-
-    _applyUserInputForRotation(delta) {
+    _applyUserInputForRotation() {
         const pressedKey = this.keyboard.getFirstPressedKey();
 
         this.rotationSpeed = 0;
@@ -131,14 +86,6 @@ export default class FlyingObjectControls extends AbstractControls {
             this.rotationSpeed = 0.0006;
         } else if (pressedKey === browserKeycodes.ARROW_RIGHT) {
             this.rotationSpeed = -0.0006;
-        }
-    }
-
-    _rotateControlAxes(delta) {
-        if (this.rotationSpeed !== 0) {
-            this.controlX.add(this.controlY.multiplyScalar(this.rotationSpeed * delta));
-            this.controlX.normalize();
-            this.controlY.crossVectors(this.controlZ, this.controlX);
         }
     }
 
