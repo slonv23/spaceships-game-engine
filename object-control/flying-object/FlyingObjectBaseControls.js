@@ -7,7 +7,7 @@ export default class FlyingObjectBaseControls extends AbstractControls {
     /** @type {FlyingObject} */
     gameObject;
 
-    /** @type {THREE.Vector3} */
+    /** @type {THREE.Vector3} TODO change to Vector2 */
     controlX = new THREE.Vector3(1, 0, 0);
     /** @type {THREE.Vector3} */
     controlY = new THREE.Vector3(0, 1, 0);
@@ -61,6 +61,17 @@ export default class FlyingObjectBaseControls extends AbstractControls {
         if (this.rotationSpeed !== 0) {
             this._rotateControlAxes(this.rotationSpeed * delta);
         }
+        this._updateAngularVelocities();
+    }
+
+    _updateAngularVelocities() {
+        /** @type {THREE.Vector3} */
+        this.rotationDirection = this.controlX.clone().multiplyScalar(this.wYawTarget).add(this.controlY.clone().multiplyScalar(this.wPitchTarget));
+        this.rotationDirection.applyQuaternion(this.controlsQuaternion);
+        // TODO try here
+
+        this.gameObject.angularVelocity.y = this.gameObject.ny.dot(this.rotationDirection);
+        this.gameObject.angularVelocity.x = this.gameObject.nx.dot(this.rotationDirection);
     }
 
 }

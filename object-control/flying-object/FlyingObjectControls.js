@@ -5,7 +5,6 @@
  * @typedef {import('../../frontend/Renderer').default} Renderer
  */
 
-import * as THREE from "three";
 import FlyingObject from "../../physics/object/FlyingObject";
 import browserKeycodes from "../../util/browser-keycodes";
 import FlyingObjectBaseControls from './FlyingObjectBaseControls';
@@ -55,14 +54,6 @@ export default class FlyingObjectControls extends FlyingObjectBaseControls {
         super.init(gameObject);
         this.renderer = renderer;
         this.controlZInWorldCoords = gameObject.nz;
-
-        /*if (this.enableAxesHelper) {
-            const size = 8;
-            this._initializeAxesHelper(size);
-            this._onUpdated = () => {
-                this._updateAxesHelper(size);
-            };
-        }*/
     }
 
     /**
@@ -70,12 +61,11 @@ export default class FlyingObjectControls extends FlyingObjectBaseControls {
      */
     updateControlParams(delta) {
         this._applyUserInputForRotation();
+        this._applyUserInputForAngularVelocities();
 
         super.updateControlParams(delta);
 
-        //this._updateControlAxes(delta);
-        this._updateYawAndPitchVelocities(delta);
-        //this._onUpdated();
+        this._correctObjectRollAngle();
     }
 
     _applyUserInputForRotation() {
@@ -89,22 +79,14 @@ export default class FlyingObjectControls extends FlyingObjectBaseControls {
         }
     }
 
-    // eslint-disable-next-line no-unused-vars
-    _updateYawAndPitchVelocities(delta) {
+    _applyUserInputForAngularVelocities() {
         const mousePos = this._calcMousePosInDimlessUnits();
-
         this.wPitchTarget = -mousePos[1] * FlyingObject.angularVelocityMax.y;
         this.wYawTarget = mousePos[0] * FlyingObject.angularVelocityMax.x;
+    }
 
-        // controlX, controlY and gameObject.ny, gameObject.nx are lie in the same plane
-        /** @type {THREE.Vector3} */
-        this.rotationDirection = this.controlX.clone().multiplyScalar(this.wYawTarget).add(this.controlY.clone().multiplyScalar(this.wPitchTarget));
-        this.rotationDirection.applyQuaternion(this.controlsQuaternion);
+    _correctObjectRollAngle() {
         this.normalToRotationDirection = this.gameObject.nz.clone().cross(this.rotationDirection);
-
-        this.gameObject.angularVelocity.y = this.gameObject.ny.dot(this.rotationDirection);
-        this.gameObject.angularVelocity.x = this.gameObject.nx.dot(this.rotationDirection);
-
         const currentSideAngle = this._calcSideAngle() * this._calcRotationDirection();
         const targetSideAngle = this._calcTargetSideAngle();
         const angleChange = -targetSideAngle - currentSideAngle;
@@ -145,50 +127,6 @@ export default class FlyingObjectControls extends FlyingObjectBaseControls {
         mousePos[1] /= this.controlCircleRadius;
 
         return mousePos;
-    }
-
-    _initializeAxesHelper(size) {
-        size = size || 1;
-
-        const vertices = [
-            0, 0, 0,    size, 0, 0,
-            0, 0, 0,    0, size, 0,
-            0, 0, 0,    0, 0, size
-        ];
-
-        const colors = [
-            1, 0, 0,    1, 0.6, 0,
-            0, 1, 0,    0.6, 1, 0,
-            0, 0, 1,    0, 0.6, 1
-        ];
-
-        var geometry = new THREE.BufferGeometry();
-        this.helperGeometry = geometry;
-
-        this.axesHelperBuffer = new THREE.Float32BufferAttribute(vertices, 3);
-        geometry.setAttribute('position', this.axesHelperBuffer);
-        geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-
-        const material = new THREE.LineBasicMaterial({vertexColors: THREE.VertexColors});
-
-        this.renderer.scene.add(new THREE.LineSegments(geometry, material));
-    }
-
-    _updateAxesHelper(size) {
-        size = size || 1;
-
-        const objectPosX = this.gameObject.position.x,
-              objectPosY = this.gameObject.position.y,
-              objectPosZ = this.gameObject.position.z;
-
-        const vertices = [
-            objectPosX, objectPosY, objectPosZ,    this.controlX.x * size, this.controlX.y * size, this.controlX.z * size,
-            objectPosX, objectPosY, objectPosZ,    this.controlY.x * size, this.controlY.y * size, this.controlY.z * size,
-            objectPosX, objectPosY, objectPosZ,    this.controlZ.x * size, this.controlZ.y * size, this.controlZ.z * size,
-        ];
-
-        this.axesHelperBuffer.set(vertices);
-        this.helperGeometry.attributes['position'].needsUpdate = true;
     }
 
 }
