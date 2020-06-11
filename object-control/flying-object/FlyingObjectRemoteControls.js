@@ -9,6 +9,8 @@ import FlyingObject from '../../physics/object/FlyingObject';
 
 export default class FlyingObjectRemoteControls extends FlyingObjectBaseControls {
 
+    rollAngleTargetPrev = 0;
+
     /**
      * @param {ObjectState} objectState
      */
@@ -20,17 +22,16 @@ export default class FlyingObjectRemoteControls extends FlyingObjectBaseControls
         this.controlZInWorldCoords.set(0, 0, 1).applyQuaternion(this.controlsQuaternion);
         this.controlY.crossVectors(this.controlZ, this.controlX);
 
-        const inverseQuaternion = this.controlsQuaternion.inverse();
-
-        // calc rotation direction
+        // calc rotation direction, yaw and pitch targets
+        const inverseQuaternion = this.controlsQuaternion.clone().inverse();
+        const nx = this.gameObject.nx.clone();
+        const ny = this.gameObject.ny.clone();
         const yaw = objectState.angularVelocity.x;
         const pitch = objectState.angularVelocity.y;
-        console.log('rotationDirection_old x: ' + this.rotationDirection.x + 'y: ' + this.rotationDirection.y + 'z: ' + this.rotationDirection.z);
-        this.rotationDirection = this.gameObject.nx.clone().multiplyScalar(yaw).add(this.gameObject.ny.clone().multiplyScalar(pitch)).applyQuaternion(inverseQuaternion);
-        // this.rotationDirection = this.controlX.clone().multiplyScalar(yaw).add(this.controlY.clone().multiplyScalar(pitch)).applyQuaternion(inverseQuaternion);
-        console.log('rotationDirection_new x: ' + this.rotationDirection.x + 'y: ' + this.rotationDirection.y + 'z: ' + this.rotationDirection.z);
-        //this.wYawTarget = this.controlX.dot(this.rotationDirection);
-        //this.wPitchTarget = this.controlY.dot(this.rotationDirection);
+        this.rotationDirection = nx.multiplyScalar(yaw).add(ny.multiplyScalar(pitch));
+        const rotDirectionInLocalCS = this.rotationDirection.clone().applyQuaternion(inverseQuaternion);
+        this.wYawTarget = this.controlX.dot(rotDirectionInLocalCS);
+        this.wPitchTarget = this.controlY.dot(rotDirectionInLocalCS);
     }
 
     /**
@@ -42,11 +43,15 @@ export default class FlyingObjectRemoteControls extends FlyingObjectBaseControls
         this.gameObject.velocity.z = objectState.speed;
         this.gameObject.angularVelocity.copy(objectState.angularVelocity);
         this.gameObject.angularAcceleration.copy(objectState.angularAcceleration);
-        // this.gameObject.rollAngleTarget = objectState.rollAngleTarget;
+        // on client
+        this.gameObject.rollAngleTarget = objectState.rollAngleTarget;
+        // on server:
+        //this.gameObject.rollAngleTarget += this.rollAngleTargetPrev - objectState.rollAngleTarget;
+        //this.rollAngleTargetPrev = objectState.rollAngleTarget;
     }
 
     /**
-     * @param angle
+     * @param {number} angle
      * @private
      */
     _rotateControlAxes(angle) {
@@ -55,8 +60,6 @@ export default class FlyingObjectRemoteControls extends FlyingObjectBaseControls
     }
 
     /********** TESTING **********/
-
-    rollAngleTargetPrev = 0;
 
     controlCircleRadius;
     controlCircleRadiusSq;
@@ -91,23 +94,24 @@ export default class FlyingObjectRemoteControls extends FlyingObjectBaseControls
 
         this._updateAngularVelocities();
         objectState.angularVelocity = this.gameObject.angularVelocity;
-        //console.log("angularVelocity.x: " + objectState.angularVelocity.x + ", " + "this.wYawTarget: " + objectState.angularVelocity.y);
         objectState.angularAcceleration = this.gameObject.angularAcceleration;
-        const newSideAngle = this._calcTargetSideAngle();
-        objectState.rollAngleTarget += this.rollAngleTargetPrev - newSideAngle;
-        this.rollAngleTargetPrev = newSideAngle;
+
+        objectState.rollAngleTarget = this._calcTargetSideAngle();
 
         this.sync(objectState);
 
         this.normalToRotationDirection = this.gameObject.nz.clone().cross(this.rotationDirection);
     }
 
+    _calcRotationDirection() {
+        const directionSign = Math.sign(this.normalToRotationDirection.dot(this.rotationDirectionForNonRotated));
+        return directionSign < 0 ? -1 : 1;
+    }
+
     _applyUserInputForAngularVelocities() {
         const mousePos = this._calcMousePosInDimlessUnits();
         this.wPitchTarget = -mousePos[1] * FlyingObject.angularVelocityMax.y;
         this.wYawTarget = mousePos[0] * FlyingObject.angularVelocityMax.x;
-        //console.log("mousePos[1] : " + mousePos[1]  + ", " + "mousePos[0] : " + mousePos[0]);
-        //console.log("this.wPitchTarget: " + this.wPitchTarget + ", " + "this.wYawTarget: " + this.wYawTarget);
     }
 
     _calcTargetSideAngle() {

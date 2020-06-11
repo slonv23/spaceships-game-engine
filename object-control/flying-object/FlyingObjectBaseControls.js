@@ -68,7 +68,6 @@ export default class FlyingObjectBaseControls extends AbstractControls {
         /** @type {THREE.Vector3} */
         this.rotationDirection = this.controlX.clone().multiplyScalar(this.wYawTarget).add(this.controlY.clone().multiplyScalar(this.wPitchTarget));
         this.rotationDirection.applyQuaternion(this.controlsQuaternion);
-        // TODO try here
 
         this.gameObject.angularVelocity.y = this.gameObject.ny.dot(this.rotationDirection);
         this.gameObject.angularVelocity.x = this.gameObject.nx.dot(this.rotationDirection);
