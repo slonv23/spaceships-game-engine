@@ -26,9 +26,7 @@ export default class FlyingObjectRemoteControls extends FlyingObjectBaseControls
         const inverseQuaternion = this.controlsQuaternion.clone().inverse();
         const nx = this.gameObject.nx.clone();
         const ny = this.gameObject.ny.clone();
-        const yaw = objectState.angularVelocity.x;
-        const pitch = objectState.angularVelocity.y;
-        this.rotationDirection = nx.multiplyScalar(yaw).add(ny.multiplyScalar(pitch));
+        this.rotationDirection = nx.multiplyScalar(objectState.angularVelocity.x).add(ny.multiplyScalar(objectState.angularVelocity.y));
         const rotDirectionInLocalCS = this.rotationDirection.clone().applyQuaternion(inverseQuaternion);
         this.wYawTarget = this.controlX.dot(rotDirectionInLocalCS);
         this.wPitchTarget = this.controlY.dot(rotDirectionInLocalCS);
@@ -43,11 +41,17 @@ export default class FlyingObjectRemoteControls extends FlyingObjectBaseControls
         this.gameObject.velocity.z = objectState.speed;
         this.gameObject.angularVelocity.copy(objectState.angularVelocity);
         this.gameObject.angularAcceleration.copy(objectState.angularAcceleration);
-        // on client
-        this.gameObject.rollAngleTarget = objectState.rollAngleTarget;
+        this.gameObject.rollAngleBtwCurrentAndTargetOrientation = objectState.rollAngleBtwCurrentAndTargetOrientation;
         // on server:
-        //this.gameObject.rollAngleTarget += this.rollAngleTargetPrev - objectState.rollAngleTarget;
+        //this.gameObject.rollAngleBtwCurrentAndTargetOrientation += this.rollAngleTargetPrev - objectState.rollAngleTarget;
         //this.rollAngleTargetPrev = objectState.rollAngleTarget;
+    }
+
+    /**
+     * @param {InputAction} inputAction
+     */
+    processInput(inputAction) {
+        // TODO ...
     }
 
     /**
@@ -56,7 +60,7 @@ export default class FlyingObjectRemoteControls extends FlyingObjectBaseControls
      */
     _rotateControlAxes(angle) {
         super._rotateControlAxes(angle);
-        this.gameObject.rollAngleTarget += angle;
+        this.gameObject.rollAngleBtwCurrentAndTargetOrientation += angle;
     }
 
     /********** TESTING **********/
@@ -96,7 +100,7 @@ export default class FlyingObjectRemoteControls extends FlyingObjectBaseControls
         objectState.angularVelocity = this.gameObject.angularVelocity;
         objectState.angularAcceleration = this.gameObject.angularAcceleration;
 
-        objectState.rollAngleTarget = this._calcTargetSideAngle();
+        // objectState.rollAngleTarget = this._calcTargetSideAngle(); -- wrong
 
         this.sync(objectState);
 

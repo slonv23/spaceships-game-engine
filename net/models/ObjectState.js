@@ -23,9 +23,7 @@ export default class ObjectState {
     /** @type {THREE.Vector3} */
     angularAcceleration;
     /** @type {number} */
-    rollAngle;
-    /** @type {number} */
-    rollAngleTarget;
+    rollAngleBtwCurrentAndTargetOrientation;
     /** @type {THREE.Vector3} */
     controlX;
     /** @type {THREE.Quaternion} */

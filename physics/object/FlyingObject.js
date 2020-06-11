@@ -30,7 +30,7 @@ export default class FlyingObject extends AbstractObject {
 
     position = new THREE.Vector3(0, 0, 0);
 
-    rollAngleTarget = 0;
+    rollAngleBtwCurrentAndTargetOrientation = 0;
 
      /**
       * @param {*} id
@@ -43,8 +43,8 @@ export default class FlyingObject extends AbstractObject {
         this._updateAngularVelocityAndAcceleration.tmpVector = new THREE.Vector3();
     }
 
-    rollOnAngle(angleChange) {
-        this.rollAngleTarget = angleChange;
+    rollOnAngle(rollAngleChange) {
+        this.rollAngleBtwCurrentAndTargetOrientation = rollAngleChange;
     }
 
     update(dt) {
@@ -86,12 +86,12 @@ export default class FlyingObject extends AbstractObject {
 
         angleChange.x = (this.angularVelocity.x + (dt * this.angularAcceleration.x) / 2) * dt;
         angleChange.y = (this.angularVelocity.y + (dt * this.angularAcceleration.y) / 2) * dt;
-        if (Math.abs(this.rollAngleTarget) > 0.0001) {
-            const result = linearTransition(this.rollAngleTarget, this.angularVelocity.z, self.angularAccelerationAbs.z, dt);
+        if (Math.abs(this.rollAngleBtwCurrentAndTargetOrientation) > 0.0001) {
+            const result = linearTransition(this.rollAngleBtwCurrentAndTargetOrientation, this.angularVelocity.z, self.angularAccelerationAbs.z, dt);
             this.angularVelocity.z = result.speed;
             this.angularAcceleration.z = result.acceleration;
             angleChange.z = result.distanceChange;
-            this.rollAngleTarget -= result.distanceChange;
+            this.rollAngleBtwCurrentAndTargetOrientation -= result.distanceChange;
         } else {
             this.angularVelocity.z = 0;
             this.angularAcceleration.z = 0;
