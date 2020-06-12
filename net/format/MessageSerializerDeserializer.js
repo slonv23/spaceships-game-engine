@@ -1,12 +1,15 @@
  /**
   * @typedef {import('three').Vector3} Vector3
   * @typedef {import('three').Quaternion} Quaternion
+  * @typedef {import('protobufjs').Type} Type
+  * @typedef {import('protobufjs').Message} Message
+  * @typedef {import('../models/AbstractModel').default} AbstractModel
   */
 
 // eslint-disable-next-line no-undef
 const protobuf = require("protobufjs");
 
-export default class MessageEncoderDecoder {
+export default class MessageSerializerDeserializer {
 
     postConstruct({protoBundle}) {
         this.protoBundle = protoBundle;
@@ -16,6 +19,7 @@ export default class MessageEncoderDecoder {
     loadProtoDefinitions() {
         const root = protobuf.Root.fromJSON(this.protoBundle);
 
+        // TODO associate types with msg models (create map {[className] => [protobufType]})
         this.HelloWorld = root.lookupType("helloworld.HelloWorld");
         this.ObjectState = root.lookupType("multiplayer.ObjectState");
         this.ControlsState = root.lookupType("multiplayer.ControlsState");
@@ -54,7 +58,7 @@ export default class MessageEncoderDecoder {
      * @param {Vector3} vector
      * @returns {*}
      */
-    convertVector(vector) {
+    serializeVector(vector) {
         return this.FloatVector.create({x: vector.x, y: vector.y, z: vector.z});
     }
 
@@ -62,7 +66,7 @@ export default class MessageEncoderDecoder {
      * @param {Quaternion} quaternion
      * @returns {*}
      */
-    convertQuaternion(quaternion) {
+    serializeQuaternion(quaternion) {
         const real = this.FloatVector.create({x: quaternion.x, y: quaternion.y, z: quaternion.z});
         const imag = quaternion.w;
 
@@ -70,11 +74,23 @@ export default class MessageEncoderDecoder {
     }
 
     /**
-     * @param {*} msgType
-     * @param {protobuf.Message} msg
+     * @param {AbstractModel} model
+     */
+    serialize(model) {
+        // TODO iterate over keys, use hasOwnProperty to extract members to plane object
+        //  and convert vectors and quaternions to corresponding protobuf types
+    }
+
+    deserialize() {
+        // TODO ...
+    }
+
+    /**
+     * @param {Type} msgType
+     * @param {Message} msg
      * @returns {Uint8Array}
      */
-    encode(msgType, msg) {
+    _toByteArray(msgType, msg) {
         const writer = new protobuf.Writer();
         msgType.encodeDelimited(msg, writer);
         return writer.finish();

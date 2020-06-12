@@ -1,10 +1,10 @@
 /**
- * @typedef {import('protobufjs')} protobuf
+ * @typedef {import('three')} THREE
  */
 
-import * as THREE from 'three';
+import AbstractModel from "./AbstractModel";
 
-export default class ObjectState {
+export default class ObjectState extends AbstractModel {
 
     /** @type {number} */
     id;
@@ -28,12 +28,5 @@ export default class ObjectState {
     controlX;
     /** @type {THREE.Quaternion} */
     controlQuaternion;
-
-    /**
-     * @param {protobuf.Message} msg
-     */
-    constructor(msg) {
-        // TODO
-    }
 
 }

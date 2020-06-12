@@ -1,19 +1,14 @@
-export default class InputAction {
+import AbstractModel from "./AbstractModel";
+
+export default class InputAction extends AbstractModel {
 
     /** @type {number} */
     yaw;
     /** @type {number} */
     pitch;
     /** @type {number} */
-    rotationAcceleration;
+    rotationSpeed;
     /** @type {number} */
-    rollAngle
-
-    /**
-     * @param {protobuf.Message} msg
-     */
-    constructor(msg) {
-        // TODO
-    }
+    rollAngle;
 
 }

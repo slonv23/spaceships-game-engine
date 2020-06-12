@@ -1,4 +1,4 @@
 import {diContainer} from '../../globals';
-import MessageEncoderDecoder from './MessageEncoderDecoder';
+import MessageSerializerDeserializer from './MessageSerializerDeserializer';
 
-diContainer.registerClass("messageEncoderDecoder", MessageEncoderDecoder);
+diContainer.registerClass("messageEncoderDecoder", MessageSerializerDeserializer);
