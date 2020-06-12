@@ -1,10 +1,10 @@
- /**
-  * @typedef {import('three').Vector3} Vector3
-  * @typedef {import('three').Quaternion} Quaternion
-  * @typedef {import('protobufjs').Type} Type
-  * @typedef {import('protobufjs').Message} Message
-  * @typedef {import('../models/AbstractModel').default} AbstractModel
-  */
+/**
+ * @typedef {import('three').Vector3} Vector3
+ * @typedef {import('three').Quaternion} Quaternion
+ * @typedef {import('protobufjs').Type} Type
+ * @typedef {import('protobufjs').Message} Message
+ * @typedef {import('../models/AbstractModel').default} AbstractModel
+ */
 
 // eslint-disable-next-line no-undef
 const protobuf = require("protobufjs");
