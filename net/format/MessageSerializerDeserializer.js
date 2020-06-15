@@ -34,16 +34,16 @@ export default class MessageSerializerDeserializer {
         await this.loadProtoDefinitions(modelNames);
         this.defaultRootMessageType = this.RequestRoot;
 
-        // test
-        const inputAction = new InputAction();
-        inputAction.rollAngle = 5;
-        inputAction.yaw = 2;
-        inputAction.pitch = 3;
-        inputAction.rotationSpeed = 6;
-
-        const serialized = this.serialize(inputAction);
-        const deserializedRequest = this.deserializeRequest(serialized);
-        console.log(JSON.stringify(deserializedRequest));
+        // test:
+        // const inputAction = new InputAction();
+        // inputAction.rollAngle = 5;
+        // inputAction.yaw = 2;
+        // inputAction.pitch = 3;
+        // inputAction.rotationSpeed = 6;
+        //
+        // const serialized = this.serialize(inputAction);
+        // const deserializedRequest = this.deserializeRequest(serialized);
+        // console.log(JSON.stringify(deserializedRequest));
     }
 
     loadProtoDefinitions(modelNames) {

@@ -47,15 +47,15 @@ export default class WebRtcNetworkClient extends AbstractNetworkClient {
         this.dataChannel.onopen = event => {
             console.debug('DataChannel ready: ' + event);
         };
-  
+
         this.dataChannel.onclose = event => {
             console.debug('DataChannel closed' + event);
         };
-  
+
         this.dataChannel.onerror = event => {
             console.error('DataChannel error: ' + event);
         };
-  
+
         this.dataChannel.onmessage = event => {
             const byteArray = new Uint8Array(event.data);
             console.debug('DataChannel received message');
@@ -85,8 +85,8 @@ export default class WebRtcNetworkClient extends AbstractNetworkClient {
     }
 
     /**
-     * @param {RTCSessionDescription} offer 
-     * @param {RTCIceCandidate[]} candidates 
+     * @param {RTCSessionDescription} offer
+     * @param {RTCIceCandidate[]} candidates
      */
     async _negotiateConnection(offer, candidates) {
         const {answer, candidates: serverCandidates} = await this._requestAnswerAndCandidates(offer, candidates);
