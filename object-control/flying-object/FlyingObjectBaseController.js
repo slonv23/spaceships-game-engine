@@ -1,9 +1,9 @@
 import * as THREE from "three";
 
-import AbstractControls from "../AbstractControls";
+import AbstractController from "../AbstractController";
 import {createQuaternionForRotation} from "../../util/math";
 
-export default class FlyingObjectBaseControls extends AbstractControls {
+export default class FlyingObjectBaseController extends AbstractController {
 
     /** @type {FlyingObject} */
     gameObject;

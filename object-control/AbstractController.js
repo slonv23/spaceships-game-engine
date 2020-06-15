@@ -4,7 +4,7 @@
  * @typedef {import('../frontend/Renderer').default} Renderer
  */
 
-export default class AbstractControls {
+export default class AbstractController {
 
     /** @type {AbstractObject} */
     gameObject;
@@ -14,6 +14,14 @@ export default class AbstractControls {
      */
     init(gameObject) {
         this.gameObject = gameObject;
+    }
+
+    /**
+     * @param {number} delta
+     */
+    update(delta) {
+        this.gameObject.update(delta);
+        this.updateControlParams(delta);
     }
 
     /**

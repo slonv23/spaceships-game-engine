@@ -32,7 +32,7 @@ export default class MultiplayerService {
         return this.networkClient.connect();
     }
 
-    sendSpawnRequest() {
+    requestSpawn() {
         // TODO ...
     }
 

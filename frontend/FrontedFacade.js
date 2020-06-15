@@ -1,12 +1,12 @@
 /**
  * @typedef {import('three')} THREE
- * @typedef {import('./asset-managment/AssetManager').default} AssetManager
+ * @typedef {import('./asset-management/AssetManager').default} AssetManager
  * @typedef {import('../state/StateManager').default} StateManager
  * @typedef {import('./Renderer').default} Renderer
  * @typedef {import('./camera/flying-object/CameraManager').default} CameraManager
  */
 
-import AbstractControls from "../object-control/AbstractControls";
+import AbstractController from "../object-control/AbstractController";
 import AbstractObject from "../physics/object/AbstractObject";
 
 export default class FrontendFacade {
@@ -26,10 +26,10 @@ export default class FrontendFacade {
     delta = 0;
     timestep = 1000 / 60;
 
-    /** @type {AbstractControls} */
-    _controls = {
+    /** @type {AbstractController} */
+    /*_controls = {
         updateControlParams: () => {}
-    };
+    };*/
 
     /** @type {CameraManager} TODO use abstract base class */
     _cameraManager = {
@@ -108,7 +108,7 @@ export default class FrontendFacade {
             throw new Error('Component not found');
         }
 
-        if (!(controls instanceof AbstractControls)) {
+        if (!(controls instanceof AbstractController)) {
             throw new Error('Class must be inherited from AbstractControls');
         }
 

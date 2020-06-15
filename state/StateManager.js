@@ -1,16 +1,26 @@
+/**
+ * @typedef {import('../object-control/AbstractController').default} AbstractController
+ */
+
 import AbstractObject from "../physics/object/AbstractObject";
 
 export default class StateManager {
 
-    /** @type {AbstractObject[]} */
-    allObjects = [];
+    /** @type {AbstractController[]} */
+    controllers = [];
+
+    /** @type {number} */
+    controllersCount = 0;
 
     update(delta) {
-        this.allObjects.forEach(object => object.update(delta));
+        for (let i = 0; i < this.controllersCount; i++) {
+            this.controllers[i].update(delta);
+        }
+        //this.allObjects.forEach(object => object.update(delta));
     }
 
     addObject(gameObject) {
-        this.allObjects.push(gameObject);
+        //this.allObjects.push(gameObject);
     }
 
 }

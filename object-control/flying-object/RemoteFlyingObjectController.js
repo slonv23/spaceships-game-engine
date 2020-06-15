@@ -4,9 +4,9 @@
  * @typedef {import('../../net/models/InputAction').default} InputAction
  */
 
-import FlyingObjectBaseControls from "./FlyingObjectBaseControls";
+import FlyingObjectBaseController from "./FlyingObjectBaseController";
 
-export default class FlyingObjectRemoteControls extends FlyingObjectBaseControls {
+export default class RemoteFlyingObjectController extends FlyingObjectBaseController {
 
     rollAnglePrev = 0;
 
@@ -14,7 +14,7 @@ export default class FlyingObjectRemoteControls extends FlyingObjectBaseControls
      * @param {ObjectState} objectState
      */
     sync(objectState) {
-        this.syncObject(objectState);
+        this._syncObject(objectState);
 
         this.controlsQuaternion.copy(objectState.controlQuaternion);
         this.controlX.copy(objectState.controlX);
@@ -33,8 +33,9 @@ export default class FlyingObjectRemoteControls extends FlyingObjectBaseControls
 
     /**
      * @param {ObjectState} objectState
+     * @protected
      */
-    syncObject(objectState) {
+    _syncObject(objectState) {
         this.gameObject.quaternion.copy(objectState.quaternion);
         this.gameObject.position = objectState.position;
         this.gameObject.velocity.z = objectState.speed;

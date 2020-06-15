@@ -7,9 +7,9 @@
 
 import FlyingObject from "../../physics/object/FlyingObject";
 import browserKeycodes from "../../util/browser-keycodes";
-import FlyingObjectBaseControls from './FlyingObjectBaseControls';
+import FlyingObjectBaseController from './FlyingObjectBaseController';
 
-export default class FlyingObjectControls extends FlyingObjectBaseControls {
+export default class FlyingObjectSingleplayerController extends FlyingObjectBaseController {
 
     /** @type {Mouse} */
     mouse;

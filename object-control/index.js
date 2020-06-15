@@ -1,16 +1,16 @@
 import {diContainer} from '../globals';
 
-import FlyingObjectControls from "./flying-object/FlyingObjectControls";
-import FlyingObjectRemoteControls from './flying-object/FlyingObjectRemoteControls';
-import FlyingObjectRemoteControlsTest from './flying-object/FlyingObjectRemoteControlsTest';
+import FlyingObjectSingleplayerController from "./flying-object/FlyingObjectController";
+import RemoteFlyingObjectController from './flying-object/FlyingObjectRemoteController';
+import RemoteFlyingObjectControllerTest from './flying-object/FlyingObjectRemoteControllerTest';
 
 export const controls = Object.freeze({
-    FLYING_OBJECT_CONTROLS: Symbol(),
-    FLYING_OBJECT_REMOTE_CONTROLS: Symbol(),
-    FLYING_OBJECT_REMOTE_CONTROLS_TEST: Symbol(),
+    FLYING_OBJECT_CONTROLLER: Symbol(),
+    FLYING_OBJECT_REMOTE_CONTROLLER: Symbol(),
+    FLYING_OBJECT_REMOTE_CONTROLLER_TEST: Symbol(),
 });
 
-diContainer.registerClass(controls.FLYING_OBJECT_CONTROLS, FlyingObjectControls, {enableAxesHelper: false});
-diContainer.registerClass(controls.FLYING_OBJECT_REMOTE_CONTROLS, FlyingObjectRemoteControls);
-diContainer.registerClass(controls.FLYING_OBJECT_REMOTE_CONTROLS_TEST, FlyingObjectRemoteControlsTest);
+diContainer.registerClass(controls.FLYING_OBJECT_CONTROLLER, FlyingObjectSingleplayerController, {enableAxesHelper: false});
+diContainer.registerClass(controls.FLYING_OBJECT_REMOTE_CONTROLLER, RemoteFlyingObjectController);
+diContainer.registerClass(controls.FLYING_OBJECT_REMOTE_CONTROLLER_TEST, RemoteFlyingObjectControllerTest);
 

@@ -2,9 +2,9 @@ import ObjectState from '../../net/models/ObjectState';
 import FlyingObject from '../../physics/object/FlyingObject';
 import browserKeycodes from "../../util/browser-keycodes";
 import InputAction from "../../net/models/InputAction";
-import FlyingObjectRemoteControls from "./FlyingObjectRemoteControls";
+import RemoteFlyingObjectController from "./FlyingObjectRemoteController";
 
-export default class FlyingObjectRemoteControlsTest extends FlyingObjectRemoteControls {
+export default class RemoteFlyingObjectControllerTest extends RemoteFlyingObjectController {
 
     controlCircleRadius;
     controlCircleRadiusSq;

@@ -1,7 +1,7 @@
 /**
  * @typedef {import('three')} THREE
  * @typedef {import('../../../physics/object/FlyingObject').default} FlyingObject
- * @typedef {import('../../../object-control/flying-object/FlyingObjectControls').default} FlyingObjectControls
+ * @typedef {import('../../../object-control/flying-object/FlyingObjectControls').default} FlyingObjectSingleplayerController
  */
 
 import * as THREE from 'three';
@@ -20,7 +20,7 @@ export default class CameraManager {
     /** @type {FlyingObject} */
     gameObject
 
-    /** @type {FlyingObjectControls} */
+    /** @type {FlyingObjectSingleplayerController} */
     controls;
 
     /** @type {THREE.Vector3} */
@@ -43,7 +43,7 @@ export default class CameraManager {
     /**
      * @param {THREE.PerspectiveCamera} camera 
      * @param {FlyingObject} gameObject 
-     * @param {FlyingObjectControls} controls
+     * @param {FlyingObjectSingleplayerController} controls
      */
     init(camera, gameObject, controls) {
         this.camera = camera;
