@@ -42,21 +42,23 @@ export default class WebRtcNetworkClient extends AbstractNetworkClient {
 
     _setupDataChannel() {
         this.dataChannel = this.peerConnection.createDataChannel('main-channel');
+        this.dataChannel.binaryType = "arraybuffer";
 
-        this.dataChannel.onopen = e => {
-            console.debug('DataChannel ready: ' + e);
+        this.dataChannel.onopen = event => {
+            console.debug('DataChannel ready: ' + event);
         };
   
-        this.dataChannel.onclose = e => {
-            console.debug('DataChannel closed' + e);
+        this.dataChannel.onclose = event => {
+            console.debug('DataChannel closed' + event);
         };
   
-        this.dataChannel.onerror = e => {
-            console.error('DataChannel error: ' + e);
+        this.dataChannel.onerror = event => {
+            console.error('DataChannel error: ' + event);
         };
   
-        this.dataChannel.onmessage = e => {
-            console.debug('DataChannel received message: ' + e.data);
+        this.dataChannel.onmessage = event => {
+            const byteArray = new Uint8Array(event.data);
+            console.debug('DataChannel received message');
         };
     }
 

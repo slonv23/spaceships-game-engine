@@ -1,61 +1,131 @@
 /**
- * @typedef {import('three').Vector3} Vector3
  * @typedef {import('three').Quaternion} Quaternion
  * @typedef {import('protobufjs').Type} Type
  * @typedef {import('protobufjs').Message} Message
  * @typedef {import('../models/AbstractModel').default} AbstractModel
  */
 
+import * as THREE from "three";
+import {lowerFirst} from "../../util/string";
+import InputAction from "../models/InputAction";
+import {config} from "../../globals";
+
 // eslint-disable-next-line no-undef
 const protobuf = require("protobufjs");
 
 export default class MessageSerializerDeserializer {
 
-    postConstruct({protoBundle}) {
-        this.protoBundle = protoBundle;
-        return this.loadProtoDefinitions();
-    }
+    modelNameToType = {};
 
-    loadProtoDefinitions() {
-        const root = protobuf.Root.fromJSON(this.protoBundle);
-
-        // TODO associate types with msg models (create map {[className] => [protobufType]})
-        this.HelloWorld = root.lookupType("helloworld.HelloWorld");
-        this.ObjectState = root.lookupType("multiplayer.ObjectState");
-        this.ControlsState = root.lookupType("multiplayer.ControlsState");
-        this.FloatVector = root.lookupType("multiplayer.FloatVector");
-        this.Quaternion = root.lookupType("multiplayer.Quaternion");
-        this.WorldState = root.lookupType("multiplayer.WorldState");
-        return Promise.resolve();
-        /*return protobuf.load(config.protoDir + "/helloworld.proto")
-                .then((root) => {
-                    this.HelloWorld = root.lookupType("helloworld.HelloWorld");
-                    return Promise.resolve();
-                });*/
-    }
-
-    /**
-     * @param {Buffer} buffer
-     * @returns {Array}
-     */
-    decodeMsgs(buffer) {
-        const msgs = [];
-        while (buffer.length) {
-            const size = buffer.readUInt32LE();
-            // TODO if received buffer size < msg size, save msg part into buffer and wait for another chunk of data
-
-            buffer = buffer.slice(4);
-            const decodedMsg = this.HelloWorld.decode(buffer.slice(0, size));
-            buffer = buffer.slice(size);
-
-            msgs.push(decodedMsg);
+    constructor() {
+        if (this._determineEndianness() === 'BE') {
+            throw new Error("Big endian platforms not supported");
         }
 
-        return msgs;
+        if (config.env === "node") {
+            this.Reader = protobuf.BufferReader;
+        } else {
+            this.Reader = protobuf.Reader;
+        }
+    }
+
+    async postConstruct({protoBundle, modelNames}) {
+        this.protoBundle = protoBundle;
+        await this.loadProtoDefinitions(modelNames);
+        this.defaultRootMessageType = this.RequestRoot;
+
+        // test
+        const inputAction = new InputAction();
+        inputAction.rollAngle = 5;
+        inputAction.yaw = 2;
+        inputAction.pitch = 3;
+        inputAction.rotationSpeed = 6;
+
+        const serialized = this.serialize(inputAction);
+        const deserializedRequest = this.deserializeRequest(serialized);
+        console.log(JSON.stringify(deserializedRequest));
+    }
+
+    loadProtoDefinitions(modelNames) {
+        const root = protobuf.Root.fromJSON(this.protoBundle);
+
+        modelNames.forEach(modelName => {
+            this.modelNameToType[modelName] = root.lookupType(`multiplayer.${modelName}`);
+        });
+
+        this.FloatVector = root.lookupType("multiplayer.FloatVector");
+        this.Quaternion = root.lookupType("multiplayer.Quaternion");
+        this.RequestRoot = root.lookupType("multiplayer.RequestRoot");
+        this.ResponseRoot = root.lookupType("multiplayer.ResponseRoot");
+
+        return Promise.resolve();
     }
 
     /**
-     * @param {Vector3} vector
+     * @param {AbstractModel} model
+     */
+    serialize(model) {
+        const modelName = model.constructor.name;
+        const type = this.modelNameToType[modelName];
+        if (!type) {
+            throw new Error(`Failed to get protobuf type associated with model ${modelName}`);
+        }
+
+        const payload = {};
+        for (const key in model) {
+            if (Object.prototype.hasOwnProperty.call(model, key)) {
+                const property = model[key];
+                if (property instanceof THREE.Vector3) {
+                    payload[key] = this.serializeVector(property);
+                } else if (property instanceof THREE.Quaternion) {
+                    payload[key] = this.serializeQuaternion(property);
+                } else {
+                    payload[key] = property;
+                }
+            }
+        }
+
+        const wrappedMessage = this._wrapMessage(this.defaultRootMessageType, lowerFirst(modelName), type.create(payload));
+
+        return this._toByteArray(this.defaultRootMessageType, wrappedMessage);
+    }
+
+    /**
+     * @param {Buffer|Uint8Array} buffer
+     */
+    deserializeRequest(buffer) {
+        return this.deserializeMessages(this.RequestRoot, buffer);
+    }
+
+    /**
+     * @param {Buffer|Uint8Array} buffer
+     */
+    deserializeResponse(buffer) {
+        return this.deserializeMessages(this.ResponseRoot, buffer);
+    }
+
+    /**
+     * @param {Type} msgType
+     * @param {Buffer|Uint8Array} buffer
+     * @returns {Array}
+     */
+    deserializeMessages(msgType, buffer) {
+        const messages = [];
+
+        let reader = new this.Reader(buffer);
+
+        while (reader.pos < buffer.length) {
+            // const size = this._readMessageSize(buffer);
+            // TODO if received buffer size < buffer size left unprocessed, save msg part into buffer and wait for another chunk of data
+            const msg = msgType.decodeDelimited(reader);
+            messages.push(msg);
+        }
+
+        return messages;
+    }
+
+    /**
+     * @param {THREE.Vector3} vector
      * @returns {*}
      */
     serializeVector(vector) {
@@ -63,7 +133,7 @@ export default class MessageSerializerDeserializer {
     }
 
     /**
-     * @param {Quaternion} quaternion
+     * @param {THREE.Quaternion} quaternion
      * @returns {*}
      */
     serializeQuaternion(quaternion) {
@@ -74,26 +144,73 @@ export default class MessageSerializerDeserializer {
     }
 
     /**
-     * @param {AbstractModel} model
+     * @param {Type} wrapperType
+     * @param {string} messageName
+     * @param {Message} message
+     * @returns {Message}
+     * @private
      */
-    serialize(model) {
-        // TODO iterate over keys, use hasOwnProperty to extract members to plane object
-        //  and convert vectors and quaternions to corresponding protobuf types
+    _wrapMessage(wrapperType, messageName, message) {
+        const wrappedMsg = wrapperType.create({[messageName]: message});
+        wrappedMsg.message = messageName;
+        return wrappedMsg;
     }
 
-    deserialize() {
-        // TODO ...
+    /**
+     * https://gist.github.com/TooTallNate/4750953
+     * @returns {string}
+     * @private
+     */
+    _determineEndianness() {
+        const a = new Uint32Array([0x12345678]);
+        const b = new Uint8Array(a.buffer, a.byteOffset, a.byteLength);
+        return b[0] === 0x12 ? 'BE' : 'LE';
+    }
+
+    /**
+     * Taken from https://github.com/feross/buffer/blob/master/index.js
+     * @param {Buffer|Uint8Array} buffer
+     * @private
+     */
+    _readMessageSize(buffer) {
+        return this._readVarInt(buffer)
+        /*if (buffer instanceof Uint8Array) {
+            return ((buffer[0]) |
+                (buffer[1] << 8) |
+                (buffer[2] << 16)) +
+                (buffer[3] * 0x1000000)
+        } else {
+            return buffer.readUInt32LE();
+        }*/
     }
 
     /**
      * @param {Type} msgType
      * @param {Message} msg
      * @returns {Uint8Array}
+     * @private
      */
     _toByteArray(msgType, msg) {
         const writer = new protobuf.Writer();
         msgType.encodeDelimited(msg, writer);
         return writer.finish();
+    }
+
+    /**
+     * https://github.com/protobufjs/protobuf.js/blob/master/src/reader.js#L86
+     * @param {Buffer|Uint8Array} buffer
+     * @returns {number}
+     * @private
+     */
+    _readVarInt(buffer) {
+        let value = 4294967295;
+        value = (buffer[0] & 127) >>> 0; if (buffer[1] < 128) return value;
+        value = (value | (buffer[1] & 127) <<  7) >>> 0; if (buffer[2] < 128) return value;
+        value = (value | (buffer[2] & 127) << 14) >>> 0; if (buffer[3] < 128) return value;
+        value = (value | (buffer[3] & 127) << 21) >>> 0; if (buffer[4] < 128) return value;
+        value = (value | (buffer[4] &  15) << 28) >>> 0;
+
+        return value;
     }
 
 }

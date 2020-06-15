@@ -1,11 +1,24 @@
-import {diContainer} from './globals';
+import {diContainer, config} from './globals';
 
-function createFrontendFacade(filepaths) {
-    diContainer.configure('assetManager', {filepaths});
-    return diContainer.get("frontendFacade");
+class Engine {
+
+    createFrontendFacade(filepaths) {
+        diContainer.configure('assetManager', {filepaths});
+        return diContainer.get("frontendFacade");
+    }
+
+    /**
+     * @param {('node'|'browser')} env
+     */
+    setEnv(env) {
+        config.env = env;
+    }
+
+    getDiContainer() {
+        return diContainer;
+    }
+
 }
 
-export {
-    diContainer,
-    createFrontendFacade,
-};
+const engine = new Engine();
+export default engine;

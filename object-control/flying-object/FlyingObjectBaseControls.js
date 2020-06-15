@@ -1,5 +1,6 @@
-import AbstractControls from "../AbstractControls";
 import * as THREE from "three";
+
+import AbstractControls from "../AbstractControls";
 import {createQuaternionForRotation} from "../../util/math";
 
 export default class FlyingObjectBaseControls extends AbstractControls {
