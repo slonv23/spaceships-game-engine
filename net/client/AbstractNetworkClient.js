@@ -1,4 +1,4 @@
-export default class AbstractNetworkClient {
+export default class AbstractNetworkClient extends EventTarget {
 
     /** @type {string} */
     serverIp;
@@ -6,11 +6,14 @@ export default class AbstractNetworkClient {
     /** @type {string} */
     signalingServerPort;
 
-    constructor(messageEncoderDecoder) {
-        this.messageEncoderDecoder = messageEncoderDecoder;
+    connect() {
+        throw new Error("Not implemented");
     }
 
-    connect() {
+    /**
+     * @param {Buffer|Uint8Array} buffer
+     */
+    sendMessage(buffer) {
         throw new Error("Not implemented");
     }
 

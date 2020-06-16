@@ -15,15 +15,24 @@ export default class WebRtcNetworkClient extends AbstractNetworkClient {
 
     async connect() {
         try {
-            this._createPeerConnection();
-            this._setupDataChannel();
+            await new Promise(async resolve => {
+                this._createPeerConnection();
+                this._setupDataChannel(resolve);
 
-            const offer = await this._createOffer();
-            const candidates = await this._gatherIceCandidates();
-            await this._negotiateConnection(offer, candidates);
+                const offer = await this._createOffer();
+                const candidates = await this._gatherIceCandidates();
+                await this._negotiateConnection(offer, candidates);
+            });
         } catch (e) {
             console.error("WebRtcNetworkClient: Failed to connect using WebRTC datachannel, error: " + e);
         }
+    }
+
+    /**
+     * @param {Buffer|Uint8Array} buffer
+     */
+    sendMessage(buffer) {
+        this.dataChannel.send(buffer.buffer);
     }
 
     _createPeerConnection() {
@@ -40,12 +49,13 @@ export default class WebRtcNetworkClient extends AbstractNetworkClient {
         }, false);
     }
 
-    _setupDataChannel() {
+    _setupDataChannel(onOpenCallback) {
         this.dataChannel = this.peerConnection.createDataChannel('main-channel');
         this.dataChannel.binaryType = "arraybuffer";
 
         this.dataChannel.onopen = event => {
             console.debug('DataChannel ready: ' + event);
+            onOpenCallback();
         };
 
         this.dataChannel.onclose = event => {
@@ -57,14 +67,14 @@ export default class WebRtcNetworkClient extends AbstractNetworkClient {
         };
 
         this.dataChannel.onmessage = event => {
-            const byteArray = new Uint8Array(event.data);
             console.debug('DataChannel received message');
+            this.dispatchEvent(new CustomEvent("message", {data: new Uint8Array(event.data)}));
         };
     }
 
     _createOffer() {
-        return this.peerConnection.createOffer().then((offer) => {
-            this.peerConnection.setLocalDescription(offer);
+        return this.peerConnection.createOffer().then(async (offer) => {
+            await this.peerConnection.setLocalDescription(offer);
             return offer;
         });
     }
@@ -85,7 +95,7 @@ export default class WebRtcNetworkClient extends AbstractNetworkClient {
     }
 
     /**
-     * @param {RTCSessionDescription} offer
+     * @param {RTCSessionDescriptionInit} offer
      * @param {RTCIceCandidate[]} candidates
      */
     async _negotiateConnection(offer, candidates) {
