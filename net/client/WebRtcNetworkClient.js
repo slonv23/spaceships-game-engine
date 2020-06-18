@@ -15,13 +15,19 @@ export default class WebRtcNetworkClient extends AbstractNetworkClient {
 
     async connect() {
         try {
-            await new Promise(async resolve => {
+            await new Promise((resolve, reject) => {
                 this._createPeerConnection();
                 this._setupDataChannel(resolve);
 
-                const offer = await this._createOffer();
-                const candidates = await this._gatherIceCandidates();
-                await this._negotiateConnection(offer, candidates);
+                (async () => {
+                    try {
+                        const offer = await this._createOffer();
+                        const candidates = await this._gatherIceCandidates();
+                        await this._negotiateConnection(offer, candidates);
+                    } catch (err) {
+                        reject(err);
+                    }
+                })();
             });
         } catch (e) {
             console.error("WebRtcNetworkClient: Failed to connect using WebRTC datachannel, error: " + e);
@@ -32,6 +38,7 @@ export default class WebRtcNetworkClient extends AbstractNetworkClient {
      * @param {Buffer|Uint8Array} buffer
      */
     sendMessage(buffer) {
+        debugger;
         this.dataChannel.send(buffer.buffer);
     }
 

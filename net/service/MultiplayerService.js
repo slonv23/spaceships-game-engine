@@ -35,7 +35,7 @@ export default class MultiplayerService {
         this.messageSerializerDeserializer = messageSerializerDeserializer;
     }
 
-    async postConstruct({client = "webRtcNetworkClient"}) {
+    async postConstruct({client = "webRtcNetworkClient"} = {}) {
         this.networkClient = await this.diContainer.get(client);
         this.networkClient.addEventListener("message", this._handleIncomingMessage)
     }

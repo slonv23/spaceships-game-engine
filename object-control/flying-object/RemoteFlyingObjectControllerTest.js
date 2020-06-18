@@ -2,7 +2,7 @@ import ObjectState from '../../net/models/ObjectState';
 import FlyingObject from '../../physics/object/FlyingObject';
 import browserKeycodes from "../../util/browser-keycodes";
 import InputAction from "../../net/models/InputAction";
-import RemoteFlyingObjectController from "./FlyingObjectRemoteController";
+import RemoteFlyingObjectController from "./RemoteFlyingObjectController";
 
 export default class RemoteFlyingObjectControllerTest extends RemoteFlyingObjectController {
 

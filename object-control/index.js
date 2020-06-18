@@ -1,8 +1,8 @@
 import {diContainer} from '../globals';
 
-import FlyingObjectSingleplayerController from "./flying-object/FlyingObjectController";
-import RemoteFlyingObjectController from './flying-object/FlyingObjectRemoteController';
-import RemoteFlyingObjectControllerTest from './flying-object/FlyingObjectRemoteControllerTest';
+import FlyingObjectSingleplayerController from "./flying-object/FlyingObjectSingleplayerController";
+import RemoteFlyingObjectController from './flying-object/RemoteFlyingObjectController';
+import RemoteFlyingObjectControllerTest from './flying-object/RemoteFlyingObjectControllerTest';
 
 export const controls = Object.freeze({
     FLYING_OBJECT_CONTROLLER: Symbol(),
