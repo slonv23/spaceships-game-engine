@@ -4,6 +4,7 @@
 
 import AbstractObject from "../physics/object/AbstractObject";
 import AbstractController from "../object-control/AbstractController";
+import FlyingObjectSingleplayerController from "../object-control/flying-object/FlyingObjectSingleplayerController";
 
 export default class StateManager {
 
@@ -37,7 +38,7 @@ export default class StateManager {
 
         let gameObject = new objectClass(objectId, model);
 
-        const controller = await this.diContainer.get(controllerRef);
+        const controller = await this.diContainer.get(controllerRef, true);
         if (!controller) {
             throw new Error('Component not found');
         }
@@ -47,8 +48,10 @@ export default class StateManager {
         }
 
         controller.init(gameObject);
+        this.controllers.push(controller);
+        this.controllersCount++;
 
-        return gameObject;
+        return controller;
     }
 
 }

@@ -64,7 +64,6 @@ export default class FrontendFacade {
 
         while (this.delta >= this.timestep) {
             this.stateManager.update(this.timestep);
-            this._controls.updateControlParams(this.timestep);
             this._cameraManager.updateCamera(this.timestep);
             this.delta -= this.timestep;
         }
