@@ -74,17 +74,17 @@ export default class FrontendFacade {
         requestAnimationFrame(this.gameLoop);
     };
 
-    async createObject(id, classRef, modelName) {
-        if (!(classRef.prototype instanceof AbstractObject)) {
+    async createObject(id, objectClass, modelName, controllerRef) {
+        if (!(objectClass.prototype instanceof AbstractObject)) {
             throw new Error('Class must be inherited from AbstractObject');
         }
 
-        let gameObject = new classRef(id, this.assetManager.getModel(modelName));
-        gameObject.object3d.matrixAutoUpdate = false;
-        this.renderer.scene.add(gameObject.object3d);
-        this.stateManager.addObject(gameObject);
+        const model = this.assetManager.getModel(modelName);
 
-        return gameObject;
+        const controller = await this.stateManager.createObject(id, objectClass, controllerRef, model);
+        this.renderer.scene.add(controller.gameObject.object3d);
+
+        return controller;
     }
 
     /**
@@ -98,28 +98,9 @@ export default class FrontendFacade {
         return sprite;
     }
 
-    /**
-     * @param {string|symbol} ref
-     * @param {AbstractObject} gameObject
-     */
-    async attachControls(ref, gameObject) {
-        const controls = await this.diContainer.get(ref);
-        if (!controls) {
-            throw new Error('Component not found');
-        }
-
-        if (!(controls instanceof AbstractController)) {
-            throw new Error('Class must be inherited from AbstractControls');
-        }
-
-        controls.init(gameObject, this.renderer);
-
-        this._controls = controls;
-    }
-
-    async attachCameraManager(ref) {
+    async attachCameraManager(cameraManagerRef, controller) {
         /** @type {CameraManager} */
-        const cameraManager = await this.diContainer.get(ref);
+        const cameraManager = await this.diContainer.get(cameraManagerRef);
         if (!cameraManager) {
             throw new Error('Component not found');
         }
@@ -129,7 +110,7 @@ export default class FrontendFacade {
             throw new Error('Class must be inherited from AbstractCameraManager');
         }*/
 
-        cameraManager.init(this.renderer.camera, this._controls.gameObject, this._controls);
+        cameraManager.init(this.renderer.camera, controller.gameObject, controller);
 
         this._cameraManager = cameraManager;
     }

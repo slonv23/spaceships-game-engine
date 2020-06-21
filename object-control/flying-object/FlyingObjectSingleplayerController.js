@@ -2,7 +2,6 @@
  * @typedef {import('three')} THREE
  * @typedef {import('../../frontend/input/Mouse').default} Mouse
  * @typedef {import('../../frontend/input/Keyboard').default} Keyboard
- * @typedef {import('../../frontend/Renderer').default} Renderer
  */
 
 import FlyingObject from "../../physics/object/FlyingObject";
@@ -16,9 +15,6 @@ export default class FlyingObjectSingleplayerController extends FlyingObjectBase
 
     /** @type {Keyboard} */
     keyboard;
-
-    /** @type {Renderer} */
-    renderer;
 
     /** user can change yaw and pitch by moving cursor to desired direction,
      * but only in specified limits */
@@ -48,11 +44,9 @@ export default class FlyingObjectSingleplayerController extends FlyingObjectBase
 
     /**
      * @param {FlyingObject} gameObject
-     * @param {Renderer} renderer
      */
-    init(gameObject, renderer) {
+    init(gameObject) {
         super.init(gameObject);
-        this.renderer = renderer;
         this.controlZInWorldCoords = gameObject.nz;
     }
 

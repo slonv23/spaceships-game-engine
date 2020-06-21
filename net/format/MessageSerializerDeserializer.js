@@ -157,7 +157,7 @@ export default class MessageSerializerDeserializer {
     }
 
     /**
-     * https://gist.github.com/TooTallNate/4750953
+     * @see https://gist.github.com/TooTallNate/4750953
      * @returns {string}
      * @private
      */
@@ -168,9 +168,10 @@ export default class MessageSerializerDeserializer {
     }
 
     /**
-     * Taken from https://github.com/feross/buffer/blob/master/index.js
+     * @see https://github.com/feross/buffer/blob/master/index.js
      * @param {Buffer|Uint8Array} buffer
      * @private
+     * @returns {number}
      */
     _readMessageSize(buffer) {
         return this._readVarInt(buffer)
@@ -197,7 +198,7 @@ export default class MessageSerializerDeserializer {
     }
 
     /**
-     * https://github.com/protobufjs/protobuf.js/blob/master/src/reader.js#L86
+     * @see https://github.com/protobufjs/protobuf.js/blob/master/src/reader.js#L86
      * @param {Buffer|Uint8Array} buffer
      * @returns {number}
      * @private

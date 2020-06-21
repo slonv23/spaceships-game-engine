@@ -1,7 +1,7 @@
 /**
  * @typedef {import('three')} THREE
  * @typedef {import('../../../physics/object/FlyingObject').default} FlyingObject
- * @typedef {import('../../../object-control/flying-object/FlyingObjectControls').default} FlyingObjectSingleplayerController
+ * @typedef {import('../../../object-control/flying-object/FlyingObjectBaseController').default} FlyingObjectBaseController
  */
 
 import * as THREE from 'three';
@@ -20,8 +20,8 @@ export default class CameraManager {
     /** @type {FlyingObject} */
     gameObject
 
-    /** @type {FlyingObjectSingleplayerController} */
-    controls;
+    /** @type {FlyingObjectBaseController} */
+    controller;
 
     /** @type {THREE.Vector3} */
     cameraX = new THREE.Vector3();
@@ -43,31 +43,31 @@ export default class CameraManager {
     /**
      * @param {THREE.PerspectiveCamera} camera 
      * @param {FlyingObject} gameObject 
-     * @param {FlyingObjectSingleplayerController} controls
+     * @param {FlyingObjectBaseController} controller
      */
-    init(camera, gameObject, controls) {
+    init(camera, gameObject, controller) {
         this.camera = camera;
         this.gameObject = gameObject;
-        this.controls = controls;
+        this.controller = controller;
         this.camera.matrixWorld.extractBasis(this.cameraX, this.cameraY, this.cameraZ);
     }
 
     updateCamera(delta) {
-        let cameraAndObjectDirectionsDiff = this.controls.gameObject.nz.clone().sub(this.cameraZ);
+        let cameraAndObjectDirectionsDiff = this.controller.gameObject.nz.clone().sub(this.cameraZ);
 
-        this.cameraQuaternion.multiplyQuaternions(createQuaternionForRotation(this.cameraZ, this.controls.gameObject.nz), this.cameraQuaternion);
+        this.cameraQuaternion.multiplyQuaternions(createQuaternionForRotation(this.cameraZ, this.controller.gameObject.nz), this.cameraQuaternion);
         // this.cameraZ.set(0, 0, 1).applyQuaternion(this.cameraQuaternion);
-        this.cameraZ.copy(this.controls.gameObject.nz);
+        this.cameraZ.copy(this.controller.gameObject.nz);
         this.cameraY.set(0, 1, 0).applyQuaternion(this.cameraQuaternion);
         this.cameraX.set(1, 0, 0).applyQuaternion(this.cameraQuaternion);
 
-        const rotationDirectionBasedOnCameraAxes = this.cameraX.clone().multiplyScalar(this.controls.wYawTarget).add(this.cameraY.clone().multiplyScalar(this.controls.wPitchTarget));
-        const angleBtwControlAndCameraAxes = rotationDirectionBasedOnCameraAxes.angleTo(this.controls.rotationDirection);
+        const rotationDirectionBasedOnCameraAxes = this.cameraX.clone().multiplyScalar(this.controller.wYawTarget).add(this.cameraY.clone().multiplyScalar(this.controller.wPitchTarget));
+        const angleBtwControlAndCameraAxes = rotationDirectionBasedOnCameraAxes.angleTo(this.controller.rotationDirection);
 
         // rotate camera
         if (Math.abs(angleBtwControlAndCameraAxes) > 0.0001) {
-            const direction = -Math.sign(rotationDirectionBasedOnCameraAxes.dot(this.controls.normalToRotationDirection));
-            const acceleration = this.controls.rotationSpeed !== 0 ? 5e-7 : 1e-6;
+            const direction = -Math.sign(rotationDirectionBasedOnCameraAxes.dot(this.controller.normalToRotationDirection));
+            const acceleration = this.controller.rotationSpeed !== 0 ? 5e-7 : 1e-6;
             
             const result = linearTransition(direction * angleBtwControlAndCameraAxes, this.rotationSpeed, acceleration, delta);
             this.rotationSpeed = result.speed;

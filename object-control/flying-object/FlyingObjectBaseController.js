@@ -1,3 +1,7 @@
+/**
+ * @typedef {import('../../physics/object/FlyingObject').default} FlyingObject
+ */
+
 import * as THREE from "three";
 
 import AbstractController from "../AbstractController";

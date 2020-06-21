@@ -17,6 +17,7 @@ export default class AbstractObject {
     constructor(id, object3d) {
         this.id = id;
         this.object3d = object3d;
+        this.object3d.matrixAutoUpdate = false;
     }
 
     // eslint-disable-next-line no-unused-vars

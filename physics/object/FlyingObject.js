@@ -64,11 +64,13 @@ export default class FlyingObject extends AbstractObject {
         this.position.addScaledVector(this.nz, this.velocity.z * dt);
 
         /** Update object3d */
-        this.object3d.matrix.makeBasis(this.nx, this.ny, this.nz);
-        this.object3d.position.copy(this.position);
-        // this.object3d.matrix.makeRotationFromQuaternion(this.quaternion);
+        if (this.object3d) {
+            this.object3d.matrix.makeBasis(this.nx, this.ny, this.nz);
+            this.object3d.position.copy(this.position);
+            // this.object3d.matrix.makeRotationFromQuaternion(this.quaternion);
 
-        this.object3d.matrix.setPosition(this.position);
+            this.object3d.matrix.setPosition(this.position);
+        }
     }
 
     updateAxes() {
