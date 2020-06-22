@@ -7,7 +7,6 @@
 
 import * as THREE from "three";
 import {lowerFirst} from "../../util/string";
-import InputAction from "../models/InputAction";
 import {config} from "../../globals";
 
 // eslint-disable-next-line no-undef
@@ -32,18 +31,6 @@ export default class MessageSerializerDeserializer {
     async postConstruct({protoBundle, modelNames}) {
         this.protoBundle = protoBundle;
         await this.loadProtoDefinitions(modelNames);
-        this.defaultRootMessageType = this.RequestRoot;
-
-        // test:
-        // const inputAction = new InputAction();
-        // inputAction.rollAngle = 5;
-        // inputAction.yaw = 2;
-        // inputAction.pitch = 3;
-        // inputAction.rotationSpeed = 6;
-        //
-        // const serialized = this.serialize(inputAction);
-        // const deserializedRequest = this.deserializeRequest(serialized);
-        // console.log(JSON.stringify(deserializedRequest));
     }
 
     loadProtoDefinitions(modelNames) {
@@ -63,8 +50,29 @@ export default class MessageSerializerDeserializer {
 
     /**
      * @param {AbstractModel} model
+     * @param {object} [wrapperProps]
+     * @returns {Uint8Array}
      */
-    serialize(model) {
+    serializeResponse(model, wrapperProps = {}) {
+        return this.serialize(model, this.ResponseRoot, wrapperProps);
+    }
+
+    /**
+     * @param {AbstractModel} model
+     * @param {object} [wrapperProps]
+     * @returns {Uint8Array}
+     */
+    serializeRequest(model, wrapperProps = {}) {
+        return this.serialize(model, this.RequestRoot, wrapperProps);
+    }
+
+    /**
+     * @param {AbstractModel} model
+     * @param {Type} wrapperType
+     * @param {object} [wrapperProps]
+     * @returns {Uint8Array}
+     */
+    serialize(model, wrapperType, wrapperProps = {}) {
         const modelName = model.constructor.name;
         const type = this.modelNameToType[modelName];
         if (!type) {
@@ -85,13 +93,14 @@ export default class MessageSerializerDeserializer {
             }
         }
 
-        const wrappedMessage = this._wrapMessage(this.defaultRootMessageType, lowerFirst(modelName), type.create(payload));
+        const wrappedMessage = this._wrapMessage(wrapperType, lowerFirst(modelName), type.create(payload), wrapperProps);
 
-        return this._toByteArray(this.defaultRootMessageType, wrappedMessage);
+        return this._toByteArray(wrapperType, wrappedMessage);
     }
 
     /**
      * @param {Buffer|Uint8Array} buffer
+     * @returns {Array<*>}
      */
     deserializeRequest(buffer) {
         return this.deserializeMessages(this.RequestRoot, buffer);
@@ -99,6 +108,7 @@ export default class MessageSerializerDeserializer {
 
     /**
      * @param {Buffer|Uint8Array} buffer
+     * @returns {Array<*>}
      */
     deserializeResponse(buffer) {
         return this.deserializeMessages(this.ResponseRoot, buffer);
@@ -147,12 +157,17 @@ export default class MessageSerializerDeserializer {
      * @param {Type} wrapperType
      * @param {string} messageName
      * @param {Message} message
+     * @param {object} [wrapperProps]
      * @returns {Message}
      * @private
      */
-    _wrapMessage(wrapperType, messageName, message) {
+    _wrapMessage(wrapperType, messageName, message, wrapperProps = {}) {
         const wrappedMsg = wrapperType.create({[messageName]: message});
         wrappedMsg.message = messageName;
+        for (const key in wrapperProps) {
+            wrappedMsg[key] = wrapperProps[key];
+        }
+
         return wrappedMsg;
     }
 

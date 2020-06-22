@@ -4,7 +4,6 @@
 
 import AbstractObject from "../physics/object/AbstractObject";
 import AbstractController from "../object-control/AbstractController";
-import FlyingObjectSingleplayerController from "../object-control/flying-object/FlyingObjectSingleplayerController";
 
 export default class StateManager {
 
@@ -13,6 +12,9 @@ export default class StateManager {
 
     /** @type {number} */
     controllersCount = 0;
+
+    /** @type {number} */
+    lastObjectId = 0;
 
     constructor(diContainer) {
         this.diContainer = diContainer;
@@ -25,13 +27,17 @@ export default class StateManager {
     }
 
     /**
-     * @param {string} objectId
-     * @param {object} objectClass
-     * @param {string} controllerRef
+     * @param {number|null} objectId - if 'null' will be auto-generated
+     * @param {Function} objectClass
+     * @param {symbol|string} controllerRef
      * @param {object} model
      * @returns {Promise<AbstractController>}
      */
     async createObject(objectId, objectClass, controllerRef, model = null) {
+        if (!objectId) {
+            objectId = ++this.lastObjectId;
+        }
+
         if (!(objectClass.prototype instanceof AbstractObject)) {
             throw new Error('Class must be inherited from AbstractObject');
         }

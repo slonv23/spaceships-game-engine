@@ -48,7 +48,7 @@ export default class MultiplayerService {
         const spawnRequest = new SpawnRequest();
         spawnRequest.nickName = "Illia";
 
-        this.networkClient.sendMessage(this.messageSerializerDeserializer.serialize(spawnRequest));
+        this.networkClient.sendMessage(this.messageSerializerDeserializer.serializeRequest(spawnRequest));
 
         return new Promise(resolve => {
             this._onSpawned = resolve;
