@@ -2,12 +2,12 @@
  * @typedef {import('three').Quaternion} Quaternion
  * @typedef {import('protobufjs').Type} Type
  * @typedef {import('protobufjs').Message} Message
- * @typedef {import('../models/AbstractModel').default} AbstractModel
  */
 
 import * as THREE from "three";
 import {lowerFirst} from "../../util/string";
 import {config} from "../../globals";
+import AbstractModel from "../models/AbstractModel";
 
 // eslint-disable-next-line no-undef
 const protobuf = require("protobufjs");
@@ -79,23 +79,36 @@ export default class MessageSerializerDeserializer {
             throw new Error(`Failed to get protobuf type associated with model ${modelName}`);
         }
 
-        const payload = {};
-        for (const key in model) {
-            if (Object.prototype.hasOwnProperty.call(model, key)) {
-                const property = model[key];
-                if (property instanceof THREE.Vector3) {
-                    payload[key] = this.serializeVector(property);
-                } else if (property instanceof THREE.Quaternion) {
-                    payload[key] = this.serializeQuaternion(property);
-                } else {
-                    payload[key] = property;
-                }
-            }
-        }
+        const payload = this._buildPayload(model);
 
         const wrappedMessage = this._wrapMessage(wrapperType, lowerFirst(modelName), type.create(payload), wrapperProps);
 
         return this._toByteArray(wrapperType, wrappedMessage);
+    }
+
+    _buildPayload(model) {
+        const payload = {};
+        for (const key in model) {
+            if (Object.prototype.hasOwnProperty.call(model, key)) {
+                payload[key] = this._buildProperty(model[key]);
+            }
+        }
+
+        return payload;
+    }
+
+    _buildProperty(property) {
+        if (Array.isArray(property)) {
+            return property.map(propElem => this._buildProperty(propElem));
+        } else if (property instanceof AbstractModel) {
+            return this._buildPayload(property);
+        } else if (property instanceof THREE.Vector3) {
+            return this.serializeVector(property);
+        } else if (property instanceof THREE.Quaternion) {
+            return this.serializeQuaternion(property);
+        } else {
+            return property;
+        }
     }
 
     /**
