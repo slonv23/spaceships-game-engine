@@ -160,8 +160,8 @@ export default class MessageSerializerDeserializer {
      * @returns {*}
      */
     serializeQuaternion(quaternion) {
-        const real = this.FloatVector.create({x: quaternion.x, y: quaternion.y, z: quaternion.z});
-        const imag = quaternion.w;
+        const imag = this.FloatVector.create({x: quaternion.x, y: quaternion.y, z: quaternion.z});
+        const real = quaternion.w;
 
         return this.Quaternion.create({real, imag});
     }
