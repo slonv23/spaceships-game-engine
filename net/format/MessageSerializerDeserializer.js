@@ -142,7 +142,9 @@ export default class MessageSerializerDeserializer {
             // const size = this._readMessageSize(buffer);
             // TODO if received buffer size < buffer size left unprocessed, save msg part into buffer and wait for another chunk of data
             const msg = msgType.decodeDelimited(reader);
-            messages.push(this._mapPayloadToModel(msg[msg.message]));
+            const model = this._mapPayloadToModel(msg[msg.message]);
+            model._requestId = msg.requestId;
+            messages.push(model);
         }
 
         return messages;
