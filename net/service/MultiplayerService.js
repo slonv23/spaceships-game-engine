@@ -55,15 +55,20 @@ export default class MultiplayerService {
         });
     }
 
-    _handleIncomingMessage(event) {
-        const message = this.messageSerializerDeserializer.deserializeResponse(event.data);
-        const type = message.constructor.name;
-        switch (type) {
-            case "SpawnResponse":
-                this.assignedObjectId = message.assignedObjectId;
-                this._onSpawned && this._onSpawned(this.assignedObjectId);
-                break;
+    _handleIncomingMessage = (event) => {
+        const messages = this.messageSerializerDeserializer.deserializeResponse(event.detail);
+        for (let i = 0; i < messages.length; i++) {
+            const message = messages[i];
+            const type = message.constructor.name;
+
+            switch (type) {
+                case "SpawnResponse":
+                    this.assignedObjectId = message.assignedObjectId;
+                    this._onSpawned && this._onSpawned(this.assignedObjectId);
+                    break;
+            }
         }
-    }
+
+    };
 
 }

@@ -14,7 +14,7 @@ const protobuf = require("protobufjs");
 
 export default class MessageSerializerDeserializer {
 
-    modelNameToType = {};
+    modelNameToClass = {};
 
     constructor() {
         if (this._determineEndianness() === 'BE') {
@@ -28,16 +28,17 @@ export default class MessageSerializerDeserializer {
         }
     }
 
-    async postConstruct({protoBundle, modelNames}) {
+    async postConstruct({protoBundle, models}) {
         this.protoBundle = protoBundle;
-        await this.loadProtoDefinitions(modelNames);
+        await this.loadProtoDefinitions(models);
     }
 
-    loadProtoDefinitions(modelNames) {
+    loadProtoDefinitions(models) {
         const root = protobuf.Root.fromJSON(this.protoBundle);
 
-        modelNames.forEach(modelName => {
-            this.modelNameToType[modelName] = root.lookupType(`multiplayer.${modelName}`);
+        models.forEach(model => {
+            this.modelNameToClass[model.name] = model;
+            model._protobufType = root.lookupType(`multiplayer.${model.name}`);
         });
 
         this.FloatVector = root.lookupType("multiplayer.FloatVector");
@@ -74,7 +75,7 @@ export default class MessageSerializerDeserializer {
      */
     serialize(model, wrapperType, wrapperProps = {}) {
         const modelName = model.constructor.name;
-        const type = this.modelNameToType[modelName];
+        const type = this.modelNameToClass[modelName]._protobufType;
         if (!type) {
             throw new Error(`Failed to get protobuf type associated with model ${modelName}`);
         }
@@ -141,6 +142,16 @@ export default class MessageSerializerDeserializer {
             // const size = this._readMessageSize(buffer);
             // TODO if received buffer size < buffer size left unprocessed, save msg part into buffer and wait for another chunk of data
             const msg = msgType.decodeDelimited(reader);
+
+            // Vector3 Quaternion AbstractModel
+            const modelClass = this.modelNameToClass[msg[msg.message].constructor.name];
+            const model = new modelClass();
+            debugger;
+            for (let key in msg[msg.message]) {
+                const value = msg[msg.message][key];
+                //model[key]
+            }
+
             messages.push(msg);
         }
 
