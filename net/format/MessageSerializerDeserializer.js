@@ -142,20 +142,40 @@ export default class MessageSerializerDeserializer {
             // const size = this._readMessageSize(buffer);
             // TODO if received buffer size < buffer size left unprocessed, save msg part into buffer and wait for another chunk of data
             const msg = msgType.decodeDelimited(reader);
-
-            // Vector3 Quaternion AbstractModel
-            const modelClass = this.modelNameToClass[msg[msg.message].constructor.name];
-            const model = new modelClass();
-            debugger;
-            for (let key in msg[msg.message]) {
-                const value = msg[msg.message][key];
-                //model[key]
-            }
-
-            messages.push(msg);
+            messages.push(this._mapPayloadToModel(msg[msg.message]));
         }
 
         return messages;
+    }
+
+    _mapPayloadToModel(payload) {
+        debugger;
+        const modelName = payload.constructor.name;
+        const model = new this.modelNameToClass[modelName]();
+
+        for (const key in payload) {
+            if (Object.prototype.hasOwnProperty.call(payload, key)) {
+                model[key] = this._mapPayloadPropertyToIntl(payload[key]);
+            }
+        }
+
+        return model;
+    }
+
+    _mapPayloadPropertyToIntl(property) {
+        const name = property.constructor.name;
+
+        if (name === "Array") {
+            return property.map(propElem => this._mapPayloadToModel(propElem));
+        } else if (name === "FloatVector") {
+            return new THREE.Vector3(property.x, property.y, property.z);
+        } else if (name === "Quaternion") {
+            return new THREE.Quaternion(property.imag.x, property.imag.y, property.imag.z, property.real);
+        } else if (property instanceof Object) {
+            return this._mapPayloadToModel(property);
+        } else {
+            return property;
+        }
     }
 
     /**
