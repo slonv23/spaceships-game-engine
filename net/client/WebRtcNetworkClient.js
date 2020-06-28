@@ -38,7 +38,6 @@ export default class WebRtcNetworkClient extends AbstractNetworkClient {
      * @param {Buffer|Uint8Array} buffer
      */
     sendMessage(buffer) {
-        debugger;
         this.dataChannel.send(buffer.buffer);
     }
 
@@ -74,8 +73,8 @@ export default class WebRtcNetworkClient extends AbstractNetworkClient {
         };
 
         this.dataChannel.onmessage = event => {
-            console.debug('DataChannel received message');
-            this.dispatchEvent(new CustomEvent("message", {detail: new Uint8Array(event.data)}));
+            console.debug('DataChannel received message(s)');
+            this.dispatchEvent(new CustomEvent("messages", {detail: new Uint8Array(event.data)}));
         };
     }
 

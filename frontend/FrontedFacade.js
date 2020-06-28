@@ -73,19 +73,6 @@ export default class FrontendFacade {
         requestAnimationFrame(this.gameLoop);
     };
 
-    async createObject(id, objectClass, modelName, controllerRef) {
-        if (!(objectClass.prototype instanceof AbstractObject)) {
-            throw new Error('Class must be inherited from AbstractObject');
-        }
-
-        const model = this.assetManager.getModel(modelName);
-
-        const controller = await this.stateManager.createObject(id, objectClass, controllerRef, model);
-        this.renderer.scene.add(controller.gameObject.object3d);
-
-        return controller;
-    }
-
     /**
      * @param {string} spriteName
      * @returns {Promise<THREE.Sprite>}

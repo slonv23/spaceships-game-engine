@@ -3,6 +3,8 @@
  * @typedef {import('../format/MessageSerializerDeserializer').default} MessageSerializerDeserializer
  * @typedef {import('di-container-js').default} DiContainer
  * @typedef {import('../models/SpawnResponse').default} SpawnResponse
+ * @typedef {import('../models/WorldState').default} WorldState
+ * @typedef {import('../../state/StateManager').default} StateManager
  */
 import SpawnRequest from '../models/SpawnRequest';
 
@@ -10,34 +12,32 @@ export default class MultiplayerService {
 
     /** @type {DiContainer} diContainer */
     diContainer;
-
     /** @type {AbstractNetworkClient} networkClient */
     networkClient;
-
     /** @type {MessageSerializerDeserializer} messageSerializerDeserializer */
     messageSerializerDeserializer;
-
+    /** @type {string} */
+    assignedObjectId;
     /**
-     * @type {function}
+     * @type {Function}
      * @private
      */
     _onSpawned;
 
-    /** @type {string} */
-    assignedObjectId;
-
     /**
      * @param {DiContainer} diContainer
      * @param {MessageSerializerDeserializer} messageSerializerDeserializer
+     * @param {StateManager} stateManager
      */
-    constructor(diContainer, messageSerializerDeserializer) {
+    constructor(diContainer, messageSerializerDeserializer, stateManager) {
         this.diContainer = diContainer;
         this.messageSerializerDeserializer = messageSerializerDeserializer;
+        this.stateManager = stateManager;
     }
 
     async postConstruct({client = "webRtcNetworkClient"} = {}) {
         this.networkClient = await this.diContainer.get(client);
-        this.networkClient.addEventListener("message", this._handleIncomingMessage)
+        //this.networkClient.addEventListener("message", this._handleIncomingMessage)
     }
 
     connect() {
@@ -48,6 +48,7 @@ export default class MultiplayerService {
         const spawnRequest = new SpawnRequest();
         spawnRequest.nickName = "Illia";
 
+        this.networkClient.addEventListener("messages", this._handleMessagesBeforeSpawn);
         this.networkClient.sendMessage(this.messageSerializerDeserializer.serializeRequest(spawnRequest));
 
         return new Promise(resolve => {
@@ -55,20 +56,34 @@ export default class MultiplayerService {
         });
     }
 
-    _handleIncomingMessage = (event) => {
+    startStateSync() {
+        this.networkClient.addEventListener("messages", this._handleMessagesAfterSpawned);
+    }
+
+    _handleMessagesBeforeSpawn = (event) => {
+        const messages = this.messageSerializerDeserializer.deserializeResponse(event.detail);
+        for (let i = 0; i < messages.length; i++) {
+            if (messages[i].constructor.name === "SpawnResponse") {
+                this.networkClient.removeEventListener("messages", this._handleMessagesBeforeSpawn);
+                this.assignedObjectId = messages[i].assignedObjectId;
+                this._onSpawned && this._onSpawned(this.assignedObjectId);
+                break;
+            }
+        }
+    };
+
+    _handleMessagesAfterSpawned = (event) => {
         const messages = this.messageSerializerDeserializer.deserializeResponse(event.detail);
         for (let i = 0; i < messages.length; i++) {
             const message = messages[i];
             const type = message.constructor.name;
 
             switch (type) {
-                case "SpawnResponse":
-                    this.assignedObjectId = message.assignedObjectId;
-                    this._onSpawned && this._onSpawned(this.assignedObjectId);
+                case "WorldState":
+                    this.stateManager.updateWorld(message);
                     break;
             }
         }
-
     };
 
 }

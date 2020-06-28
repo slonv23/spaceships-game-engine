@@ -2,7 +2,7 @@
 
 import Emitter from '../../util/Emitter';
 
-export default class AbstractNetworkClient  extends Emitter {
+export default class AbstractNetworkClient extends Emitter {
 
     /** @type {string} */
     serverIp;
