@@ -5,6 +5,7 @@
  */
 
 import FlyingObjectSingleplayerController from "./FlyingObjectSingleplayerController";
+import {syncStateMixin} from "./_mixins";
 
 export default class FlyingObjectMultiplayerController extends FlyingObjectSingleplayerController {
 
@@ -12,12 +13,19 @@ export default class FlyingObjectMultiplayerController extends FlyingObjectSingl
      * @param {number} delta
      */
     updateControlParams(delta) {
+        return;
         this._applyUserInputForRotation();
         this._applyUserInputForAngularVelocities();
 
         super.updateControlParams(delta);
 
         this._correctObjectRollAngle();
+    }
+
+    update(delta) {
+        return;
+        //this.gameObject.update(delta);
+        //this.updateControlParams(delta);
     }
 
     _applyUserInputForRotation() {
@@ -46,3 +54,5 @@ export default class FlyingObjectMultiplayerController extends FlyingObjectSingl
     }
 
 }
+
+Object.assign(FlyingObjectMultiplayerController.prototype, syncStateMixin);

@@ -34,6 +34,14 @@ export default class FlyingObjectBaseController extends AbstractController {
     /** @type {number} */
     rotationSpeed = 0;
 
+    static calculateRotationDirection(nx, ny, yaw, pitch) {
+        if ((yaw*yaw + pitch*pitch) < 0.0001) {
+            return ny.clone();
+        } else {
+            return nx.clone().multiplyScalar(yaw).add(ny.clone().multiplyScalar(pitch));
+        }
+    }
+
     /**
      * @param {FlyingObject} gameObject
      */
@@ -71,7 +79,9 @@ export default class FlyingObjectBaseController extends AbstractController {
 
     _updateAngularVelocities() {
         /** @type {THREE.Vector3} */
-        this.rotationDirection = this.controlX.clone().multiplyScalar(this.wYawTarget).add(this.controlY.clone().multiplyScalar(this.wPitchTarget));
+        this.rotationDirection = FlyingObjectBaseController.calculateRotationDirection(this.controlX, this.controlY,
+                                                                                       this.wYawTarget, this.wPitchTarget);
+        //this.rotationDirection = this.controlX.clone().multiplyScalar(this.wYawTarget).add(this.controlY.clone().multiplyScalar(this.wPitchTarget));
         this.rotationDirection.applyQuaternion(this.controlsQuaternion);
 
         this.gameObject.angularVelocity.y = this.gameObject.ny.dot(this.rotationDirection);

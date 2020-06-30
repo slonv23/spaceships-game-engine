@@ -80,6 +80,7 @@ export default class MultiplayerService {
 
             switch (type) {
                 case "WorldState":
+                    console.log("Received WorldState msg");
                     this.stateManager.updateWorld(message);
                     break;
             }

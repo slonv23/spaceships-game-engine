@@ -43,6 +43,14 @@ export default class FrontendFacade {
         this.diContainer = diContainer;
     }
 
+    postConstruct() {
+        this.stateManager.addEventListener("object-created", (event) => {
+            /** @type {AbstractObject} */
+            const gameObject = event.detail;
+            this.renderer.scene.add(gameObject.object3d);
+        })
+    }
+
     startGameLoop() {
         requestAnimationFrame((timestamp) => {
             this.lastFrameTimeMs = timestamp;

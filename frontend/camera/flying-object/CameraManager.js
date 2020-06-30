@@ -7,6 +7,7 @@
 import * as THREE from 'three';
 import FlyingObject from "../../../physics/object/FlyingObject";
 import {linearTransition, createQuaternionForRotation} from "../../../util/math";
+import FlyingObjectBaseController from "../../../object-control/flying-object/FlyingObjectBaseController";
 
 export default class CameraManager {
 
@@ -53,6 +54,7 @@ export default class CameraManager {
     }
 
     updateCamera(delta) {
+        return;
         let cameraAndObjectDirectionsDiff = this.controller.gameObject.nz.clone().sub(this.cameraZ);
 
         this.cameraQuaternion.multiplyQuaternions(createQuaternionForRotation(this.cameraZ, this.controller.gameObject.nz), this.cameraQuaternion);
@@ -61,8 +63,10 @@ export default class CameraManager {
         this.cameraY.set(0, 1, 0).applyQuaternion(this.cameraQuaternion);
         this.cameraX.set(1, 0, 0).applyQuaternion(this.cameraQuaternion);
 
-        const rotationDirectionBasedOnCameraAxes = this.cameraX.clone().multiplyScalar(this.controller.wYawTarget).add(this.cameraY.clone().multiplyScalar(this.controller.wPitchTarget));
-        const angleBtwControlAndCameraAxes = rotationDirectionBasedOnCameraAxes.angleTo(this.controller.rotationDirection);
+        //const rotationDirectionBasedOnCameraAxes = this.cameraX.clone().multiplyScalar(this.controller.wYawTarget).add(this.cameraY.clone().multiplyScalar(this.controller.wPitchTarget));
+        const rotationDirectionBasedOnCameraAxes = FlyingObjectBaseController.calculateRotationDirection(this.cameraX, this.cameraY,
+                                                                                                         this.controller.wYawTarget, this.controller.wPitchTarget);
+        const angleBtwControlAndCameraAxes = 0; // rotationDirectionBasedOnCameraAxes.angleTo(this.controller.rotationDirection);
 
         // rotate camera
         if (Math.abs(angleBtwControlAndCameraAxes) > 0.0001) {

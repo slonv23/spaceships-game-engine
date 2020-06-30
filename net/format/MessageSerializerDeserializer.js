@@ -151,7 +151,6 @@ export default class MessageSerializerDeserializer {
     }
 
     _mapPayloadToModel(payload) {
-        debugger;
         const modelName = payload.constructor.name;
         const model = new this.modelNameToClass[modelName]();
 

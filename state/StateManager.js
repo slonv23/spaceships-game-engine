@@ -2,32 +2,37 @@
  * @typedef {import('../object-control/AbstractController').default} AbstractController
  * @typedef {import('../net/models/WorldState').default} WorldState
  * @typedef {import('../net/models/ObjectState').default} ObjectState
+ * @typedef {import('../frontend/asset-management/AssetManager').default} AssetManager
+ * @typedef {import('di-container-js').default} DiContainer
  */
 
 import AbstractObject from "../physics/object/AbstractObject";
 import AbstractController from "../object-control/AbstractController";
+import Emitter from "../util/Emitter";
 
-export default class StateManager {
+export default class StateManager extends Emitter {
 
     /** @type {AbstractController[]} */
     controllers = [];
-
     /** @type {object.<string, AbstractController>} */
     controllersByObjectId = {};
-
+    /** @type {object.<string, object>} */
     gameObjectTypes = {};
-
     /** @type {number} */
     controllersCount = 0;
-
     /** @type {number} */
     lastObjectId = 0;
-
     /** @type {string} */
     defaultGameObjectType;
+    /** @type {DiContainer} */
+    diContainer;
+    /** @type {AssetManager} */
+    assetManager;
 
-    constructor(diContainer) {
+    constructor(diContainer, assetManager) {
+        super();
         this.diContainer = diContainer;
+        this.assetManager = assetManager;
     }
 
     update(delta) {
@@ -55,7 +60,8 @@ export default class StateManager {
         if (!(gameObjectDef.objectClass.prototype instanceof AbstractObject)) {
             throw new Error('Class must be inherited from AbstractObject');
         }
-        let gameObject = new gameObjectDef.objectClass(objectId, gameObjectDef.model);
+        let gameObject = new gameObjectDef.objectClass(objectId, this.assetManager.getModel(gameObjectDef.model));
+        this.dispatchEvent(new CustomEvent("object-created", {detail: gameObject}));
 
         let controller = await this.diContainer.get(controllerRef ? controllerRef : gameObjectDef.defaultControllerRef, true);
         if (!controller) {
@@ -77,7 +83,8 @@ export default class StateManager {
      * @param {WorldState} worldState
      */
     updateWorld(worldState) {
-        for (let i = 0; i < worldState.objectStates; i++) {
+        const worldObjectsCount = worldState.objectStates.length;
+        for (let i = 0; i < worldObjectsCount; i++) {
             /** @type {ObjectState} */
             const objectState = worldState.objectStates[i];
             let controller = this.controllersByObjectId[objectState.id];
@@ -85,6 +92,7 @@ export default class StateManager {
                 const gameObjectType = objectState.objectType ? objectState.objectType : this.defaultGameObjectType;
                 controller = this.createObject(objectState.id, gameObjectType);
             }
+            console.log(JSON.stringify(objectState));
 
             controller.sync(objectState);
         }
