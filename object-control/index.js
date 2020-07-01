@@ -16,4 +16,3 @@ diContainer.registerClass(controllers.FLYING_OBJECT_SP_CONTROLLER, FlyingObjectS
 diContainer.registerClass(controllers.FLYING_OBJECT_MP_CONTROLLER, FlyingObjectMultiplayerController, {enableAxesHelper: false});
 diContainer.registerClass(controllers.REMOTE_FLYING_OBJECT_CONTROLLER, RemoteFlyingObjectController);
 diContainer.registerClass(controllers.REMOTE_FLYING_OBJECT_CONTROLLER_TEST, RemoteFlyingObjectControllerTest);
-

@@ -35,11 +35,7 @@ export default class FlyingObjectBaseController extends AbstractController {
     rotationSpeed = 0;
 
     static calculateRotationDirection(nx, ny, yaw, pitch) {
-        if ((yaw*yaw + pitch*pitch) < 0.0001) {
-            return ny.clone();
-        } else {
-            return nx.clone().multiplyScalar(yaw).add(ny.clone().multiplyScalar(pitch));
-        }
+        return nx.clone().multiplyScalar(yaw).add(ny.clone().multiplyScalar(pitch));
     }
 
     /**
@@ -61,6 +57,7 @@ export default class FlyingObjectBaseController extends AbstractController {
      * @protected
      */
     _rotateControlAxes(angle) {
+        // TODO abandon controlX and controlY vectors and modify control quaternion instead
         this.controlX.add(this.controlY.multiplyScalar(angle));
         this.controlX.normalize();
         this.controlY.crossVectors(this.controlZ, this.controlX);

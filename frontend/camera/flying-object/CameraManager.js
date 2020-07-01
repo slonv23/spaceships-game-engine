@@ -42,8 +42,8 @@ export default class CameraManager {
     cameraPositionConvergeSpeed = 0;
 
     /**
-     * @param {THREE.PerspectiveCamera} camera 
-     * @param {FlyingObject} gameObject 
+     * @param {THREE.PerspectiveCamera} camera
+     * @param {FlyingObject} gameObject
      * @param {FlyingObjectBaseController} controller
      */
     init(camera, gameObject, controller) {
@@ -54,25 +54,30 @@ export default class CameraManager {
     }
 
     updateCamera(delta) {
-        return;
-        let cameraAndObjectDirectionsDiff = this.controller.gameObject.nz.clone().sub(this.cameraZ);
+        const controller = this.controller;
+        let cameraAndObjectDirectionsDiff = controller.gameObject.nz.clone().sub(this.cameraZ);
 
-        this.cameraQuaternion.multiplyQuaternions(createQuaternionForRotation(this.cameraZ, this.controller.gameObject.nz), this.cameraQuaternion);
+        this.cameraQuaternion.multiplyQuaternions(createQuaternionForRotation(this.cameraZ, controller.gameObject.nz),
+                                                  this.cameraQuaternion);
         // this.cameraZ.set(0, 0, 1).applyQuaternion(this.cameraQuaternion);
-        this.cameraZ.copy(this.controller.gameObject.nz);
+        this.cameraZ.copy(controller.gameObject.nz);
         this.cameraY.set(0, 1, 0).applyQuaternion(this.cameraQuaternion);
         this.cameraX.set(1, 0, 0).applyQuaternion(this.cameraQuaternion);
 
         //const rotationDirectionBasedOnCameraAxes = this.cameraX.clone().multiplyScalar(this.controller.wYawTarget).add(this.cameraY.clone().multiplyScalar(this.controller.wPitchTarget));
-        const rotationDirectionBasedOnCameraAxes = FlyingObjectBaseController.calculateRotationDirection(this.cameraX, this.cameraY,
-                                                                                                         this.controller.wYawTarget, this.controller.wPitchTarget);
-        const angleBtwControlAndCameraAxes = 0; // rotationDirectionBasedOnCameraAxes.angleTo(this.controller.rotationDirection);
+        const rotationDirectionBasedOnCameraAxes =
+            FlyingObjectBaseController.calculateRotationDirection(this.cameraX, this.cameraY,
+                                                                  controller.wYawTarget, controller.wPitchTarget);
+        let angleBtwControlAndCameraAxes = 0;
+        if (rotationDirectionBasedOnCameraAxes.dot(controller.rotationDirection) !== 1) {
+            angleBtwControlAndCameraAxes = rotationDirectionBasedOnCameraAxes.angleTo(controller.rotationDirection);
+        }
 
         // rotate camera
         if (Math.abs(angleBtwControlAndCameraAxes) > 0.0001) {
-            const direction = -Math.sign(rotationDirectionBasedOnCameraAxes.dot(this.controller.normalToRotationDirection));
-            const acceleration = this.controller.rotationSpeed !== 0 ? 5e-7 : 1e-6;
-            
+            const direction = -Math.sign(rotationDirectionBasedOnCameraAxes.dot(controller.normalToRotationDirection));
+            const acceleration = controller.rotationSpeed !== 0 ? 5e-7 : 1e-6;
+
             const result = linearTransition(direction * angleBtwControlAndCameraAxes, this.rotationSpeed, acceleration, delta);
             this.rotationSpeed = result.speed;
             let angleChange = result.distanceChange;
