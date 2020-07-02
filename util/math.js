@@ -5,7 +5,7 @@ export const sqrtOf2 = Math.sqrt(2);
 /**
  * Returns a vector that is deviated from vd1 by a given angle 'fi'(in radian)
  * and lies in the plane formed by the vectors vd0, vd1.
- * 
+ *
  * @param {THREE.Vector3} vd0 - normalized
  * @param {THREE.Vector3} vd1 - normalized
  * @param {number} fi - angle in radians
@@ -52,7 +52,7 @@ export function linearTransition(distance, currentSpeed, accelerationAbs, dt) {
 
     const t1 = C0 + Math.sqrt(4 * C1 + 2 * (currentSpeed ** 2)) / accelerationAbs;
     const t0 = (t1 + C0) / 2;
-    
+
     let speed, distanceChange;
     if (t1 <= dt) {
         // stop moving
@@ -62,7 +62,7 @@ export function linearTransition(distance, currentSpeed, accelerationAbs, dt) {
     } else if (t0 <= dt) {
         // change acceleration direction to opposite
         speed = currentSpeed + (2*t0 - dt) * acceleration;
-        distanceChange = (2*acceleration*t0 + currentSpeed - (acceleration * dt) / 2) * dt - acceleration*t0*t0;
+        distanceChange = ((speed + currentSpeed) / 2) * dt; // (2*acceleration*t0 + currentSpeed - (acceleration * dt) / 2) * dt - acceleration*t0*t0;
         acceleration = -acceleration;
     } else {
         distanceChange = (currentSpeed + (dt * acceleration) / 2) * dt;

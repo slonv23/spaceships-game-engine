@@ -1,5 +1,6 @@
 /**
  * @typedef {import('three')} THREE
+ * @typedef {import('./InputAction').default} InputAction
  */
 
 import AbstractModel from "./AbstractModel";
@@ -20,13 +21,14 @@ export default class ObjectState extends AbstractModel {
     acceleration;
     /** @type {THREE.Vector3} */
     angularVelocity;
-    /** @type {THREE.Vector3} */
-    angularAcceleration;
+    /* @type {THREE.Vector3}
+    angularAcceleration; - currently not supported */
     /** @type {number} */
     rollAngleBtwCurrentAndTargetOrientation;
-    /** @type {THREE.Vector3} */
-    controlX;
     /** @type {THREE.Quaternion} */
     controlQuaternion;
+
+    /** @type {InputAction[]} */
+    actions;
 
 }

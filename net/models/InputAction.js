@@ -3,6 +3,8 @@ import AbstractModel from "./AbstractModel";
 export default class InputAction extends AbstractModel {
 
     /** @type {number} */
+    frameIndex;
+    /** @type {number} */
     yaw;
     /** @type {number} */
     pitch;
@@ -10,5 +12,7 @@ export default class InputAction extends AbstractModel {
     rotationSpeed;
     /** @type {number} */
     rollAngle;
+    /** @type {number} */
+    objectId;
 
 }

@@ -12,7 +12,7 @@ export default class FlyingObjectBaseController extends AbstractController {
     /** @type {FlyingObject} */
     gameObject;
 
-    /** @type {THREE.Vector3} TODO change to Vector2 */
+    /** @type {THREE.Vector3} TODO change to Vector2? */
     controlX = new THREE.Vector3(1, 0, 0);
     /** @type {THREE.Vector3} */
     controlY = new THREE.Vector3(0, 1, 0);
@@ -46,31 +46,20 @@ export default class FlyingObjectBaseController extends AbstractController {
         this.controlZInWorldCoords = gameObject.nz;
     }
 
-    _updateControlsQuaternion() {
+    _updateControlsQuaternion(delta) {
         this.controlsQuaternion.multiplyQuaternions(createQuaternionForRotation(this.controlZInWorldCoords, this.gameObject.nz), this.controlsQuaternion);
+        if (this.rotationSpeed !== 0) {
+            this.controlsQuaternion.multiply(new THREE.Quaternion(0, 0, this.rotationSpeed * delta * 0.5, 1));
+        }
         this.controlsQuaternion.normalize();
         this.controlZInWorldCoords.set(0, 0, 1).applyQuaternion(this.controlsQuaternion);
-    }
-
-    /**
-     * @param {number} angle
-     * @protected
-     */
-    _rotateControlAxes(angle) {
-        // TODO abandon controlX and controlY vectors and modify control quaternion instead
-        this.controlX.add(this.controlY.multiplyScalar(angle));
-        this.controlX.normalize();
-        this.controlY.crossVectors(this.controlZ, this.controlX);
     }
 
     /**
      * @param {number} delta
      */
     updateControlParams(delta) {
-        this._updateControlsQuaternion();
-        if (this.rotationSpeed !== 0) {
-            this._rotateControlAxes(this.rotationSpeed * delta);
-        }
+        this._updateControlsQuaternion(delta);
         this._updateAngularVelocities();
     }
 

@@ -28,6 +28,14 @@ export default class StateManager extends Emitter {
     diContainer;
     /** @type {AssetManager} */
     assetManager;
+    /** @type {WorldState} */
+    previousWorldState;
+    /** @type {WorldState} */
+    latestWorldState;
+    /** @type {number} */
+    currentFrameIndex = 0;
+    /** @type {number} */
+    latestFrameIndex = 0;
 
     constructor(diContainer, assetManager) {
         super();
@@ -36,10 +44,36 @@ export default class StateManager extends Emitter {
     }
 
     update(delta) {
+        // TODO don't forget to accelerate frame transition
+        //  if more than one future world states enabled (maybe in updateWorld method)
+        if (this.currentFrameIndex === this.latestFrameIndex) {
+            return;
+        }
+
+        const newFrameIndex = this.currentFrameIndex + 1;
+        if (newFrameIndex === this.latestFrameIndex) {
+            this._syncWorldState();
+        } else {
+            this._applyInputActionsAndUpdateObjects(delta);
+        }
+    }
+
+    _syncWorldState() {
+
+    }
+
+    _applyInputActionsAndUpdateObjects() {
         for (let i = 0; i < this.controllersCount; i++) {
             this.controllers[i].update(delta);
         }
     }
+
+    // update method for single player mode:
+    /*update(delta) {
+        for (let i = 0; i < this.controllersCount; i++) {
+            this.controllers[i].update(delta);
+        }
+    }*/
 
     registerGameObjectType(objectTypeName, objectClass, defaultControllerRef = null, model = null) {
         this.gameObjectTypes[objectTypeName] = {objectClass, defaultControllerRef, model};
@@ -83,18 +117,28 @@ export default class StateManager extends Emitter {
      * @param {WorldState} worldState
      */
     updateWorld(worldState) {
+        if (!this.previousWorldState) {
+            this.previousWorldState = worldState;
+        } else {
+            this.updateWorld = this._updateWorld;
+        }
+    }
+
+    _updateWorld(worldState) {
         const worldObjectsCount = worldState.objectStates.length;
         for (let i = 0; i < worldObjectsCount; i++) {
             /** @type {ObjectState} */
             const objectState = worldState.objectStates[i];
-            let controller = this.controllersByObjectId[objectState.id];
+            // TODO group actions by frame index and object ids
+
+            /*let controller = this.controllersByObjectId[objectState.id];
             if (!controller) {
                 const gameObjectType = objectState.objectType ? objectState.objectType : this.defaultGameObjectType;
                 controller = this.createObject(objectState.id, gameObjectType);
             }
             console.log(JSON.stringify(objectState));
 
-            controller.sync(objectState);
+            controller.sync(objectState);*/
         }
     }
 
