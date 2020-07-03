@@ -2,12 +2,15 @@
  * @typedef {import('three')} THREE
  * @typedef {import('../../frontend/input/Mouse').default} Mouse
  * @typedef {import('../../frontend/input/Keyboard').default} Keyboard
+ * @typedef {import('../../net/models/InputAction').default} InputAction
  */
 
 import FlyingObjectSingleplayerController from "./FlyingObjectSingleplayerController";
 import {syncStateMixin} from "./_mixins";
 
 export default class FlyingObjectMultiplayerController extends FlyingObjectSingleplayerController {
+
+    rollAnglePrev = 0;
 
     /**
      * @param {number} delta

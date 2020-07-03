@@ -12,17 +12,6 @@ export default class RemoteFlyingObjectController extends FlyingObjectBaseContro
     rollAnglePrev = 0;
 
     /**
-     * @param {InputAction} inputAction
-     */
-    processInput(inputAction) {
-        this.gameObject.rollAngleBtwCurrentAndTargetOrientation += this.rollAnglePrev - inputAction.rollAngle;
-        this.rollAnglePrev = inputAction.rollAngle;
-        this.wYawTarget = inputAction.yaw;
-        this.wPitchTarget = inputAction.pitch;
-        this.rotationSpeed = inputAction.rotationSpeed;
-    }
-
-    /**
      * @param {number} angle
      * @private
      */

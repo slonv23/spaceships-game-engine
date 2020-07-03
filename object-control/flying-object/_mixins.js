@@ -1,5 +1,6 @@
 /**
  * @typedef {import('../../net/models/ObjectState').default} ObjectState
+ * @typedef {import('../../net/models/InputAction').default} InputAction
  */
 
 import FlyingObjectBaseController from "./FlyingObjectBaseController";
@@ -41,5 +42,16 @@ export const syncStateMixin = {
         this.gameObject.angularVelocity.copy(objectState.angularVelocity);
         this.gameObject.angularAcceleration.copy(objectState.angularAcceleration);
         this.gameObject.rollAngleBtwCurrentAndTargetOrientation = objectState.rollAngleBtwCurrentAndTargetOrientation;
+    },
+
+    /**
+     * @param {InputAction} inputAction
+     */
+    processInput(inputAction) {
+        this.gameObject.rollAngleBtwCurrentAndTargetOrientation += this.rollAnglePrev - inputAction.rollAngle;
+        this.rollAnglePrev = inputAction.rollAngle;
+        this.wYawTarget = inputAction.yaw;
+        this.wPitchTarget = inputAction.pitch;
+        this.rotationSpeed = inputAction.rotationSpeed;
     }
 };
