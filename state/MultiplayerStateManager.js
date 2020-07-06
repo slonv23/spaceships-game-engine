@@ -8,30 +8,9 @@
  * @typedef {import('di-container-js').default} DiContainer
  */
 
-import AbstractObject from "../physics/object/AbstractObject";
-import AbstractController from "../object-control/AbstractController";
-import Emitter from "../util/Emitter";
+import AuthoritativeStateManager from "./AuthoritativeStateManager";
 
-// TODO rename to MultiplayerStateManager
-// TODO inherit from AuthoritativeStateManager
-export default class StateManager extends Emitter {
-
-    /** @type {AbstractController[]} */
-    controllers = [];
-    /** @type {object.<string, AbstractController>} */
-    controllersByObjectId = {};
-    /** @type {object.<string, object>} */
-    gameObjectTypes = {};
-    /** @type {number} */
-    controllersCount = 0;
-    /** @type {number} */
-    lastObjectId = 0;
-    /** @type {string} */
-    defaultGameObjectType;
-    /** @type {DiContainer} */
-    diContainer;
-    /** @type {AssetManager} */
-    assetManager;
+export default class MultiplayerStateManager extends AuthoritativeStateManager {
 
     /** @type {WorldState} */
     nextWorldState;
@@ -42,17 +21,6 @@ export default class StateManager extends Emitter {
     latestWorldState;
     /** @type {number} */
     latestFrameIndex;
-
-    /** @type {number} */
-    currentFrameIndex = 0;
-    /** @type {object.<number, object.<number, InputAction>>} */
-    inputActionsByObjectId = {};
-
-    constructor(diContainer, assetManager) {
-        super();
-        this.diContainer = diContainer;
-        this.assetManager = assetManager;
-    }
 
     update(delta) {
         if (this.latestWorldState) {
@@ -72,6 +40,7 @@ export default class StateManager extends Emitter {
         this.currentFrameIndex++;
         if (this.currentFrameIndex === this.nextFrameIndex) {
             this._syncWorldState(this.nextWorldState);
+            this._cleanup();
         } else {
             this._applyInputActionsAndUpdateObjects(delta);
         }
@@ -90,66 +59,6 @@ export default class StateManager extends Emitter {
 
             controller.sync(objectState);
         }
-    }
-
-    _applyInputActionsAndUpdateObjects(delta) {
-        for (let i = 0; i < this.controllersCount; i++) {
-            const id = this.controllers[i].gameObject.id;
-            const inputAction = this.inputActionsByObjectId[id][this.currentFrameIndex];
-            if (inputAction) {
-                this.controllers[i].processInput(inputAction);
-            }
-
-            this.controllers[i].update(delta);
-        }
-    }
-
-    // update method for single player mode:
-    /*update(delta) {
-        for (let i = 0; i < this.controllersCount; i++) {
-            this.controllers[i].update(delta);
-        }
-    }*/
-
-    registerGameObjectType(objectTypeName, objectClass, defaultControllerRef = null, model = null) {
-        this.gameObjectTypes[objectTypeName] = {objectClass, defaultControllerRef, model};
-    }
-
-    /**
-     * @param {number|null} objectId - if 'null' will be auto-generated
-     * @param {string} type
-     * @param {symbol|string|null} [controllerRef]
-     * @returns {Promise<AbstractController>}
-     */
-    async createObject(objectId, type, controllerRef = null) {
-        if (!objectId) {
-            objectId = ++this.lastObjectId;
-        }
-
-        const gameObjectDef = this.gameObjectTypes[type];
-        if (!(gameObjectDef.objectClass.prototype instanceof AbstractObject)) {
-            throw new Error('Class must be inherited from AbstractObject');
-        }
-        let gameObject = new gameObjectDef.objectClass(objectId, this.assetManager.getModel(gameObjectDef.model));
-        this.dispatchEvent(new CustomEvent("object-created", {detail: gameObject}));
-
-        let controller = await this.diContainer.get(controllerRef ? controllerRef : gameObjectDef.defaultControllerRef, true);
-        if (!controller) {
-            throw new Error('Component not found');
-        }
-        if (!(controller instanceof AbstractController)) {
-            throw new Error(`Object controller must be inherited from AbstractControls`);
-        }
-
-        controller.init(gameObject);
-        this.controllers.push(controller);
-        this.controllersByObjectId[objectId] = controller;
-        this.controllersCount++;
-
-        // allocate array for input actions, this is not needed in SP mode TODO refactor
-        this.inputActionsByObjectId[objectId] = {};
-
-        return controller;
     }
 
     /**
@@ -189,8 +98,6 @@ export default class StateManager extends Emitter {
 
             if (!this.inputActionsByObjectId[objectState.id]) {
                 this.inputActionsByObjectId[objectState.id] = {};
-            } else {
-                this._cleanActions(this.inputActionsByObjectId[objectState.id]);
             }
 
             for (let j = 0, actionsCount = objectState.actions.length; j < actionsCount; j++) {
@@ -210,14 +117,6 @@ export default class StateManager extends Emitter {
 
     addInputAction(objectId, action) {
         this.inputActionsByObjectId[objectId][action.frameIndex] = action;
-    }
-
-    _cleanActions(actions) {
-        for (const actionFrameIndex in actions) {
-            if (actionFrameIndex < this.currentFrameIndex) {
-                delete actions[actionFrameIndex];
-            }
-        }
     }
 
 }

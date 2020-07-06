@@ -1,7 +1,7 @@
 /**
  * @typedef {import('three')} THREE
  * @typedef {import('./asset-management/AssetManager').default} AssetManager
- * @typedef {import('../state/StateManager').default} StateManager
+ * @typedef {import('../state/MultiplayerStateManager').default} StateManager
  * @typedef {import('./Renderer').default} Renderer
  * @typedef {import('./camera/flying-object/CameraManager').default} CameraManager
  */
@@ -36,10 +36,10 @@ export default class FrontendFacade {
         updateCamera: () => {}
     };
 
-    constructor(assetManager, stateManager, renderer, diContainer) {
+    constructor(assetManager, multiplayerStateManager, renderer, diContainer) {
         this.assetManager = assetManager;
         this.renderer = renderer;
-        this.stateManager = stateManager;
+        this.stateManager = multiplayerStateManager;
         this.diContainer = diContainer;
     }
 

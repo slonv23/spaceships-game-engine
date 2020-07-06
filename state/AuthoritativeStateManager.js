@@ -43,6 +43,7 @@ export default class AuthoritativeStateManager extends Emitter {
     update(delta) {
         this.currentFrameIndex++;
         this._applyInputActionsAndUpdateObjects(delta);
+        this._cleanup();
     }
 
     _applyInputActionsAndUpdateObjects(delta) {
@@ -108,6 +109,20 @@ export default class AuthoritativeStateManager extends Emitter {
     addInputAction(objectId, action) {
         const actionFrameIndex = action.frameIndex <= this.currentFrameIndex ? this.currentFrameIndex + 1 : action.frameIndex;
         this.inputActionsByObjectId[objectId][actionFrameIndex] = action;
+    }
+
+    _cleanup() {
+        for (const objectId in this.inputActionsByObjectId) {
+            this._cleanActions(this.inputActionsByObjectId[objectId]);
+        }
+    }
+
+    _cleanActions(actions) {
+        for (const actionFrameIndex in actions) {
+            if (actionFrameIndex <= this.currentFrameIndex) {
+                delete actions[actionFrameIndex];
+            }
+        }
     }
 
 }

@@ -4,7 +4,7 @@
  * @typedef {import('di-container-js').default} DiContainer
  * @typedef {import('../models/SpawnResponse').default} SpawnResponse
  * @typedef {import('../models/WorldState').default} WorldState
- * @typedef {import('../../state/StateManager').default} StateManager
+ * @typedef {import('../../state/MultiplayerStateManager').default} StateManager
  */
 import SpawnRequest from '../models/SpawnRequest';
 

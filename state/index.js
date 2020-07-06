@@ -1,5 +1,7 @@
 import {diContainer} from '../globals';
 
-import StateManager from './StateManager';
+import MultiplayerStateManager from './MultiplayerStateManager';
+import AuthoritativeStateManager from "./AuthoritativeStateManager";
 
-diContainer.registerClass("stateManager", StateManager);
+diContainer.registerClass("multiplayerStateManager", MultiplayerStateManager);
+diContainer.registerClass("authoritativeStateManager", AuthoritativeStateManager);
