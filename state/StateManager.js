@@ -1,5 +1,6 @@
 /**
  * @typedef {import('../object-control/AbstractController').default} AbstractController
+ * @typedef {import('../object-control/flying-object/RemoteFlyingObjectController').default} RemoteFlyingObjectController
  * @typedef {import('../net/models/WorldState').default} WorldState
  * @typedef {import('../net/models/ObjectState').default} ObjectState
  * @typedef {import('../net/models/InputAction').default} InputAction
@@ -12,6 +13,7 @@ import AbstractController from "../object-control/AbstractController";
 import Emitter from "../util/Emitter";
 
 // TODO rename to MultiplayerStateManager
+// TODO inherit from AuthoritativeStateManager
 export default class StateManager extends Emitter {
 
     /** @type {AbstractController[]} */
@@ -32,13 +34,17 @@ export default class StateManager extends Emitter {
     assetManager;
 
     /** @type {WorldState} */
-    previousWorldState;
+    nextWorldState;
+    /** @type {number} */
+    nextFrameIndex = 0;
+
     /** @type {WorldState} */
     latestWorldState;
     /** @type {number} */
-    currentFrameIndex = 0;
+    latestFrameIndex;
+
     /** @type {number} */
-    latestFrameIndex = 0;
+    currentFrameIndex = 0;
     /** @type {object.<number, object.<number, InputAction>>} */
     inputActionsByObjectId = {};
 
@@ -48,37 +54,41 @@ export default class StateManager extends Emitter {
         this.assetManager = assetManager;
     }
 
-    // eslint-disable-next-line no-unused-vars
     update(delta) {
-        // TODO don't forget to accelerate frame transition
-        //  if more than one future world states enabled (maybe in updateWorld method)
-        if (!this.previousWorldState && !this.latestWorldState) {
+        if (this.latestWorldState) {
+            // time to speed up, more recent state received
+            this.currentFrameIndex = this.nextFrameIndex;
+
+            this._syncWorldState(this.nextWorldState);
+
+            this.nextWorldState = this.latestWorldState;
+            this.nextFrameIndex = this.latestFrameIndex;
+            this.latestWorldState = null;
+        } else if (this.currentFrameIndex === this.nextFrameIndex) {
+            // no more data about world state available, not possible to continue interpolation
             return;
         }
 
-        // initialize world
-        this._syncWorldState(this.previousWorldState);
-
-        this.update = this._update;
-    }
-
-    _update(delta) {
-        if (this.currentFrameIndex === this.latestFrameIndex) {
-            return;
-        }
-
-        // const newFrameIndex = this.currentFrameIndex + 1;
         this.currentFrameIndex++;
-        if (this.currentFrameIndex === this.latestFrameIndex) {
-            this._syncWorldState(this.latestWorldState);
+        if (this.currentFrameIndex === this.nextFrameIndex) {
+            this._syncWorldState(this.nextWorldState);
         } else {
             this._applyInputActionsAndUpdateObjects(delta);
         }
     }
 
     _syncWorldState(worldState) {
-        for (let i = 0; i < this.controllersCount; i++) {
-            // TODO
+        const worldObjectsCount = worldState.objectStates.length;
+        for (let i = 0; i < worldObjectsCount; i++) {
+            /** @type {ObjectState} */
+            const objectState = worldState.objectStates[i];
+            /** @type {RemoteFlyingObjectController} */
+            const controller = this.controllersByObjectId[objectState.id];
+            if (!controller) {
+                continue;
+            }
+
+            controller.sync(objectState);
         }
     }
 
@@ -146,10 +156,12 @@ export default class StateManager extends Emitter {
      * @param {WorldState} worldState
      */
     updateWorld(worldState) {
-        if (!this.previousWorldState) {
-            this.previousWorldState = worldState;
+        if (!this.nextWorldState) {
+            this.nextWorldState = worldState;
         } else {
-            this.currentFrameIndex = this.previousWorldState.frameIndex;
+            // game loop will start update objects when currentFrameIndex != nextFrameIndex
+            this.nextFrameIndex = this.nextWorldState.frameIndex;
+
             this.latestFrameIndex = worldState.frameIndex;
             this.latestWorldState = worldState;
             this.updateWorld = this._updateWorld;
@@ -157,11 +169,17 @@ export default class StateManager extends Emitter {
     }
 
     _updateWorld(worldState) {
-        if (this.currentFrameIndex < this.latestFrameIndex) {
-            // time to speed up
-            // ...
-            // TODO reset state to old state immediately and move to new frames
-            //  use previousWorldState and initial update method
+        if (worldState.frameIndex <= this.nextFrameIndex) {
+            // old state received
+            return;
+        } else if (!this.latestWorldState) {
+            this.latestWorldState = worldState;
+            this.latestFrameIndex = worldState.frameIndex;
+        } else {
+            this.nextWorldState = this.latestWorldState;
+            this.nextFrameIndex = this.latestFrameIndex;
+            this.latestWorldState = worldState;
+            this.latestFrameIndex = worldState.frameIndex;
         }
 
         const worldObjectsCount = worldState.objectStates.length;
@@ -171,11 +189,12 @@ export default class StateManager extends Emitter {
 
             if (!this.inputActionsByObjectId[objectState.id]) {
                 this.inputActionsByObjectId[objectState.id] = {};
+            } else {
+                this._cleanActions(this.inputActionsByObjectId[objectState.id]);
             }
 
             for (let j = 0, actionsCount = objectState.actions.length; j < actionsCount; j++) {
-                const action = objectState.actions[j];
-                this.inputActionsByObjectId[objectState.id][action.frameIndex] = action;
+                this.addInputAction(objectState.id, objectState.actions[j]);
             }
 
             /*let controller = this.controllersByObjectId[objectState.id];
@@ -186,6 +205,18 @@ export default class StateManager extends Emitter {
             console.log(JSON.stringify(objectState));
 
             controller.sync(objectState);*/
+        }
+    }
+
+    addInputAction(objectId, action) {
+        this.inputActionsByObjectId[objectId][action.frameIndex] = action;
+    }
+
+    _cleanActions(actions) {
+        for (const actionFrameIndex in actions) {
+            if (actionFrameIndex < this.currentFrameIndex) {
+                delete actions[actionFrameIndex];
+            }
         }
     }
 
