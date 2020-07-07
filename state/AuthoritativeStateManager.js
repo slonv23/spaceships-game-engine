@@ -6,9 +6,9 @@
  * @typedef {import('di-container-js').default} DiContainer
  */
 
-import Emitter from '../util/Emitter';
 import AbstractObject from '../physics/object/AbstractObject';
 import AbstractController from '../object-control/AbstractController';
+import Emitter from '../util/Emitter';
 
 export default class AuthoritativeStateManager extends Emitter {
 
@@ -34,10 +34,23 @@ export default class AuthoritativeStateManager extends Emitter {
     /** @type {object.<number, object.<number, InputAction>>} */
     inputActionsByObjectId = {};
 
-    constructor(diContainer, assetManager) {
+    /** @type {Function} */
+    _createGameObject;
+
+    constructor(diContainer) {
         super();
         this.diContainer = diContainer;
-        this.assetManager = assetManager;
+
+        if (diContainer.isProvided('assetManager')) {
+            this.assetManager = diContainer.get('assetManager');
+            this._createGameObject = (objectId, gameObjectDef) => {
+                return new gameObjectDef.objectClass(objectId, this.assetManager.getModel(gameObjectDef.model))
+            };
+        } else {
+            this._createGameObject = (objectId, gameObjectDef) => {
+                return new gameObjectDef.objectClass(objectId)
+            };
+        }
     }
 
     update(delta) {
@@ -84,8 +97,8 @@ export default class AuthoritativeStateManager extends Emitter {
         if (!(gameObjectDef.objectClass.prototype instanceof AbstractObject)) {
             throw new Error('Class must be inherited from AbstractObject');
         }
-        let gameObject = new gameObjectDef.objectClass(objectId, this.assetManager.getModel(gameObjectDef.model));
-        this.dispatchEvent(new CustomEvent("object-created", {detail: gameObject}));
+        let gameObject = this._createGameObject(objectId, gameObjectDef);
+        this.dispatchEvent("object-created", gameObject);
 
         let controller = await this.diContainer.get(controllerRef ? controllerRef : gameObjectDef.defaultControllerRef, true);
         if (!controller) {

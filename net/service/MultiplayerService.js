@@ -4,7 +4,7 @@
  * @typedef {import('di-container-js').default} DiContainer
  * @typedef {import('../models/SpawnResponse').default} SpawnResponse
  * @typedef {import('../models/WorldState').default} WorldState
- * @typedef {import('../../state/MultiplayerStateManager').default} StateManager
+ * @typedef {import('../../state/MultiplayerStateManager').default} MultiplayerStateManager
  */
 import SpawnRequest from '../models/SpawnRequest';
 
@@ -27,12 +27,12 @@ export default class MultiplayerService {
     /**
      * @param {DiContainer} diContainer
      * @param {MessageSerializerDeserializer} messageSerializerDeserializer
-     * @param {StateManager} stateManager
+     * @param {MultiplayerStateManager} multiplayerStateManager
      */
-    constructor(diContainer, messageSerializerDeserializer, stateManager) {
+    constructor(diContainer, messageSerializerDeserializer, multiplayerStateManager) {
         this.diContainer = diContainer;
         this.messageSerializerDeserializer = messageSerializerDeserializer;
-        this.stateManager = stateManager;
+        this.stateManager = multiplayerStateManager;
     }
 
     async postConstruct({client = "webRtcNetworkClient"} = {}) {

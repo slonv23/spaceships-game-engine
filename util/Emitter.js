@@ -1,14 +1,30 @@
 export default class Emitter {
 
     constructor() {
-        const delegate = document.createDocumentFragment();
+        let delegate;
+        if (global && global.EventTarget) {
+            delegate = new global.EventTarget;
+        } else {
+            delegate = document.createDocumentFragment();
+        }
+
         [
             'addEventListener',
-            'dispatchEvent',
             'removeEventListener'
         ].forEach(f =>
             this[f] = (...xs) => delegate[f](...xs)
         )
+
+        this.dispatchEvent = (type, detail) => {
+            let event;
+            if (typeof CustomEvent !== 'undefined') {
+                event = new CustomEvent(type, {detail});
+            } else {
+                event = {type, detail};
+            }
+
+            delegate.dispatchEvent(event);
+        }
     }
 
 }
