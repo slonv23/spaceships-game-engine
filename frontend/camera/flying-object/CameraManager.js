@@ -69,7 +69,8 @@ export default class CameraManager {
             FlyingObjectBaseController.calculateRotationDirection(this.cameraX, this.cameraY,
                                                                   controller.wYawTarget, controller.wPitchTarget);
         let angleBtwControlAndCameraAxes = 0;
-        if (rotationDirectionBasedOnCameraAxes.dot(controller.rotationDirection) !== 1) {
+        // rotationDirectionBasedOnCameraAxes.dot(controller.rotationDirection) !== 1
+        if (rotationDirectionBasedOnCameraAxes.lengthSq() * controller.rotationDirection.lengthSq() > 0.0001) {
             angleBtwControlAndCameraAxes = rotationDirectionBasedOnCameraAxes.angleTo(controller.rotationDirection);
         }
 

@@ -72,6 +72,7 @@ export default class FrontendFacade {
 
         while (this.delta >= this.timestep) {
             this.stateManager.update(this.timestep);
+            // TODO do not update camera while stateManager is not ready
             this._cameraManager.updateCamera(this.timestep);
             this.delta -= this.timestep;
         }

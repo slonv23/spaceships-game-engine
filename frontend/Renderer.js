@@ -32,6 +32,40 @@ export default class Renderer {
             window.document.body.appendChild(renderer.domElement);
         }
 
+        let geometry = new THREE.BoxGeometry( 1, 1, 1 );
+        let material = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
+        let cube = new THREE.Mesh(geometry, material);
+        cube.position.z = -100;
+        scene.add(cube);
+
+        geometry = new THREE.BoxGeometry( 1, 1, 1 );
+        material = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
+        cube = new THREE.Mesh(geometry, material);
+        cube.position.z = -50;
+        cube.position.x = 10;
+        scene.add(cube);
+
+        geometry = new THREE.BoxGeometry( 1, 1, 1 );
+        material = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
+        cube = new THREE.Mesh(geometry, material);
+        cube.position.z = -50;
+        cube.position.x = -10;
+        scene.add(cube);
+
+        geometry = new THREE.BoxGeometry( 1, 1, 1 );
+        material = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
+        cube = new THREE.Mesh(geometry, material);
+        cube.position.z = -30;
+        cube.position.x = -5;
+        scene.add(cube);
+
+        geometry = new THREE.BoxGeometry( 1, 1, 1 );
+        material = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
+        cube = new THREE.Mesh(geometry, material);
+        cube.position.z = -30;
+        cube.position.x = 5;
+        scene.add(cube);
+
         this.scene = scene;
         this.sceneOrtho = new THREE.Scene();
         this.camera = camera;
@@ -40,7 +74,7 @@ export default class Renderer {
         this.camera.matrixAutoUpdate = false;
         this.renderer = renderer;
         this.renderer.autoClear = false;
-        
+
         if (options.useDefaultLight) {
             const light = new THREE.HemisphereLight(0xbbbbff, 0x444422);
             light.position.set(0, 1, 0);

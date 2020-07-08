@@ -22,7 +22,7 @@ export default class FlyingObjectBaseController extends AbstractController {
     controlZInWorldCoords = new THREE.Vector3();
 
     /** @type {THREE.Vector3} */
-    rotationDirection;
+    rotationDirection = new THREE.Vector3();
 
     /** @type {THREE.Quaternion} used to convert control axes from local spaceship coordinate system (CS) to world CS */
     controlsQuaternion = new THREE.Quaternion();

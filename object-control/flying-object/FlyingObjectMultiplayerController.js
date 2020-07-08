@@ -26,8 +26,7 @@ export default class FlyingObjectMultiplayerController extends FlyingObjectSingl
     }
 
     update(delta) {
-        return;
-        //this.gameObject.update(delta);
+        this.gameObject.update(delta);
         //this.updateControlParams(delta);
     }
 

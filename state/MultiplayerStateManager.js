@@ -28,16 +28,19 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
             this.currentFrameIndex = this.nextFrameIndex;
 
             this._syncWorldState(this.nextWorldState);
+            console.log('Sync with next world state ' + this.nextWorldState.frameIndex);
 
             this.nextWorldState = this.latestWorldState;
             this.nextFrameIndex = this.latestFrameIndex;
             this.latestWorldState = null;
+            return;
         } else if (this.currentFrameIndex === this.nextFrameIndex) {
             // no more data about world state available, not possible to continue interpolation
             return;
         }
 
         this.currentFrameIndex++;
+        console.log("currentFrameIndex: " + this.currentFrameIndex + " nextFrameIndex: " + this.nextFrameIndex);
         if (this.currentFrameIndex === this.nextFrameIndex) {
             this._syncWorldState(this.nextWorldState);
             this._cleanup();
@@ -67,6 +70,7 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
     updateWorld(worldState) {
         if (!this.nextWorldState) {
             this.nextWorldState = worldState;
+            console.log('Set next world state');
         } else {
             // game loop will start update objects when currentFrameIndex != nextFrameIndex
             this.nextFrameIndex = this.nextWorldState.frameIndex;
@@ -74,6 +78,7 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
             this.latestFrameIndex = worldState.frameIndex;
             this.latestWorldState = worldState;
             this.updateWorld = this._updateWorld;
+            console.log('Set latest world state');
         }
     }
 
@@ -82,9 +87,11 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
             // old state received
             return;
         } else if (!this.latestWorldState) {
+            console.log('Set latestWorldState');
             this.latestWorldState = worldState;
             this.latestFrameIndex = worldState.frameIndex;
         } else {
+            console.log('Swap nextWorldState <-> latestWorldState');
             this.nextWorldState = this.latestWorldState;
             this.nextFrameIndex = this.latestFrameIndex;
             this.latestWorldState = worldState;
