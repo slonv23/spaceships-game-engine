@@ -50,6 +50,8 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
     }
 
     _syncWorldState(worldState) {
+        console.log('Sync with world state ' + worldState.frameIndex);
+        console.log('World state: ' + JSON.stringify(worldState));
         const worldObjectsCount = worldState.objectStates.length;
         for (let i = 0; i < worldObjectsCount; i++) {
             /** @type {ObjectState} */
@@ -59,6 +61,8 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
             if (!controller) {
                 continue;
             }
+
+            console.log('Game object pos: ' + JSON.stringify(controller.gameObject.position));
 
             controller.sync(objectState);
         }
@@ -84,6 +88,7 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
 
     _updateWorld(worldState) {
         if (worldState.frameIndex <= this.nextFrameIndex) {
+            console.log('Old state received, frame index ' + worldState.frameIndex);
             // old state received
             return;
         } else if (!this.latestWorldState) {

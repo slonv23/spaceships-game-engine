@@ -37,6 +37,8 @@ export const syncStateMixin = {
         this.gameObject.angularVelocity.copy(objectState.angularVelocity);
         //this.gameObject.angularAcceleration.copy(objectState.angularAcceleration);
         this.gameObject.rollAngleBtwCurrentAndTargetOrientation = objectState.rollAngleBtwCurrentAndTargetOrientation;
+
+        this.gameObject.updateTransformationMatrix();
     },
 
     /**
