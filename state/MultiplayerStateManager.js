@@ -49,7 +49,7 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
         }
     }
 
-    _syncWorldState(worldState) {
+    async _syncWorldState(worldState) {
         console.log('Sync with world state ' + worldState.frameIndex);
         console.log('World state: ' + JSON.stringify(worldState));
         const worldObjectsCount = worldState.objectStates.length;
@@ -57,9 +57,9 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
             /** @type {ObjectState} */
             const objectState = worldState.objectStates[i];
             /** @type {RemoteFlyingObjectController} */
-            const controller = this.controllersByObjectId[objectState.id];
+            let controller = this.controllersByObjectId[objectState.id];
             if (!controller) {
-                continue;
+                controller = await this.createObject(objectState.id, objectState.objectType);
             }
 
             console.log('Game object pos: ' + JSON.stringify(controller.gameObject.position));

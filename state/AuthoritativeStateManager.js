@@ -84,7 +84,7 @@ export default class AuthoritativeStateManager extends Emitter {
 
     /**
      * @param {number|null} objectId - if 'null' will be auto-generated
-     * @param {string} type
+     * @param {number} type
      * @param {symbol|string|null} [controllerRef]
      * @returns {Promise<AbstractController>}
      */
