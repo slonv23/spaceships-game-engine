@@ -125,7 +125,7 @@ export default class WebRtcNetworkClient extends AbstractNetworkClient {
             params.append("candidates", candidate.candidate);
         });
 
-        return fetch(`http://${this.serverIp}:${this.signalingServerPort}/connect`, {
+        return this._fetchWithRetry(`http://${this.serverIp}:${this.signalingServerPort}/connect`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                 body: params
@@ -142,6 +142,21 @@ export default class WebRtcNetworkClient extends AbstractNetworkClient {
                 console.error("WebRtcNetworkClient: Failed to retrieve sdp answer and ice candidates from signaling server, error: " + err);
                 throw err;
             });
+    }
+
+    _fetchWithRetry() {
+        return fetch(...arguments).then((res) => {
+            if (res.status === 503) {
+                console.debug("Retrying request...")
+                return new Promise((resolve, reject) => {
+                    setTimeout(() => {
+                        this._fetchWithRetry(...arguments).then(resolve, reject);
+                    }, 1000);
+                });
+            }
+
+            return res;
+        });
     }
 
 }
