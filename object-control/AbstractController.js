@@ -8,12 +8,15 @@ export default class AbstractController {
 
     /** @type {AbstractObject} */
     gameObject;
+    /** @type {boolean} */
+    initialized = false;
 
     /**
      * @param {AbstractObject} gameObject
      */
     init(gameObject) {
         this.gameObject = gameObject;
+        this.initialized = true;
     }
 
     /**

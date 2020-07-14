@@ -13,13 +13,13 @@ import Emitter from '../util/Emitter';
 export default class AuthoritativeStateManager extends Emitter {
 
     /** @type {AbstractController[]} */
-    controllers = [];
+    initializedControllers = [];
+    /** @type {number} */
+    initializedControllersCount = 0;
     /** @type {object.<string, AbstractController>} */
     controllersByObjectId = {};
     /** @type {object.<string, object>} */
     gameObjectTypes = {};
-    /** @type {number} */
-    controllersCount = 0;
     /** @type {number} */
     lastObjectId = 0;
     /** @type {string} */
@@ -60,21 +60,21 @@ export default class AuthoritativeStateManager extends Emitter {
     }
 
     _applyInputActionsAndUpdateObjects(delta) {
-        for (let i = 0; i < this.controllersCount; i++) {
-            const id = this.controllers[i].gameObject.id;
+        for (let i = 0; i < this.initializedControllersCount; i++) {
+            const id = this.initializedControllers[i].gameObject.id;
             const inputAction = this.inputActionsByObjectId[id][this.currentFrameIndex];
             if (inputAction) {
-                this.controllers[i].processInput(inputAction);
+                this.initializedControllers[i].processInput(inputAction);
             }
 
-            this.controllers[i].update(delta);
+            this.initializedControllers[i].update(delta);
         }
     }
 
     // update method for single player mode:
     /*update(delta) {
-        for (let i = 0; i < this.controllersCount; i++) {
-            this.controllers[i].update(delta);
+        for (let i = 0; i < this.initializedControllersCount; i++) {
+            this.initializedControllers[i].update(delta);
         }
     }*/
 
@@ -100,7 +100,22 @@ export default class AuthoritativeStateManager extends Emitter {
         let gameObject = this._createGameObject(objectId, gameObjectDef);
         this.dispatchEvent("object-created", gameObject);
 
-        let controller = await this.diContainer.get(controllerRef ? controllerRef : gameObjectDef.defaultControllerRef, true);
+        let controller = this.controllersByObjectId[objectId];
+        if (!controller) {
+            controller = await this.createController(objectId, controllerRef ? controllerRef : gameObjectDef.defaultControllerRef);
+        }
+        controller.init(gameObject);
+        this.initializedControllers.push(controller);
+        this.initializedControllersCount++;
+
+        // allocate array for input actions, this is not needed in SP mode TODO refactor
+        this.inputActionsByObjectId[objectId] = {};
+
+        return controller;
+    }
+
+    async createController(objectId, controllerRef) {
+        let controller = await this.diContainer.get(controllerRef, true);
         if (!controller) {
             throw new Error('Component not found');
         }
@@ -108,13 +123,7 @@ export default class AuthoritativeStateManager extends Emitter {
             throw new Error(`Object controller must be inherited from AbstractControls`);
         }
 
-        controller.init(gameObject);
-        this.controllers.push(controller);
         this.controllersByObjectId[objectId] = controller;
-        this.controllersCount++;
-
-        // allocate array for input actions, this is not needed in SP mode TODO refactor
-        this.inputActionsByObjectId[objectId] = {};
 
         return controller;
     }

@@ -49,7 +49,7 @@ export default class MultiplayerService {
         spawnRequest.nickName = "Illia";
 
         this.networkClient.addEventListener("messages", this._handleMessagesBeforeSpawn);
-        this.networkClient.sendMessage(this.messageSerializerDeserializer.serializeRequest(spawnRequest));
+        this.networkClient.sendMessage(this._buildMessage(spawnRequest, true));
 
         return new Promise(resolve => {
             this._onSpawned = resolve;
@@ -58,6 +58,14 @@ export default class MultiplayerService {
 
     startStateSync() {
         this.networkClient.addEventListener("messages", this._handleMessagesAfterSpawned);
+    }
+
+    _buildMessage(data, ack = false) {
+        const wrapperProps = {};
+        if (ack) {
+            wrapperProps.requestSentTimestamp = Math.round((new Date()).getTime() / 1000);
+        }
+        return this.messageSerializerDeserializer.serializeRequest(data, wrapperProps)
     }
 
     _handleMessagesBeforeSpawn = (event) => {

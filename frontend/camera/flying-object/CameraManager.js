@@ -1,11 +1,9 @@
 /**
  * @typedef {import('three')} THREE
- * @typedef {import('../../../physics/object/FlyingObject').default} FlyingObject
  * @typedef {import('../../../object-control/flying-object/FlyingObjectBaseController').default} FlyingObjectBaseController
  */
 
 import * as THREE from 'three';
-import FlyingObject from "../../../physics/object/FlyingObject";
 import {linearTransition, createQuaternionForRotation} from "../../../util/math";
 import FlyingObjectBaseController from "../../../object-control/flying-object/FlyingObjectBaseController";
 
@@ -17,9 +15,6 @@ export default class CameraManager {
 
     /** @type {THREE.PerspectiveCamera} */
     camera;
-
-    /** @type {FlyingObject} */
-    gameObject
 
     /** @type {FlyingObjectBaseController} */
     controller;
@@ -43,18 +38,20 @@ export default class CameraManager {
 
     /**
      * @param {THREE.PerspectiveCamera} camera
-     * @param {FlyingObject} gameObject
      * @param {FlyingObjectBaseController} controller
      */
-    init(camera, gameObject, controller) {
+    init(camera, controller) {
         this.camera = camera;
-        this.gameObject = gameObject;
         this.controller = controller;
         this.camera.matrixWorld.extractBasis(this.cameraX, this.cameraY, this.cameraZ);
     }
 
     updateCamera(delta) {
         const controller = this.controller;
+        if (!controller.initialized) {
+            return;
+        }
+
         let cameraAndObjectDirectionsDiff = controller.gameObject.nz.clone().sub(this.cameraZ);
 
         this.cameraQuaternion.multiplyQuaternions(createQuaternionForRotation(this.cameraZ, controller.gameObject.nz),
@@ -87,7 +84,7 @@ export default class CameraManager {
         this.cameraQuaternion.normalize();
 
         // update camera position
-        this.camera.position.copy(this.gameObject.position.clone().add(this.cameraZ.clone().multiplyScalar(self.lenBtwCameraAndPosLookAt)));
+        this.camera.position.copy(controller.gameObject.position.clone().add(this.cameraZ.clone().multiplyScalar(self.lenBtwCameraAndPosLookAt)));
 
         let diffX = -cameraAndObjectDirectionsDiff.dot(this.cameraX);
         let diffY = cameraAndObjectDirectionsDiff.dot(this.cameraY);
@@ -119,7 +116,7 @@ export default class CameraManager {
     }
 
     _calcPosLookAt() {
-        return this.gameObject.position.clone().addScaledVector(this.gameObject.nz, -self.lenBtwSpaceshipAndPosLookAt)
+        return this.controller.gameObject.position.clone().addScaledVector(this.controller.gameObject.nz, -self.lenBtwSpaceshipAndPosLookAt)
     }
 
 }

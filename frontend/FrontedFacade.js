@@ -105,7 +105,7 @@ export default class FrontendFacade {
             throw new Error('Class must be inherited from AbstractCameraManager');
         }*/
 
-        cameraManager.init(this.renderer.camera, controller.gameObject, controller);
+        cameraManager.init(this.renderer.camera, controller);
 
         this._cameraManager = cameraManager;
     }

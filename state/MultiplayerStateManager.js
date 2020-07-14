@@ -58,7 +58,7 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
             const objectState = worldState.objectStates[i];
             /** @type {RemoteFlyingObjectController} */
             let controller = this.controllersByObjectId[objectState.id];
-            if (!controller) {
+            if (!controller || !controller.initialized) {
                 controller = await this.createObject(objectState.id, objectState.objectType);
             }
 
