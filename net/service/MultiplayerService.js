@@ -7,8 +7,10 @@
  * @typedef {import('../../state/MultiplayerStateManager').default} MultiplayerStateManager
  */
 import SpawnRequest from '../models/SpawnRequest';
+import Emitter from "../../util/Emitter";
+import {unixTimestamp} from "../../util/date";
 
-export default class MultiplayerService {
+export default class MultiplayerService extends Emitter {
 
     /** @type {DiContainer} diContainer */
     diContainer;
@@ -18,6 +20,8 @@ export default class MultiplayerService {
     messageSerializerDeserializer;
     /** @type {string} */
     assignedObjectId;
+    /** @type {number} */
+    ping = 0;
     /**
      * @type {Function}
      * @private
@@ -30,6 +34,7 @@ export default class MultiplayerService {
      * @param {MultiplayerStateManager} multiplayerStateManager
      */
     constructor(diContainer, messageSerializerDeserializer, multiplayerStateManager) {
+        super();
         this.diContainer = diContainer;
         this.messageSerializerDeserializer = messageSerializerDeserializer;
         this.stateManager = multiplayerStateManager;
@@ -63,7 +68,7 @@ export default class MultiplayerService {
     _buildMessage(data, ack = false) {
         const wrapperProps = {};
         if (ack) {
-            wrapperProps.requestSentTimestamp = Math.round((new Date()).getTime() / 1000);
+            wrapperProps.requestSentTimestamp = unixTimestamp();
         }
         return this.messageSerializerDeserializer.serializeRequest(data, wrapperProps)
     }
@@ -71,10 +76,15 @@ export default class MultiplayerService {
     _handleMessagesBeforeSpawn = (event) => {
         const messages = this.messageSerializerDeserializer.deserializeResponse(event.detail);
         for (let i = 0; i < messages.length; i++) {
-            if (messages[i].constructor.name === "SpawnResponse") {
+            const messageName = messages[i].constructor.name;
+            if (messageName === "SpawnResponse") {
                 this.networkClient.removeEventListener("messages", this._handleMessagesBeforeSpawn);
                 this.assignedObjectId = messages[i].assignedObjectId;
                 this._onSpawned && this._onSpawned(this.assignedObjectId);
+                break;
+            } else if (messageName === "RequestAck") {
+                this.ping = messages[i].requestSentTimestamp - unixTimestamp();
+                this.dispatchEvent("ping", this.ping);
                 break;
             }
         }
@@ -90,6 +100,10 @@ export default class MultiplayerService {
                 case "WorldState":
                     console.log("Received WorldState msg");
                     this.stateManager.updateWorld(message);
+                    break;
+                case "RequestAck":
+                    this.ping = messages[i].requestSentTimestamp - unixTimestamp();
+                    this.dispatchEvent("ping", this.ping);
                     break;
             }
         }

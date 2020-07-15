@@ -5,8 +5,8 @@ import ObjectState from '../models/ObjectState';
 import SpawnRequest from '../models/SpawnRequest';
 import SpawnResponse from '../models/SpawnResponse';
 import WorldState from '../models/WorldState';
+import RequestAck from "../models/RequestAck";
 
 diContainer.registerClass("messageSerializerDeserializer", MessageSerializerDeserializer, {
-    models: [InputAction, ObjectState, SpawnRequest, SpawnResponse, WorldState]
-    //modelNames: ['InputAction', 'ObjectState', 'SpawnRequest', 'SpawnResponse', 'WorldState']
+    models: [InputAction, ObjectState, SpawnRequest, SpawnResponse, WorldState, RequestAck]
 });
