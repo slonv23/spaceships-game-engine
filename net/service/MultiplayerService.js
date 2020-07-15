@@ -83,7 +83,7 @@ export default class MultiplayerService extends Emitter {
                 this._onSpawned && this._onSpawned(this.assignedObjectId);
                 break;
             } else if (messageName === "RequestAck") {
-                this.ping = messages[i].requestSentTimestamp - unixTimestamp();
+                this.ping = unixTimestamp() - messages[i].requestSentTimestamp;
                 this.dispatchEvent("ping", this.ping);
                 break;
             }
