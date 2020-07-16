@@ -22,17 +22,22 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
     /** @type {number} */
     latestFrameIndex;
 
+    /** @type {number} */
+    playerObjectId;
+
     update(delta) {
         if (this.latestWorldState) {
+            // TODO maybe add some lag tolerance, because jitter can decrease and increase
             // time to speed up, more recent state received
             this.currentFrameIndex = this.nextFrameIndex;
 
-            this._syncWorldState(this.nextWorldState);
+            this._syncWorldState(this.nextWorldState, this.latestWorldState);
             console.log('Sync with next world state ' + this.nextWorldState.frameIndex);
 
             this.nextWorldState = this.latestWorldState;
             this.nextFrameIndex = this.latestFrameIndex;
             this.latestWorldState = null;
+            this._cleanup();
             return;
         } else if (this.currentFrameIndex === this.nextFrameIndex) {
             // no more data about world state available, not possible to continue interpolation
@@ -43,13 +48,19 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
         console.log("currentFrameIndex: " + this.currentFrameIndex + " nextFrameIndex: " + this.nextFrameIndex);
         if (this.currentFrameIndex === this.nextFrameIndex) {
             this._syncWorldState(this.nextWorldState);
+            this.nextWorldState = null; // world state is updated, no need to update it again when new will be received
             this._cleanup();
         } else {
             this._applyInputActionsAndUpdateObjects(delta);
         }
     }
 
-    async _syncWorldState(worldState) {
+    async _syncWorldState(actualWorldState, futureWorldState) {
+        if (!actualWorldState) {
+            // already processed
+            actualWorldState = {};
+        }
+
         console.log('Sync with world state ' + worldState.frameIndex);
         console.log('World state: ' + JSON.stringify(worldState));
         const worldObjectsCount = worldState.objectStates.length;
@@ -107,6 +118,10 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
         for (let i = 0; i < worldObjectsCount; i++) {
             /** @type {ObjectState} */
             const objectState = worldState.objectStates[i];
+            if (this.playerObjectId === objectState.id) {
+                // we should not re-process input actions of player object retransmitted back from server
+                continue;
+            }
 
             if (!this.inputActionsByObjectId[objectState.id]) {
                 this.inputActionsByObjectId[objectState.id] = {};
@@ -115,20 +130,16 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
             for (let j = 0, actionsCount = objectState.actions.length; j < actionsCount; j++) {
                 this.addInputAction(objectState.id, objectState.actions[j]);
             }
-
-            /*let controller = this.controllersByObjectId[objectState.id];
-            if (!controller) {
-                const gameObjectType = objectState.objectType ? objectState.objectType : this.defaultGameObjectType;
-                controller = this.createObject(objectState.id, gameObjectType);
-            }
-            console.log(JSON.stringify(objectState));
-
-            controller.sync(objectState);*/
         }
     }
 
     addInputAction(objectId, action) {
         this.inputActionsByObjectId[objectId][action.frameIndex] = action;
+    }
+
+    setPlayerObjectId(playerObjectId) {
+        this.playerObjectId = playerObjectId;
+        this.inputActionsByObjectId[playerObjectId] = {}
     }
 
 }
