@@ -27,7 +27,7 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
 
     update(delta) {
         if (this.latestWorldState) {
-            // TODO maybe add some lag tolerance, because jitter can decrease and increase
+            // TODO maybe add some lag tolerance, because jitter can decrease and increase compensating each other
             // time to speed up, more recent state received
             this.currentFrameIndex = this.nextFrameIndex;
 
@@ -38,44 +38,43 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
             this.nextFrameIndex = this.latestFrameIndex;
             this.latestWorldState = null;
             this._cleanup();
-            return;
-        } else if (this.currentFrameIndex === this.nextFrameIndex) {
-            // no more data about world state available, not possible to continue interpolation
-            return;
-        }
-
-        this.currentFrameIndex++;
-        console.log("currentFrameIndex: " + this.currentFrameIndex + " nextFrameIndex: " + this.nextFrameIndex);
-        if (this.currentFrameIndex === this.nextFrameIndex) {
-            this._syncWorldState(this.nextWorldState);
-            this.nextWorldState = null; // world state is updated, no need to update it again when new will be received
-            this._cleanup();
-        } else {
+        } else if (++this.currentFrameIndex < this.nextFrameIndex) {
+            console.log("currentFrameIndex: " + this.currentFrameIndex + " nextFrameIndex: " + this.nextFrameIndex);
             this._applyInputActionsAndUpdateObjects(delta);
         }
+        // this.currentFrameIndex === this.nextFrameIndex
+        // no more data about world state available, not possible to continue interpolation
     }
 
     async _syncWorldState(actualWorldState, futureWorldState) {
-        if (!actualWorldState) {
-            // already processed
-            actualWorldState = {};
-        }
+        const actualWorldStateObjectsCount = actualWorldState.objectStates.length;
+        const futureWorldStateObjectsCount = futureWorldState.objectStates.length;
 
-        console.log('Sync with world state ' + worldState.frameIndex);
-        console.log('World state: ' + JSON.stringify(worldState));
-        const worldObjectsCount = worldState.objectStates.length;
-        for (let i = 0; i < worldObjectsCount; i++) {
-            /** @type {ObjectState} */
-            const objectState = worldState.objectStates[i];
+        for (let i = 0, j = 0; i < actualWorldStateObjectsCount; i++) {
+            const actualObjectState = actualWorldState.objectStates[i];
+            let futureObjectState = null;
+
+            const objectId = actualObjectState.id;
+            // eslint-disable-next-line no-constant-condition
+            while (true) {
+                if (futureWorldState.objectStates[j].id === objectId) {
+                    futureObjectState = futureWorldState.objectStates[j];
+                    break;
+                } else if (j === futureWorldStateObjectsCount || objectId < futureWorldStateObjectsCount[objectId]) {
+                    break;
+                }
+                j++;
+            }
+
             /** @type {RemoteFlyingObjectController} */
-            let controller = this.controllersByObjectId[objectState.id];
+            let controller = this.controllersByObjectId[objectId];
             if (!controller || !controller.initialized) {
-                controller = await this.createObject(objectState.id, objectState.objectType);
+                controller = await this.createObject(objectId, actualObjectState.objectType);
             }
 
             console.log('Game object pos: ' + JSON.stringify(controller.gameObject.position));
 
-            controller.sync(objectState);
+            controller.sync(actualObjectState, futureObjectState);
         }
     }
 

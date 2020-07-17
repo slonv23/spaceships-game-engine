@@ -11,7 +11,7 @@ export const syncStateMixin = {
     /**
      * @param {ObjectState} objectState
      */
-    sync(objectState) {
+    _sync(objectState) {
         this._syncObject(objectState);
 
         this.controlsQuaternion.copy(objectState.controlQuaternion);

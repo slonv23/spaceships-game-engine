@@ -1,17 +1,7 @@
-/*binaryInsert(comment, comments, (left, right) => {
-    if (!left.sort_value) {
-        this.calculateSortValue(left);
-    }
-    if (!right.sort_value) {
-        this.calculateSortValue(right);
-    }
-
-    if (left.sort_value[0] === right.sort_value[0]) {
-        return left.sort_value[1] - right.sort_value[1];
-    } else {
-        return left.sort_value[0] - right.sort_value[0];
-    }
-});*/
+/**
+ * @example
+ * binaryInsert(obj, objects, (l, r) => l.id - r.id);
+ */
 export function binaryInsert(value, array, comparator, startVal, endVal) {
     const length = array.length;
     const start = typeof(startVal) != 'undefined' ? startVal : 0;

@@ -30,6 +30,10 @@ export default class FlyingObjectMultiplayerController extends FlyingObjectSingl
         //this.updateControlParams(delta);
     }
 
+    sync(actualObjectState, futureObjectState) {
+        this._sync(futureObjectState);
+    }
+
     _applyUserInputForRotation() {
         const pressedKey = this.keyboard.getFirstPressedKey();
 

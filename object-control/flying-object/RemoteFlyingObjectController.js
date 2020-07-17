@@ -11,6 +11,11 @@ export default class RemoteFlyingObjectController extends FlyingObjectBaseContro
 
     rollAnglePrev = 0;
 
+    // eslint-disable-next-line no-unused-vars
+    sync(actualObjectState, futureObjectState) {
+        this._sync(actualObjectState);
+    }
+
     /**
      * @param {number} angle
      * @private
