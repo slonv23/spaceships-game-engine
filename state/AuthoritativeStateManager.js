@@ -40,9 +40,11 @@ export default class AuthoritativeStateManager extends Emitter {
     constructor(diContainer) {
         super();
         this.diContainer = diContainer;
+    }
 
-        if (diContainer.isProvided('assetManager')) {
-            this.assetManager = diContainer.get('assetManager');
+    async postConstruct() {
+        if (this.diContainer.isProvided('assetManager')) {
+            this.assetManager = await this.diContainer.get('assetManager');
             this._createGameObject = (objectId, gameObjectDef) => {
                 return new gameObjectDef.objectClass(objectId, this.assetManager.getModel(gameObjectDef.model))
             };

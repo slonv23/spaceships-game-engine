@@ -12,13 +12,11 @@
 
 import AuthoritativeStateManager from "./AuthoritativeStateManager";
 
-const windowSizeFrames = 1000 / 60; // TODO move to configuration
-
 export default class MultiplayerStateManager extends AuthoritativeStateManager {
 
     /** @type {MultiplayerService} */
     multiplayerService;
-    
+
     /** @type {WorldState} */
     nextWorldState;
     /** @type {number} */
@@ -35,15 +33,27 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
     playerController;
 
     /** @type {number} */
-    inputGatheringPeriodFrames = 60;
+    inputGatheringPeriodFrames;
     /** @type {number} */
     lastInputGatheringFrame = 0;
+
+    /** @type {number} */
+    packetPeriodFrames;
+    /** @type {number} */
+    frameLengthMs;
 
     constructor(diContainer, multiplayerService) {
         super(diContainer);
         this.multiplayerService = multiplayerService;
     }
-    
+
+    async postConstruct({packetPeriodFrames, inputGatheringPeriodFrames, fps}) {
+        await super.postConstruct();
+        this.packetPeriodFrames = packetPeriodFrames;
+        this.inputGatheringPeriodFrames = inputGatheringPeriodFrames;
+        this.frameLengthMs = 1000 / fps;
+    }
+
     update(delta) {
         if (this.latestWorldState) {
             // TODO maybe add some lag tolerance, because jitter can decrease and increase compensating each other
@@ -70,8 +80,19 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
         if (this.currentFrameIndex - this.lastInputGatheringFrame >= this.inputGatheringPeriodFrames) {
             this.lastInputGatheringFrame = this.currentFrameIndex;
             const inputAction = this.playerController.getInputActionForCurrentState();
-            this.multiplayerService.scheduleInputAction(inputAction, );
-            // TODO Get input from this.playerController and use multiplayerService to send message
+
+            // player object's state is one packet period (window) ahead, because we don't use interpolation on it
+            // here we add one packet period length to currentFrameIndex (which is index of current interpolated frame)
+            const frameOffset = this.currentFrameIndex + this.packetPeriodFrames;
+
+            this.multiplayerService.scheduleInputAction(inputAction, frameOffset);
+
+            // we should apply input action in the preceding "window" for player's object
+            // because simulation for it runs without interpolation
+            inputAction.frameIndex -= this.packetPeriodFrames;
+
+            console.log(`Input action will be applied on frame #${inputAction.frameIndex}`);
+            this.addInputAction(this.playerObjectId, inputAction);
         }
     }
 
@@ -166,11 +187,14 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
         this.inputActionsByObjectId[objectId][action.frameIndex] = action;
     }
 
-    /** @param {RemoteFlyingObjectController} playerController */
-    setPlayerController(playerController) {
-        this.playerObjectId = playerController.gameObject.id;
+    /**
+     * @param {number} playerObjectId
+     * @param {RemoteFlyingObjectController} playerController
+     */
+    specifyPlayerControllerAndControlledObject(playerObjectId, playerController) {
+        this.playerObjectId = playerObjectId;
         this.playerController = playerController;
-        this.inputActionsByObjectId[this.playerObjectId] = {}
+        this.inputActionsByObjectId[playerObjectId] = {}
     }
 
 }

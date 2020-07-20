@@ -22,9 +22,8 @@ export default class FrontendFacade {
 
     /** Timing */
     lastFrameTimeMs;
-    maxFPS = 60;
     delta = 0;
-    timestep = 1000 / 60;
+    timestep;
 
     /** @type {AbstractController} */
     /*_controls = {
@@ -43,7 +42,8 @@ export default class FrontendFacade {
         this.diContainer = diContainer;
     }
 
-    postConstruct() {
+    postConstruct({fps = 60} = {}) {
+        this.timestep = 1000 / fps;
         this.stateManager.addEventListener("object-created", (event) => {
             /** @type {AbstractObject} */
             const gameObject = event.detail;
@@ -63,7 +63,7 @@ export default class FrontendFacade {
     }
 
     gameLoop = (timestamp) => {
-        if (timestamp < this.lastFrameTimeMs + (1000 / this.maxFPS)) {
+        if (timestamp < this.lastFrameTimeMs + this.timestep) {
             requestAnimationFrame(this.gameLoop);
             return;
         }

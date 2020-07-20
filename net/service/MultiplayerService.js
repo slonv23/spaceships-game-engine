@@ -11,8 +11,6 @@ import SpawnRequest from '../models/SpawnRequest';
 import Emitter from "../../util/Emitter";
 import {unixTimestampMs} from "../../util/date";
 
-const frameLengthMs = 1000 / 60; // TODO move to configuration
-
 export default class MultiplayerService extends Emitter {
 
     /** @type {DiContainer} diContainer */
@@ -25,6 +23,9 @@ export default class MultiplayerService extends Emitter {
     assignedObjectId;
     /** @type {number} */
     ping = 0;
+    /** @type {number} */
+    frameLengthMs;
+
     /**
      * @type {Function}
      * @private
@@ -43,9 +44,9 @@ export default class MultiplayerService extends Emitter {
         this.stateManager = multiplayerStateManager;
     }
 
-    async postConstruct({client = "webRtcNetworkClient"} = {}) {
+    async postConstruct({client = "webRtcNetworkClient", fps} = {}) {
         this.networkClient = await this.diContainer.get(client);
-        //this.networkClient.addEventListener("message", this._handleIncomingMessage)
+        this.frameLengthMs = 1000 / fps;
     }
 
     connect() {
@@ -73,10 +74,11 @@ export default class MultiplayerService extends Emitter {
      * @param {number} currentFrameIndex
      */
     scheduleInputAction(inputAction, currentFrameIndex) {
-        const halfRttFramesLength = (this.ping / 2) / frameLengthMs; // half of rtt represented in number of frames
+        const halfRttFramesLength = (this.ping / 2) / this.frameLengthMs; // half of rtt represented in number of frames
         inputAction.frameIndex = currentFrameIndex + halfRttFramesLength + 1; // +1 frame to make prediction more reliable
-        console.log(`InputAction scheduled at frame #${inputAction.frameIndex}`);
         this.networkClient.sendMessage(this._buildMessage(inputAction, true));
+
+        console.log(`InputAction scheduled at frame #${inputAction.frameIndex}`);
     }
 
     _buildMessage(data, ack = false) {
