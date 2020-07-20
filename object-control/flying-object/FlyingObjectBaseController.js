@@ -60,16 +60,24 @@ export default class FlyingObjectBaseController extends AbstractController {
      */
     updateControlParams(delta) {
         this._updateControlsQuaternion(delta);
+        this._calculateRotationDirection();
+        this._calculateNormalToRotationDirection(); // used by camera manager
         this._updateAngularVelocities();
     }
 
-    _updateAngularVelocities() {
+    _calculateRotationDirection() {
         /** @type {THREE.Vector3} */
         this.rotationDirection = FlyingObjectBaseController.calculateRotationDirection(this.controlX, this.controlY,
-                                                                                       this.wYawTarget, this.wPitchTarget);
+            this.wYawTarget, this.wPitchTarget);
         //this.rotationDirection = this.controlX.clone().multiplyScalar(this.wYawTarget).add(this.controlY.clone().multiplyScalar(this.wPitchTarget));
         this.rotationDirection.applyQuaternion(this.controlsQuaternion);
+    }
 
+    _calculateNormalToRotationDirection() {
+        this.normalToRotationDirection = this.gameObject.nz.clone().cross(this.rotationDirection);
+    }
+
+    _updateAngularVelocities() {
         this.gameObject.angularVelocity.y = this.gameObject.ny.dot(this.rotationDirection);
         this.gameObject.angularVelocity.x = this.gameObject.nx.dot(this.rotationDirection);
     }

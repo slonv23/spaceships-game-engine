@@ -1,17 +1,24 @@
 /**
  * @typedef {import('../object-control/AbstractController').default} AbstractController
  * @typedef {import('../object-control/flying-object/RemoteFlyingObjectController').default} RemoteFlyingObjectController
+ * @typedef {import('../object-control/flying-object/FlyingObjectMultiplayerController').default} FlyingObjectMultiplayerController
  * @typedef {import('../net/models/WorldState').default} WorldState
  * @typedef {import('../net/models/ObjectState').default} ObjectState
  * @typedef {import('../net/models/InputAction').default} InputAction
+ * @typedef {import('../net/service/MultiplayerService').default} MultiplayerService
  * @typedef {import('../frontend/asset-management/AssetManager').default} AssetManager
  * @typedef {import('di-container-js').default} DiContainer
  */
 
 import AuthoritativeStateManager from "./AuthoritativeStateManager";
 
+const windowSizeFrames = 1000 / 60; // TODO move to configuration
+
 export default class MultiplayerStateManager extends AuthoritativeStateManager {
 
+    /** @type {MultiplayerService} */
+    multiplayerService;
+    
     /** @type {WorldState} */
     nextWorldState;
     /** @type {number} */
@@ -24,7 +31,19 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
 
     /** @type {number} */
     playerObjectId;
+    /** @type {FlyingObjectMultiplayerController} */
+    playerController;
 
+    /** @type {number} */
+    inputGatheringPeriodFrames = 60;
+    /** @type {number} */
+    lastInputGatheringFrame = 0;
+
+    constructor(diContainer, multiplayerService) {
+        super(diContainer);
+        this.multiplayerService = multiplayerService;
+    }
+    
     update(delta) {
         if (this.latestWorldState) {
             // TODO maybe add some lag tolerance, because jitter can decrease and increase compensating each other
@@ -41,9 +60,19 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
         } else if (++this.currentFrameIndex < this.nextFrameIndex) {
             console.log("currentFrameIndex: " + this.currentFrameIndex + " nextFrameIndex: " + this.nextFrameIndex);
             this._applyInputActionsAndUpdateObjects(delta);
+        } else {
+            // else:
+            //  this.currentFrameIndex === this.nextFrameIndex
+            //  no more data about world state available, not possible to continue interpolation
+            return;
         }
-        // this.currentFrameIndex === this.nextFrameIndex
-        // no more data about world state available, not possible to continue interpolation
+
+        if (this.currentFrameIndex - this.lastInputGatheringFrame >= this.inputGatheringPeriodFrames) {
+            this.lastInputGatheringFrame = this.currentFrameIndex;
+            const inputAction = this.playerController.getInputActionForCurrentState();
+            this.multiplayerService.scheduleInputAction(inputAction, );
+            // TODO Get input from this.playerController and use multiplayerService to send message
+        }
     }
 
     async _syncWorldState(actualWorldState, futureWorldState) {
@@ -88,6 +117,7 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
         } else {
             // game loop will start update objects when currentFrameIndex != nextFrameIndex
             this.nextFrameIndex = this.nextWorldState.frameIndex;
+            this.lastInputGatheringFrame = this.nextFrameIndex;
 
             this.latestFrameIndex = worldState.frameIndex;
             this.latestWorldState = worldState;
@@ -136,9 +166,11 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
         this.inputActionsByObjectId[objectId][action.frameIndex] = action;
     }
 
-    setPlayerObjectId(playerObjectId) {
-        this.playerObjectId = playerObjectId;
-        this.inputActionsByObjectId[playerObjectId] = {}
+    /** @param {RemoteFlyingObjectController} playerController */
+    setPlayerController(playerController) {
+        this.playerObjectId = playerController.gameObject.id;
+        this.playerController = playerController;
+        this.inputActionsByObjectId[this.playerObjectId] = {}
     }
 
 }

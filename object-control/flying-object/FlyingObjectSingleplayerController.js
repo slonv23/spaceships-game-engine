@@ -80,15 +80,16 @@ export default class FlyingObjectSingleplayerController extends FlyingObjectBase
     }
 
     _correctObjectRollAngle() {
-        this.normalToRotationDirection = this.gameObject.nz.clone().cross(this.rotationDirection);
         const currentSideAngle = this._calcSideAngle() * this._calcRotationDirection();
         const targetSideAngle = this._calcTargetSideAngle();
-        const angleChange = -targetSideAngle - currentSideAngle;
+        const angleChange = targetSideAngle - currentSideAngle;
+        //const angleChange = -targetSideAngle - currentSideAngle;
         this.gameObject.rollOnAngle(angleChange);
     }
 
     _calcTargetSideAngle() {
-        return this.wYawTarget / FlyingObject.angularVelocityMax.x * Math.PI / 6;
+        return -this.wYawTarget / FlyingObject.angularVelocityMax.x * Math.PI / 6;
+        //return this.wYawTarget / FlyingObject.angularVelocityMax.x * Math.PI / 6;
     }
 
     _calcSideAngle() {

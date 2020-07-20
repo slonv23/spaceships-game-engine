@@ -2,11 +2,11 @@
  * @typedef {import('three')} THREE
  * @typedef {import('../../frontend/input/Mouse').default} Mouse
  * @typedef {import('../../frontend/input/Keyboard').default} Keyboard
- * @typedef {import('../../net/models/InputAction').default} InputAction
  */
 
 import FlyingObjectSingleplayerController from "./FlyingObjectSingleplayerController";
 import {syncStateMixin} from "./_mixins";
+import InputAction from "../../net/models/InputAction";
 
 export default class FlyingObjectMultiplayerController extends FlyingObjectSingleplayerController {
 
@@ -15,48 +15,43 @@ export default class FlyingObjectMultiplayerController extends FlyingObjectSingl
     /**
      * @param {number} delta
      */
+    // eslint-disable-next-line no-unused-vars
     updateControlParams(delta) {
-        return;
+        // actually no update to control params made here, instead user input is captured
+        // and some re-calculation needed for camera manager performed
         this._applyUserInputForRotation();
         this._applyUserInputForAngularVelocities();
 
-        super.updateControlParams(delta);
-
-        this._correctObjectRollAngle();
+        this._updateControlsQuaternion(delta);
+        this._calculateRotationDirection();
+        this._calculateNormalToRotationDirection();
     }
 
     update(delta) {
         this.gameObject.update(delta);
-        //this.updateControlParams(delta);
+        this.updateControlParams(delta);
     }
 
     sync(actualObjectState, futureObjectState) {
         this._sync(futureObjectState);
     }
 
-    _applyUserInputForRotation() {
-        const pressedKey = this.keyboard.getFirstPressedKey();
-
-        /*this.rotationSpeed = 0;
-        if (pressedKey === browserKeycodes.ARROW_LEFT) {
-            this.rotationSpeed = 0.0006;
-        } else if (pressedKey === browserKeycodes.ARROW_RIGHT) {
-            this.rotationSpeed = -0.0006;
-        }*/
-    }
-
-    _applyUserInputForAngularVelocities() {
-        const mousePos = this._calcMousePosInDimlessUnits();
-        //this.wPitchTarget = -mousePos[1] * FlyingObject.angularVelocityMax.y;
-        //this.wYawTarget = mousePos[0] * FlyingObject.angularVelocityMax.x;
-    }
-
-    _correctObjectRollAngle() {
-        /*this.normalToRotationDirection = this.gameObject.nz.clone().cross(this.rotationDirection);
+    getInputActionForCurrentState() {
         const currentSideAngle = this._calcSideAngle() * this._calcRotationDirection();
         const targetSideAngle = this._calcTargetSideAngle();
-        const angleChange = -targetSideAngle - currentSideAngle;
-        this.gameObject.rollOnAngle(angleChange);*/
+        const angleChange = targetSideAngle - currentSideAngle;
+
+        const targetRollAngleWithCorrection = this.gameObject.rollAngleBtwCurrentAndTargetOrientation
+                                               + this.rollAnglePrev - angleChange;
+        console.log('targetSideAngle: ' + targetSideAngle + ' targetRollAngleWithCorrection: ' + targetRollAngleWithCorrection);
+
+        const inputAction = new InputAction();
+        inputAction.pitch = this.wYawTarget;
+        inputAction.yaw = this.wPitchTarget;
+        inputAction.rollAngle = targetRollAngleWithCorrection;
+        inputAction.rotationSpeed = this.rotationSpeed;
+
+        return inputAction;
     }
 
 }

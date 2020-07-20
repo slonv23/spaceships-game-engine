@@ -4,11 +4,14 @@
  * @typedef {import('di-container-js').default} DiContainer
  * @typedef {import('../models/SpawnResponse').default} SpawnResponse
  * @typedef {import('../models/WorldState').default} WorldState
+ * @typedef {import('../models/InputAction').default} InputAction
  * @typedef {import('../../state/MultiplayerStateManager').default} MultiplayerStateManager
  */
 import SpawnRequest from '../models/SpawnRequest';
 import Emitter from "../../util/Emitter";
-import {unixTimestamp} from "../../util/date";
+import {unixTimestampMs} from "../../util/date";
+
+const frameLengthMs = 1000 / 60; // TODO move to configuration
 
 export default class MultiplayerService extends Emitter {
 
@@ -65,10 +68,21 @@ export default class MultiplayerService extends Emitter {
         this.networkClient.addEventListener("messages", this._handleMessagesAfterSpawned);
     }
 
+    /**
+     * @param {InputAction} inputAction
+     * @param {number} currentFrameIndex
+     */
+    scheduleInputAction(inputAction, currentFrameIndex) {
+        const halfRttFramesLength = (this.ping / 2) / frameLengthMs; // half of rtt represented in number of frames
+        inputAction.frameIndex = currentFrameIndex + halfRttFramesLength + 1; // +1 frame to make prediction more reliable
+        console.log(`InputAction scheduled at frame #${inputAction.frameIndex}`);
+        this.networkClient.sendMessage(this._buildMessage(inputAction, true));
+    }
+
     _buildMessage(data, ack = false) {
         const wrapperProps = {};
         if (ack) {
-            wrapperProps.requestSentTimestamp = unixTimestamp();
+            wrapperProps.requestSentTimestamp = unixTimestampMs();
         }
         return this.messageSerializerDeserializer.serializeRequest(data, wrapperProps)
     }
@@ -83,7 +97,7 @@ export default class MultiplayerService extends Emitter {
                 this._onSpawned && this._onSpawned(this.assignedObjectId);
                 break;
             } else if (messageName === "RequestAck") {
-                this.ping = unixTimestamp() - messages[i].requestSentTimestamp;
+                this.ping = unixTimestampMs() - messages[i].requestSentTimestamp;
                 this.dispatchEvent("ping", this.ping);
                 break;
             }
@@ -102,7 +116,7 @@ export default class MultiplayerService extends Emitter {
                     this.stateManager.updateWorld(message);
                     break;
                 case "RequestAck":
-                    this.ping = messages[i].requestSentTimestamp - unixTimestamp();
+                    this.ping = messages[i].requestSentTimestamp - unixTimestampMs();
                     this.dispatchEvent("ping", this.ping);
                     break;
             }
