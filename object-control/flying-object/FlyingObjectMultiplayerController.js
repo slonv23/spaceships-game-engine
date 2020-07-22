@@ -48,7 +48,7 @@ export default class FlyingObjectMultiplayerController extends FlyingObjectSingl
         const inputAction = new InputAction();
         inputAction.pitch = this.wYawTarget;
         inputAction.yaw = this.wPitchTarget;
-        inputAction.rollAngle = targetRollAngleWithCorrection;
+        inputAction.rollAngle = 0; // targetRollAngleWithCorrection;
         inputAction.rotationSpeed = this.rotationSpeed;
 
         return inputAction;

@@ -115,7 +115,7 @@ export default class MultiplayerService extends Emitter {
                     this.dispatchEvent("worldStateUpdate", message);
                     break;
                 case "RequestAck":
-                    this.ping = messages[i].requestSentTimestamp - unixTimestampMs();
+                    this.ping = unixTimestampMs() - messages[i].requestSentTimestamp;
                     this.dispatchEvent("ping", this.ping);
                     break;
             }
