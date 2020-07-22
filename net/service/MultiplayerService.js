@@ -5,7 +5,6 @@
  * @typedef {import('../models/SpawnResponse').default} SpawnResponse
  * @typedef {import('../models/WorldState').default} WorldState
  * @typedef {import('../models/InputAction').default} InputAction
- * @typedef {import('../../state/MultiplayerStateManager').default} MultiplayerStateManager
  */
 import SpawnRequest from '../models/SpawnRequest';
 import Emitter from "../../util/Emitter";
@@ -35,13 +34,11 @@ export default class MultiplayerService extends Emitter {
     /**
      * @param {DiContainer} diContainer
      * @param {MessageSerializerDeserializer} messageSerializerDeserializer
-     * @param {MultiplayerStateManager} multiplayerStateManager
      */
-    constructor(diContainer, messageSerializerDeserializer, multiplayerStateManager) {
+    constructor(diContainer, messageSerializerDeserializer) {
         super();
         this.diContainer = diContainer;
         this.messageSerializerDeserializer = messageSerializerDeserializer;
-        this.stateManager = multiplayerStateManager;
     }
 
     async postConstruct({client = "webRtcNetworkClient", fps} = {}) {
@@ -115,7 +112,7 @@ export default class MultiplayerService extends Emitter {
             switch (type) {
                 case "WorldState":
                     console.log("Received WorldState msg");
-                    this.stateManager.updateWorld(message);
+                    this.dispatchEvent("worldStateUpdate", message);
                     break;
                 case "RequestAck":
                     this.ping = messages[i].requestSentTimestamp - unixTimestampMs();

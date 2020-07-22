@@ -52,6 +52,8 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
         this.packetPeriodFrames = packetPeriodFrames;
         this.inputGatheringPeriodFrames = inputGatheringPeriodFrames;
         this.frameLengthMs = 1000 / fps;
+        // subscribe for world state updates
+        this.multiplayerService.addEventListener('worldStateUpdate', this.handleInitialWorldStateUpdates);
     }
 
     update(delta) {
@@ -128,10 +130,10 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
         }
     }
 
-    /**
-     * @param {WorldState} worldState
-     */
-    updateWorld(worldState) {
+    handleInitialWorldStateUpdates = (event) => {
+        /** @type {WorldState} */
+        const worldState = event.detail;
+
         if (!this.nextWorldState) {
             this.nextWorldState = worldState;
             console.log('Set next world state');
@@ -142,12 +144,15 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
 
             this.latestFrameIndex = worldState.frameIndex;
             this.latestWorldState = worldState;
-            this.updateWorld = this._updateWorld;
-            console.log('Set latest world state');
+            this.multiplayerService.removeEventListener('worldStateUpdate', this.handleInitialWorldStateUpdates);
+            this.multiplayerService.addEventListener('worldStateUpdate', this.handleWorldStateUpdates)
         }
-    }
+    };
 
-    _updateWorld(worldState) {
+    handleWorldStateUpdates = (event) => {
+        /** @type {WorldState} */
+        const worldState = event.detail;
+
         if (worldState.frameIndex <= this.nextFrameIndex) {
             console.log('Old state received, frame index ' + worldState.frameIndex);
             // old state received
@@ -181,7 +186,7 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
                 this.addInputAction(objectState.id, objectState.actions[j]);
             }
         }
-    }
+    };
 
     addInputAction(objectId, action) {
         this.inputActionsByObjectId[objectId][action.frameIndex] = action;
