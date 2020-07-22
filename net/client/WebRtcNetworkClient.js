@@ -35,10 +35,11 @@ export default class WebRtcNetworkClient extends AbstractNetworkClient {
     }
 
     /**
-     * @param {Buffer|Uint8Array} buffer
+     * @param {Uint8Array} uint8Array
      */
-    sendMessage(buffer) {
-        this.dataChannel.send(buffer.buffer);
+    sendMessage(uint8Array) {
+        const arrayBuffer = uint8Array.buffer.slice(uint8Array.byteOffset, uint8Array.byteLength + uint8Array.byteOffset);
+        this.dataChannel.send(arrayBuffer);
     }
 
     _createPeerConnection() {

@@ -96,8 +96,12 @@ export default class FlyingObjectSingleplayerController extends FlyingObjectBase
         const nx = this.gameObject.nx.clone();
         const ny = this.gameObject.ny.clone();
         this.rotationDirectionForNonRotated = nx.multiplyScalar(this.wYawTarget).add(ny.multiplyScalar(this.wPitchTarget));
-
-        return this.rotationDirectionForNonRotated.angleTo(this.rotationDirection);
+        if (this.rotationDirectionForNonRotated.lengthSq() * this.rotationDirection.lengthSq() > 0.0001) {
+            return this.rotationDirectionForNonRotated.angleTo(this.rotationDirection);
+        } else {
+            // if yaw and pitch are too small than rotation direction will be close to zero vector
+            return 0;
+        }
     }
 
     _calcRotationDirection() {
