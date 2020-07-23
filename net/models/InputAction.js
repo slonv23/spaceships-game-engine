@@ -5,13 +5,13 @@ export default class InputAction extends AbstractModel {
     /** @type {number} */
     frameIndex;
     /** @type {number} */
-    yaw;
+    yaw = 0;
     /** @type {number} */
-    pitch;
+    pitch = 0;
     /** @type {number} */
-    rotationSpeed;
+    rotationSpeed = 0;
     /** @type {number} */
-    rollAngle;
+    rollAngle = 0;
     /** @type {number} */
     objectId;
 

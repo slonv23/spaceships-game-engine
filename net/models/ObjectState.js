@@ -24,7 +24,7 @@ export default class ObjectState extends AbstractModel {
     /* @type {THREE.Vector3}
     angularAcceleration; - currently not supported */
     /** @type {number} */
-    rollAngleBtwCurrentAndTargetOrientation;
+    rollAngleBtwCurrentAndTargetOrientation = 0;
     /** @type {THREE.Quaternion} */
     controlQuaternion;
 
