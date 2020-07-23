@@ -7,6 +7,7 @@
 import FlyingObjectSingleplayerController from "./FlyingObjectSingleplayerController";
 import {syncStateMixin} from "./_mixins";
 import InputAction from "../../net/models/InputAction";
+import FlyingObject from '../../physics/object/FlyingObject';
 
 export default class FlyingObjectMultiplayerController extends FlyingObjectSingleplayerController {
 
@@ -19,12 +20,11 @@ export default class FlyingObjectMultiplayerController extends FlyingObjectSingl
     updateControlParams(delta) {
         // actually no update to control params made here, instead user input is captured
         // and some re-calculation needed for camera manager performed
-        this._applyUserInputForRotation();
-        this._applyUserInputForAngularVelocities();
+        // DON'T USE THIS FUNCTIONS! THEY MODIFY CONTROL PARAMS
+        //this._applyUserInputForRotation();
+        //this._applyUserInputForAngularVelocities();
 
-        this._updateControlsQuaternion(delta);
-        this._calculateRotationDirection();
-        this._calculateNormalToRotationDirection();
+        super.updateControlParams(delta);
     }
 
     update(delta) {
@@ -33,7 +33,7 @@ export default class FlyingObjectMultiplayerController extends FlyingObjectSingl
     }
 
     sync(actualObjectState, futureObjectState) {
-        this._sync(futureObjectState);
+        //this._sync(futureObjectState);
     }
 
     getInputActionForCurrentState() {
@@ -46,10 +46,13 @@ export default class FlyingObjectMultiplayerController extends FlyingObjectSingl
         console.log('targetSideAngle: ' + targetSideAngle + ' targetRollAngleWithCorrection: ' + targetRollAngleWithCorrection);
 
         const inputAction = new InputAction();
-        inputAction.pitch = this.wYawTarget;
-        inputAction.yaw = this.wPitchTarget;
+
+        const mousePos = this._calcMousePosInDimlessUnits();
+        inputAction.pitch = -mousePos[1] * FlyingObject.angularVelocityMax.y; //this.wYawTarget;
+        inputAction.yaw = mousePos[0] * FlyingObject.angularVelocityMax.x; //this.wPitchTarget;
+        // TODO:
         inputAction.rollAngle = 0; // targetRollAngleWithCorrection;
-        inputAction.rotationSpeed = this.rotationSpeed;
+        inputAction.rotationSpeed = 0; // this.rotationSpeed;
 
         return inputAction;
     }

@@ -71,8 +71,8 @@ export default class MultiplayerService extends Emitter {
      * @param {number} currentFrameIndex
      */
     scheduleInputAction(inputAction, currentFrameIndex) {
-        const halfRttFramesLength = (this.ping / 2) / this.frameLengthMs; // half of rtt represented in number of frames
-        inputAction.frameIndex = currentFrameIndex + halfRttFramesLength + 1; // +1 frame to make prediction more reliable
+        const halfRttFramesLength = Math.ceil((this.ping / 2) / this.frameLengthMs); // half of rtt represented in number of frames
+        inputAction.frameIndex = currentFrameIndex + halfRttFramesLength + 10; // +1 frame to make prediction more reliable
         this.networkClient.sendMessage(this._buildMessage(inputAction, true));
 
         console.log(`InputAction scheduled at frame #${inputAction.frameIndex}`);
