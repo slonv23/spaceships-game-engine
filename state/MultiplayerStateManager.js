@@ -64,13 +64,14 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
 
             this._syncWorldState(this.nextWorldState, this.latestWorldState);
             console.log('Sync with next world state ' + this.nextWorldState.frameIndex);
+            console.log('Difference btw received and current frame index: ' + (this.nextWorldState.frameIndex - this.currentFrameIndex));
 
             this.nextWorldState = this.latestWorldState;
             this.nextFrameIndex = this.latestFrameIndex;
             this.latestWorldState = null;
             this._cleanup();
         } else if (++this.currentFrameIndex < this.nextFrameIndex) {
-            console.log("currentFrameIndex: " + this.currentFrameIndex + " nextFrameIndex: " + this.nextFrameIndex);
+            //console.log("currentFrameIndex: " + this.currentFrameIndex + " nextFrameIndex: " + this.nextFrameIndex);
             this._applyInputActionsAndUpdateObjects(delta);
         } else {
             // else:

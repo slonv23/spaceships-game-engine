@@ -29,6 +29,7 @@ export const syncStateMixin = {
      * @protected
      */
     _syncObject(objectState) {
+        console.log('Difference btw position: ' + this.gameObject.position.distanceTo(this.gameObject.position));
         this.gameObject.quaternion.copy(objectState.quaternion);
         this.gameObject.position = objectState.position;
         this.gameObject.object3d.position.copy(objectState.position);
@@ -37,6 +38,9 @@ export const syncStateMixin = {
         this.gameObject.angularVelocity.copy(objectState.angularVelocity);
         //this.gameObject.angularAcceleration.copy(objectState.angularAcceleration);
         this.gameObject.rollAngleBtwCurrentAndTargetOrientation = objectState.rollAngleBtwCurrentAndTargetOrientation;
+        if (isNaN(this.gameObject.rollAngleBtwCurrentAndTargetOrientation)) {
+            debugger;
+        }
 
         this.gameObject.updateTransformationMatrix();
     },

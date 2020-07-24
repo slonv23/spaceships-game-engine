@@ -24,7 +24,11 @@ export default class FlyingObjectMultiplayerController extends FlyingObjectSingl
         //this._applyUserInputForRotation();
         //this._applyUserInputForAngularVelocities();
 
-        super.updateControlParams(delta);
+        //super.updateControlParams(delta);
+        this._updateControlsQuaternion(delta);
+        this._calculateRotationDirection();
+        this._calculateNormalToRotationDirection(); // used by camera manager
+        this._updateAngularVelocities();
     }
 
     update(delta) {
@@ -33,7 +37,7 @@ export default class FlyingObjectMultiplayerController extends FlyingObjectSingl
     }
 
     sync(actualObjectState, futureObjectState) {
-        //this._sync(futureObjectState);
+        this._sync(futureObjectState);
     }
 
     getInputActionForCurrentState() {
@@ -43,6 +47,9 @@ export default class FlyingObjectMultiplayerController extends FlyingObjectSingl
 
         const targetRollAngleWithCorrection = this.gameObject.rollAngleBtwCurrentAndTargetOrientation
                                                + this.rollAnglePrev - angleChange;
+        if (isNaN(targetRollAngleWithCorrection)) {
+            debugger;
+        }
         console.log('targetSideAngle: ' + targetSideAngle + ' targetRollAngleWithCorrection: ' + targetRollAngleWithCorrection);
 
         const inputAction = new InputAction();
