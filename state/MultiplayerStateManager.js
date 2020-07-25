@@ -61,7 +61,6 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
             // TODO maybe add some lag tolerance, because jitter can decrease and increase compensating each other
             // time to speed up, more recent state received
             this.currentFrameIndex = this.nextFrameIndex;
-
             this._syncWorldState(this.nextWorldState, this.latestWorldState);
             console.log('Sync with next world state ' + this.nextWorldState.frameIndex);
             console.log('Difference btw received and current frame index: ' + (this.nextWorldState.frameIndex - this.currentFrameIndex));

@@ -47,9 +47,6 @@ export default class FlyingObjectMultiplayerController extends FlyingObjectSingl
 
         const targetRollAngleWithCorrection = this.gameObject.rollAngleBtwCurrentAndTargetOrientation
                                                + this.rollAnglePrev - angleChange;
-        if (isNaN(targetRollAngleWithCorrection)) {
-            debugger;
-        }
         console.log('targetSideAngle: ' + targetSideAngle + ' targetRollAngleWithCorrection: ' + targetRollAngleWithCorrection);
 
         const inputAction = new InputAction();

@@ -62,15 +62,20 @@ export default class AuthoritativeStateManager extends Emitter {
     }
 
     _applyInputActionsAndUpdateObjects(delta) {
+        const processedActions = [];
+
         for (let i = 0; i < this.initializedControllersCount; i++) {
             const id = this.initializedControllers[i].gameObject.id;
             const inputAction = this.inputActionsByObjectId[id][this.currentFrameIndex];
             if (inputAction) {
                 this.initializedControllers[i].processInput(inputAction);
+                processedActions.push(inputAction);
             }
 
             this.initializedControllers[i].update(delta);
         }
+
+        this.dispatchEvent("actions-processed", processedActions);
     }
 
     // update method for single player mode:
