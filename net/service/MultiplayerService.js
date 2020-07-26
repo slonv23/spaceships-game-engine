@@ -74,8 +74,6 @@ export default class MultiplayerService extends Emitter {
         const halfRttFramesLength = Math.ceil((this.ping / 2) / this.frameLengthMs); // half of rtt represented in number of frames
         inputAction.frameIndex = currentFrameIndex + halfRttFramesLength + 10; // +1 frame to make prediction more reliable
         this.networkClient.sendMessage(this._buildMessage(inputAction, true));
-
-        console.log(`InputAction scheduled at frame #${inputAction.frameIndex}`);
     }
 
     _buildMessage(data, ack = false) {
@@ -111,7 +109,6 @@ export default class MultiplayerService extends Emitter {
 
             switch (type) {
                 case "WorldState":
-                    console.log("Received WorldState msg");
                     this.dispatchEvent("worldStateUpdate", message);
                     break;
                 case "RequestAck":

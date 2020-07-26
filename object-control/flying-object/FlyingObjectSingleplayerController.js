@@ -2,6 +2,7 @@
  * @typedef {import('three')} THREE
  * @typedef {import('../../frontend/input/Mouse').default} Mouse
  * @typedef {import('../../frontend/input/Keyboard').default} Keyboard
+ * @typedef {import('../../logging/AbstractLogger').default} AbstractLogger
  */
 
 import FlyingObject from "../../physics/object/FlyingObject";
@@ -27,10 +28,10 @@ export default class FlyingObjectSingleplayerController extends FlyingObjectBase
      /**
       * @param {Mouse} mouseInterface
       * @param {Keyboard} keyboardInterface
+      * @param {AbstractLogger} logger
       */
-    constructor(mouseInterface, keyboardInterface) {
-        super();
-
+    constructor(mouseInterface, keyboardInterface, logger) {
+        super(logger);
         this.mouse = mouseInterface;
         this.keyboard = keyboardInterface;
 

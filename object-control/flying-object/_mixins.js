@@ -3,8 +3,6 @@
  * @typedef {import('../../net/models/InputAction').default} InputAction
  */
 
-import * as THREE from "three";
-
 import FlyingObjectBaseController from "./FlyingObjectBaseController";
 
 export const syncStateMixin = {
@@ -29,7 +27,11 @@ export const syncStateMixin = {
      * @protected
      */
     _syncObject(objectState) {
-        console.log('Difference btw position: ' + this.gameObject.position.distanceTo(this.gameObject.position));
+        const lastPosDiffNewPos = this.gameObject.position.distanceTo(this.gameObject.position);
+        if (lastPosDiffNewPos !== 0) {
+            this.logger.debug(`Current and new object positions diverge on ${lastPosDiffNewPos}`);
+        }
+
         this.gameObject.quaternion.copy(objectState.quaternion);
         this.gameObject.position = objectState.position;
         this.gameObject.object3d.position.copy(objectState.position);
@@ -38,9 +40,6 @@ export const syncStateMixin = {
         this.gameObject.angularVelocity.copy(objectState.angularVelocity);
         //this.gameObject.angularAcceleration.copy(objectState.angularAcceleration);
         this.gameObject.rollAngleBtwCurrentAndTargetOrientation = objectState.rollAngleBtwCurrentAndTargetOrientation;
-        if (isNaN(this.gameObject.rollAngleBtwCurrentAndTargetOrientation)) {
-            debugger;
-        }
 
         this.gameObject.updateTransformationMatrix();
     },

@@ -7,6 +7,7 @@
  * @typedef {import('../net/models/InputAction').default} InputAction
  * @typedef {import('../net/service/MultiplayerService').default} MultiplayerService
  * @typedef {import('../frontend/asset-management/AssetManager').default} AssetManager
+ * @typedef {import('../logging/AbstractLogger').default} AbstractLogger
  * @typedef {import('di-container-js').default} DiContainer
  */
 
@@ -16,6 +17,9 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
 
     /** @type {MultiplayerService} */
     multiplayerService;
+
+    /** @type {AbstractLogger} */
+    logger;
 
     /** @type {WorldState} */
     nextWorldState;
@@ -42,9 +46,10 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
     /** @type {number} */
     frameLengthMs;
 
-    constructor(diContainer, multiplayerService) {
+    constructor(diContainer, multiplayerService, logger) {
         super(diContainer);
         this.multiplayerService = multiplayerService;
+        this.logger = logger;
     }
 
     async postConstruct({packetPeriodFrames, inputGatheringPeriodFrames, fps}) {
@@ -57,25 +62,29 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
     }
 
     update(delta) {
+        this.logger.debug(`[FRM#${this.currentFrameIndex}]`);
         if (this.latestWorldState) {
             // TODO maybe add some lag tolerance, because jitter can decrease and increase compensating each other
             // time to speed up, more recent state received
+            this.logger.debug(`Switching to next state on new state received`);
+            if (this.nextWorldState.frameIndex - this.currentFrameIndex > 1) {
+                const framesOmitted = this.nextWorldState.frameIndex - this.currentFrameIndex - 1;
+                this.logger.debug(`${framesOmitted} frame(s) will be omitted`);
+            }
+
             this.currentFrameIndex = this.nextFrameIndex;
             this._syncWorldState(this.nextWorldState, this.latestWorldState);
-            console.log('Sync with next world state ' + this.nextWorldState.frameIndex);
-            console.log('Difference btw received and current frame index: ' + (this.nextWorldState.frameIndex - this.currentFrameIndex));
 
             this.nextWorldState = this.latestWorldState;
             this.nextFrameIndex = this.latestFrameIndex;
             this.latestWorldState = null;
             this._cleanup();
         } else if (++this.currentFrameIndex < this.nextFrameIndex) {
-            //console.log("currentFrameIndex: " + this.currentFrameIndex + " nextFrameIndex: " + this.nextFrameIndex);
             this._applyInputActionsAndUpdateObjects(delta);
         } else {
-            // else:
-            //  this.currentFrameIndex === this.nextFrameIndex
-            //  no more data about world state available, not possible to continue interpolation
+            // this.currentFrameIndex === this.nextFrameIndex
+            // no more data about world state available, not possible to continue interpolation
+            this.logger.debug(`[FRM#${this.currentFrameIndex}] No update`);
             return;
         }
 
@@ -93,7 +102,7 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
             // because simulation for it runs without interpolation
             inputAction.frameIndex -= this.packetPeriodFrames;
 
-            console.log(`Input action will be applied on frame #${inputAction.frameIndex}`);
+            this.logger.debug(`Input action will be applied on frame #${inputAction.frameIndex}`);
             this.addInputAction(this.playerObjectId, inputAction);
         }
     }
@@ -124,8 +133,6 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
                 controller = await this.createObject(objectId, actualObjectState.objectType);
             }
 
-            console.log('Game object pos: ' + JSON.stringify(controller.gameObject.position));
-
             controller.sync(actualObjectState, futureObjectState);
         }
     }
@@ -136,7 +143,6 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
 
         if (!this.nextWorldState) {
             this.nextWorldState = worldState;
-            console.log('Set next world state');
         } else {
             // game loop will start update objects when currentFrameIndex != nextFrameIndex
             this.nextFrameIndex = this.nextWorldState.frameIndex;
@@ -154,15 +160,12 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
         const worldState = event.detail;
 
         if (worldState.frameIndex <= this.nextFrameIndex) {
-            console.log('Old state received, frame index ' + worldState.frameIndex);
             // old state received
             return;
         } else if (!this.latestWorldState) {
-            console.log('Set latestWorldState');
             this.latestWorldState = worldState;
             this.latestFrameIndex = worldState.frameIndex;
         } else {
-            console.log('Swap nextWorldState <-> latestWorldState');
             this.nextWorldState = this.latestWorldState;
             this.nextFrameIndex = this.latestFrameIndex;
             this.latestWorldState = worldState;

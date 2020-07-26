@@ -1,5 +1,6 @@
 /**
  * @typedef {import('../../physics/object/FlyingObject').default} FlyingObject
+ * @typedef {import('../../logging/AbstractLogger').default} AbstractLogger
  */
 
 import * as THREE from "three";
@@ -8,6 +9,9 @@ import AbstractController from "../AbstractController";
 import {createQuaternionForRotation} from "../../util/math";
 
 export default class FlyingObjectBaseController extends AbstractController {
+
+    /** @type {AbstractLogger} */
+    logger;
 
     /** @type {FlyingObject} */
     gameObject;
@@ -36,6 +40,11 @@ export default class FlyingObjectBaseController extends AbstractController {
 
     static calculateRotationDirection(nx, ny, yaw, pitch) {
         return nx.clone().multiplyScalar(yaw).add(ny.clone().multiplyScalar(pitch));
+    }
+
+    constructor(logger) {
+        super();
+        this.logger = logger;
     }
 
     /**

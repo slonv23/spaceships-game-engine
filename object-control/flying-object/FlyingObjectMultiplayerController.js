@@ -16,15 +16,7 @@ export default class FlyingObjectMultiplayerController extends FlyingObjectSingl
     /**
      * @param {number} delta
      */
-    // eslint-disable-next-line no-unused-vars
     updateControlParams(delta) {
-        // actually no update to control params made here, instead user input is captured
-        // and some re-calculation needed for camera manager performed
-        // DON'T USE THIS FUNCTIONS! THEY MODIFY CONTROL PARAMS
-        //this._applyUserInputForRotation();
-        //this._applyUserInputForAngularVelocities();
-
-        //super.updateControlParams(delta);
         this._updateControlsQuaternion(delta);
         this._calculateRotationDirection();
         this._calculateNormalToRotationDirection(); // used by camera manager
@@ -44,16 +36,13 @@ export default class FlyingObjectMultiplayerController extends FlyingObjectSingl
         const currentSideAngle = this._calcSideAngle() * this._calcRotationDirection();
         const targetSideAngle = this._calcTargetSideAngle();
         const angleChange = targetSideAngle - currentSideAngle;
-
         const targetRollAngleWithCorrection = this.gameObject.rollAngleBtwCurrentAndTargetOrientation
                                                + this.rollAnglePrev - angleChange;
-        console.log('targetSideAngle: ' + targetSideAngle + ' targetRollAngleWithCorrection: ' + targetRollAngleWithCorrection);
 
         const inputAction = new InputAction();
-
         const mousePos = this._calcMousePosInDimlessUnits();
-        inputAction.pitch = -mousePos[1] * FlyingObject.angularVelocityMax.y; //this.wYawTarget;
-        inputAction.yaw = mousePos[0] * FlyingObject.angularVelocityMax.x; //this.wPitchTarget;
+        inputAction.pitch = -mousePos[1] * FlyingObject.angularVelocityMax.y;
+        inputAction.yaw = mousePos[0] * FlyingObject.angularVelocityMax.x;
         // TODO:
         inputAction.rollAngle = 0; // targetRollAngleWithCorrection;
         inputAction.rotationSpeed = 0; // this.rotationSpeed;
