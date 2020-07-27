@@ -1,3 +1,6 @@
+/**
+ * @typedef {import('../../logging/AbstractLogger').default} AbstractLogger
+ */
 import AbstractNetworkClient from "./AbstractNetworkClient";
 
 export default class WebRtcNetworkClient extends AbstractNetworkClient {
@@ -7,6 +10,14 @@ export default class WebRtcNetworkClient extends AbstractNetworkClient {
 
     /** @type {RTCDataChannel} */
     dataChannel;
+
+    /** @type {AbstractLogger} */
+    logger;
+
+    constructor(logger) {
+        super();
+        this.logger = logger;
+    }
 
     async postConstruct({serverIp, signalingServerPort}) {
         this.serverIp = serverIp;
@@ -29,8 +40,8 @@ export default class WebRtcNetworkClient extends AbstractNetworkClient {
                     }
                 })();
             });
-        } catch (e) {
-            console.error("WebRtcNetworkClient: Failed to connect using WebRTC datachannel, error: " + e);
+        } catch (err) {
+            this.logger.error("WebRtcNetworkClient: Failed to connect using WebRTC datachannel, error: " + err.message);
         }
     }
 
@@ -61,20 +72,20 @@ export default class WebRtcNetworkClient extends AbstractNetworkClient {
         this.dataChannel.binaryType = "arraybuffer";
 
         this.dataChannel.onopen = event => {
-            console.debug('DataChannel ready: ' + event);
+            this.logger.debug('DataChannel is ready');
             onOpenCallback();
         };
 
         this.dataChannel.onclose = event => {
-            console.debug('DataChannel closed' + event);
+            this.logger.debug('DataChannel is closed');
         };
 
         this.dataChannel.onerror = event => {
-            console.error('DataChannel error: ' + event);
+            this.logger.warn('DataChannel error: ' + event.message);
         };
 
         this.dataChannel.onmessage = event => {
-            console.debug('DataChannel received message(s)');
+            this.logger.debug('DataChannel received message(s)');
             this.dispatchEvent("messages", new Uint8Array(event.data));
         };
     }
@@ -94,7 +105,7 @@ export default class WebRtcNetworkClient extends AbstractNetworkClient {
                 if (event.candidate) {
                     candidates.push(event.candidate);
                 } else {
-                    console.debug("All local candidates received");
+                    this.logger.debug("All local candidates received");
                     resolve(candidates);
                 }
             };
@@ -140,7 +151,8 @@ export default class WebRtcNetworkClient extends AbstractNetworkClient {
                     candidates: params.getAll('candidates')
                 }
             }).catch(err => {
-                console.error("WebRtcNetworkClient: Failed to retrieve sdp answer and ice candidates from signaling server, error: " + err);
+                this.logger.error("WebRtcNetworkClient: Failed to retrieve sdp answer and" +
+                                  " ice candidates from signaling server, error: " + err.message)
                 throw err;
             });
     }
@@ -148,7 +160,6 @@ export default class WebRtcNetworkClient extends AbstractNetworkClient {
     _fetchWithRetry() {
         return fetch(...arguments).then((res) => {
             if (res.status === 503) {
-                console.debug("Retrying request...")
                 return new Promise((resolve, reject) => {
                     setTimeout(() => {
                         this._fetchWithRetry(...arguments).then(resolve, reject);

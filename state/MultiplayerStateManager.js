@@ -46,6 +46,8 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
     /** @type {number} */
     frameLengthMs;
 
+    ticksWaiting = 0;
+
     constructor(diContainer, multiplayerService, logger) {
         super(diContainer);
         this.multiplayerService = multiplayerService;
@@ -62,7 +64,10 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
     }
 
     update(delta) {
-        this.logger.debug(`[FRM#${this.currentFrameIndex}]`);
+        if (this.currentFrameIndex !== 0) {
+            this.logger.debug(`[FRM#${this.currentFrameIndex}]`);
+        }
+
         if (this.latestWorldState) {
             // TODO maybe add some lag tolerance, because jitter can decrease and increase compensating each other
             // time to speed up, more recent state received
@@ -72,6 +77,11 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
                 this.logger.debug(`${framesOmitted} frame(s) will be omitted`);
             }
 
+            if (this.ticksWaiting) {
+                this.logger.debug(`No update was made over ${this.ticksWaiting} ticks`);
+                this.ticksWaiting = 0;
+            }
+
             this.currentFrameIndex = this.nextFrameIndex;
             this._syncWorldState(this.nextWorldState, this.latestWorldState);
 
@@ -79,12 +89,13 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
             this.nextFrameIndex = this.latestFrameIndex;
             this.latestWorldState = null;
             this._cleanup();
-        } else if (++this.currentFrameIndex < this.nextFrameIndex) {
+        } else if ((this.currentFrameIndex + 1) < this.nextFrameIndex) {
             this._applyInputActionsAndUpdateObjects(delta);
+            this.currentFrameIndex++;
         } else {
             // this.currentFrameIndex === this.nextFrameIndex
             // no more data about world state available, not possible to continue interpolation
-            this.logger.debug(`[FRM#${this.currentFrameIndex}] No update`);
+            this.ticksWaiting++;
             return;
         }
 
