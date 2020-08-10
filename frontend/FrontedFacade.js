@@ -87,7 +87,7 @@ export default class FrontendFacade {
      * @returns {Promise<THREE.Sprite>}
      */
     async createSprite(spriteName) {
-        const sprite = this.assetManager.getSprite(spriteName);
+        const sprite = this.assetManager.getSprite(spriteName).clone();
         this.renderer.sceneOrtho.add(sprite);
 
         return sprite;

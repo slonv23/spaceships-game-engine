@@ -6,12 +6,12 @@ export default class AssetManager {
 
     assetsDir;
 
-    modelsDir;
+    assets3dDir;
 
-    spritesDir
+    spritesDir;
 
-    /** @type {object.<string, THREE.Object3D>} */
-    models = {};
+    /** @type {object.<string, object>} */
+    assets3d = {};
 
     /** @type {object.<string, THREE.Sprite>} */
     sprites = {};
@@ -27,21 +27,21 @@ export default class AssetManager {
     }
 
     /**
-     * @param {{assetsRootDir: string, modelsDirSubpath: string, spritesDirSubpath: string, modelFilepathsPathByName: object.<string, string>}} param0
+     * @param {{assetsRootDir: string, assets3dDirSubpath: string, spritesDirSubpath: string, modelFilepathsPathByName: object.<string, string>}} param0
      * @returns {Promise<any>}
      */
     postConstruct({
         assetsRootDir = "assets",
-        modelsDirSubpath = "models",
+        assets3dDirSubpath = "models",
         spritesDirSubpath = "sprites",
         filepaths = {}
     } = {}) {
         this.assetsDir = assetsRootDir;
-        this.modelsDir = this.assetsDir + '/' + modelsDirSubpath;
+        this.assets3dDir = this.assetsDir + '/' + assets3dDirSubpath;
         this.spritesDir = this.assetsDir + '/' + spritesDirSubpath;
 
         return Promise.all([
-            this._loadModels(filepaths.models),
+            this._load3dAssets(filepaths.assets3d),
             this._loadSprites(filepaths.sprites)
         ]);
     }
@@ -55,19 +55,19 @@ export default class AssetManager {
     }
 
     /**
-     * @param {string} modelName 
-     * @returns {THREE.Object3D}
+     * @param {string} name
+     * @returns {object}
      */
-    getModel(modelName) {
-        if (!(modelName in this.models)) {
-            throw new Error(`Model '${modelName}' is not loaded`);
+    get3dAsset(name) {
+        if (!(name in this.assets3d)) {
+            throw new Error(`3d asset '${name}' is not loaded`);
         }
 
-        return this.models[modelName].clone();
+        return this.assets3d[name];
     }
 
     /**
-     * @param {string} spriteName 
+     * @param {string} spriteName
      * @returns {THREE.Sprite}
      */
     getSprite(spriteName) {
@@ -75,7 +75,7 @@ export default class AssetManager {
             throw new Error(`Sprite '${spriteName}' is not loaded`);
         }
 
-        return this.sprites[spriteName].clone();
+        return this.sprites[spriteName];
     }
 
     async _loadSprites(spritesFilepathsByName) {
@@ -87,26 +87,22 @@ export default class AssetManager {
         }
     }
 
-    async _loadModels(modelFilepathsByName) {
-        if (modelFilepathsByName) {
-            for (let modelName in modelFilepathsByName) {
-                const model = await this._loadModel(modelFilepathsByName[modelName]);
-                this.models[modelName] = model;
+    async _load3dAssets(assets3dFilepathsByName) {
+        if (assets3dFilepathsByName) {
+            for (let name in assets3dFilepathsByName) {
+                this.assets3d[name] = await this._load3dAsset(assets3dFilepathsByName[name]);
             }
         }
     }
 
     /**
-     * @param {string} subpath 
-     * @returns {Promise<THREE.Object3D>}
+     * @param {string} subpath
+     * @returns {Promise<object>}
      */
-    _loadModel(subpath) {
+    _load3dAsset(subpath) {
         return new Promise((resolve, reject) => {
             this.gltfLoader.load(this.modelFilepath(subpath), (gltf) => {
-                let model = gltf.scene.children[0].children[0];
-                model.matrixAutoUpdate = false;
-
-                resolve(model);
+                resolve(gltf);
             }, undefined, function (e) {
                 console.error(e);
 
@@ -116,7 +112,7 @@ export default class AssetManager {
     }
 
     /**
-     * @param {string} subpath 
+     * @param {string} subpath
      * @returns {Promise<THREE.Sprite>}
      */
     _loadSprite(subpath) {
