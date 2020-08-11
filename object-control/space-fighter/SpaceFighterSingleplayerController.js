@@ -5,11 +5,11 @@
  * @typedef {import('../../logging/AbstractLogger').default} AbstractLogger
  */
 
-import FlyingObject from "../../physics/object/FlyingObject";
+import SpaceFighter from "../../physics/object/SpaceFighter";
 import browserKeycodes from "../../util/browser-keycodes";
-import FlyingObjectBaseController from './FlyingObjectBaseController';
+import SpaceFighterBaseController from './SpaceFighterBaseController';
 
-export default class FlyingObjectSingleplayerController extends FlyingObjectBaseController {
+export default class SpaceFighterSingleplayerController extends SpaceFighterBaseController {
 
     /** @type {Mouse} */
     mouse;
@@ -44,7 +44,7 @@ export default class FlyingObjectSingleplayerController extends FlyingObjectBase
     }
 
     /**
-     * @param {FlyingObject} gameObject
+     * @param {SpaceFighter} gameObject
      */
     init(gameObject) {
         super.init(gameObject);
@@ -76,8 +76,8 @@ export default class FlyingObjectSingleplayerController extends FlyingObjectBase
 
     _applyUserInputForAngularVelocities() {
         const mousePos = this._calcMousePosInDimlessUnits();
-        this.wPitchTarget = -mousePos[1] * FlyingObject.angularVelocityMax.y;
-        this.wYawTarget = mousePos[0] * FlyingObject.angularVelocityMax.x;
+        this.wPitchTarget = -mousePos[1] * SpaceFighter.angularVelocityMax.y;
+        this.wYawTarget = mousePos[0] * SpaceFighter.angularVelocityMax.x;
     }
 
     _correctObjectRollAngle() {
@@ -89,8 +89,8 @@ export default class FlyingObjectSingleplayerController extends FlyingObjectBase
     }
 
     _calcTargetSideAngle() {
-        return -this.wYawTarget / FlyingObject.angularVelocityMax.x * Math.PI / 6;
-        //return this.wYawTarget / FlyingObject.angularVelocityMax.x * Math.PI / 6;
+        return -this.wYawTarget / SpaceFighter.angularVelocityMax.x * Math.PI / 6;
+        //return this.wYawTarget / SpaceFighter.angularVelocityMax.x * Math.PI / 6;
     }
 
     _calcSideAngle() {

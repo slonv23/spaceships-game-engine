@@ -8,6 +8,6 @@ diContainer.registerClass("renderer", Renderer);
 
 // register other components
 import '../state';
-import './asset-management';
+import '../asset-management';
 import '../object-control';
 import './input';

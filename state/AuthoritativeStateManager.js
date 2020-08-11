@@ -1,8 +1,8 @@
 /**
  * @typedef {import('../object-control/AbstractController').default} AbstractController
- * @typedef {import('../object-control/flying-object/RemoteFlyingObjectController').default} RemoteFlyingObjectController
+ * @typedef {import('../object-control/space-fighter/RemoteSpaceFighterController').default} RemoteSpaceFighterController
  * @typedef {import('../net/models/InputAction').default} InputAction
- * @typedef {import('../frontend/asset-management/AssetManager').default} AssetManager
+ * @typedef {import('../asset-management/AssetManager').default} AssetManager
  * @typedef {import('di-container-js').default} DiContainer
  */
 
@@ -34,25 +34,10 @@ export default class AuthoritativeStateManager extends Emitter {
     /** @type {object.<number, object.<number, InputAction>>} */
     inputActionsByObjectId = {};
 
-    /** @type {Function} */
-    _createGameObject;
-
-    constructor(diContainer) {
+    constructor(diContainer, assetManager) {
         super();
         this.diContainer = diContainer;
-    }
-
-    async postConstruct() {
-        if (this.diContainer.isProvided('assetManager')) {
-            this.assetManager = await this.diContainer.get('assetManager');
-            this._createGameObject = (objectId, gameObjectDef) => {
-                return new gameObjectDef.objectClass(objectId, this.assetManager.getModel(gameObjectDef.model))
-            };
-        } else {
-            this._createGameObject = (objectId, gameObjectDef) => {
-                return new gameObjectDef.objectClass(objectId)
-            };
-        }
+        this.assetManager = assetManager;
     }
 
     update(delta) {
@@ -85,8 +70,8 @@ export default class AuthoritativeStateManager extends Emitter {
         }
     }*/
 
-    registerGameObjectType(objectTypeName, objectClass, defaultControllerRef = null, model = null) {
-        this.gameObjectTypes[objectTypeName] = {objectClass, defaultControllerRef, model};
+    registerGameObjectType(objectTypeName, objectFactory, defaultControllerRef = null) {
+        this.gameObjectTypes[objectTypeName] = {objectFactory, defaultControllerRef};
     }
 
     /**
@@ -104,12 +89,12 @@ export default class AuthoritativeStateManager extends Emitter {
         if (!(gameObjectDef.objectClass.prototype instanceof AbstractObject)) {
             throw new Error('Class must be inherited from AbstractObject');
         }
-        let gameObject = this._createGameObject(objectId, gameObjectDef);
+        let gameObject = gameObjectDef.objectFactory(objectId, this.assetManager);
         this.dispatchEvent("object-created", gameObject);
 
         let controller = this.controllersByObjectId[objectId];
         if (!controller) {
-            controller = await this.createController(objectId, controllerRef ? controllerRef : gameObjectDef.defaultControllerRef);
+            controller = await this.createObjectController(objectId, controllerRef ? controllerRef : gameObjectDef.defaultControllerRef);
         }
         controller.init(gameObject);
         this.initializedControllers.push(controller);
@@ -121,7 +106,7 @@ export default class AuthoritativeStateManager extends Emitter {
         return controller;
     }
 
-    async createController(objectId, controllerRef) {
+    async createObjectController(objectId, controllerRef) {
         let controller = await this.diContainer.get(controllerRef, true);
         if (!controller) {
             throw new Error('Component not found');

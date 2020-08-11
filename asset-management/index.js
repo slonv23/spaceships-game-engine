@@ -1,4 +1,4 @@
-import {diContainer} from '../../globals';
+import {diContainer} from '../globals';
 
 import AssetManager from "./AssetManager";
 import GltfLoader from "./GltfLoader";

@@ -1,12 +1,12 @@
 /**
  * @typedef {import('../object-control/AbstractController').default} AbstractController
- * @typedef {import('../object-control/flying-object/RemoteFlyingObjectController').default} RemoteFlyingObjectController
- * @typedef {import('../object-control/flying-object/FlyingObjectMultiplayerController').default} FlyingObjectMultiplayerController
+ * @typedef {import('../object-control/space-fighter/RemoteSpaceFighterController').default} RemoteSpaceFighterController
+ * @typedef {import('../object-control/space-fighter/SpaceFighterMultiplayerController').default} SpaceFighterMultiplayerController
  * @typedef {import('../net/models/WorldState').default} WorldState
  * @typedef {import('../net/models/ObjectState').default} ObjectState
  * @typedef {import('../net/models/InputAction').default} InputAction
  * @typedef {import('../net/service/MultiplayerService').default} MultiplayerService
- * @typedef {import('../frontend/asset-management/AssetManager').default} AssetManager
+ * @typedef {import('../asset-management/AssetManager').default} AssetManager
  * @typedef {import('../logging/AbstractLogger').default} AbstractLogger
  * @typedef {import('di-container-js').default} DiContainer
  */
@@ -33,7 +33,7 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
 
     /** @type {number} */
     playerObjectId;
-    /** @type {FlyingObjectMultiplayerController} */
+    /** @type {SpaceFighterMultiplayerController} */
     playerController;
 
     /** @type {number} */
@@ -138,7 +138,7 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
                 j++;
             }
 
-            /** @type {RemoteFlyingObjectController} */
+            /** @type {RemoteSpaceFighterController} */
             let controller = this.controllersByObjectId[objectId];
             if (!controller || !controller.initialized) {
                 controller = await this.createObject(objectId, actualObjectState.objectType);
@@ -208,7 +208,7 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
 
     /**
      * @param {number} playerObjectId
-     * @param {RemoteFlyingObjectController} playerController
+     * @param {RemoteSpaceFighterController} playerController
      */
     specifyPlayerControllerAndControlledObject(playerObjectId, playerController) {
         this.playerObjectId = playerObjectId;

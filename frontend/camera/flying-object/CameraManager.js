@@ -1,11 +1,10 @@
 /**
  * @typedef {import('three')} THREE
- * @typedef {import('../../../object-control/flying-object/FlyingObjectBaseController').default} FlyingObjectBaseController
  */
-
 import * as THREE from 'three';
+
 import {linearTransition, createQuaternionForRotation} from "../../../util/math";
-import FlyingObjectBaseController from "../../../object-control/flying-object/FlyingObjectBaseController";
+import SpaceFighterBaseController from "../../../object-control/space-fighter/SpaceFighterBaseController";
 
 export default class CameraManager {
 
@@ -16,7 +15,7 @@ export default class CameraManager {
     /** @type {THREE.PerspectiveCamera} */
     camera;
 
-    /** @type {FlyingObjectBaseController} */
+    /** @type {SpaceFighterBaseController} */
     controller;
 
     /** @type {THREE.Vector3} */
@@ -38,7 +37,7 @@ export default class CameraManager {
 
     /**
      * @param {THREE.PerspectiveCamera} camera
-     * @param {FlyingObjectBaseController} controller
+     * @param {SpaceFighterBaseController} controller
      */
     init(camera, controller) {
         this.camera = camera;
@@ -63,7 +62,7 @@ export default class CameraManager {
 
         //const rotationDirectionBasedOnCameraAxes = this.cameraX.clone().multiplyScalar(this.controller.wYawTarget).add(this.cameraY.clone().multiplyScalar(this.controller.wPitchTarget));
         const rotationDirectionBasedOnCameraAxes =
-            FlyingObjectBaseController.calculateRotationDirection(this.cameraX, this.cameraY,
+            SpaceFighterBaseController.calculateRotationDirection(this.cameraX, this.cameraY,
                                                                   controller.wYawTarget, controller.wPitchTarget);
         let angleBtwControlAndCameraAxes = 0;
         // rotationDirectionBasedOnCameraAxes.dot(controller.rotationDirection) !== 1

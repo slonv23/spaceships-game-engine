@@ -1,22 +1,21 @@
 /**
- * @typedef {import('../../physics/object/FlyingObject').default} FlyingObject
+ * @typedef {import('../../physics/object/SpaceFighter').default} SpaceFighter
  * @typedef {import('../../logging/AbstractLogger').default} AbstractLogger
  */
-
 import * as THREE from "three";
 
-import AbstractController from "../AbstractController";
 import {createQuaternionForRotation} from "../../util/math";
+import AbstractObjectController from "../AbstractObjectController";
 
-export default class FlyingObjectBaseController extends AbstractController {
+export default class SpaceFighterBaseController extends AbstractObjectController {
 
     /** @type {AbstractLogger} */
     logger;
 
-    /** @type {FlyingObject} */
+    /** @type {SpaceFighter} */
     gameObject;
 
-    /** @type {THREE.Vector3} TODO change to Vector2? */
+    /** @type {THREE.Vector3} TODO maybe change to Vector2 since z component always zero */
     controlX = new THREE.Vector3(1, 0, 0);
     /** @type {THREE.Vector3} */
     controlY = new THREE.Vector3(0, 1, 0);
@@ -48,7 +47,7 @@ export default class FlyingObjectBaseController extends AbstractController {
     }
 
     /**
-     * @param {FlyingObject} gameObject
+     * @param {SpaceFighter} gameObject
      */
     init(gameObject) {
         super.init(gameObject);
@@ -76,7 +75,7 @@ export default class FlyingObjectBaseController extends AbstractController {
 
     _calculateRotationDirection() {
         /** @type {THREE.Vector3} */
-        this.rotationDirection = FlyingObjectBaseController.calculateRotationDirection(this.controlX, this.controlY,
+        this.rotationDirection = SpaceFighterBaseController.calculateRotationDirection(this.controlX, this.controlY,
             this.wYawTarget, this.wPitchTarget);
         //this.rotationDirection = this.controlX.clone().multiplyScalar(this.wYawTarget).add(this.controlY.clone().multiplyScalar(this.wPitchTarget));
         this.rotationDirection.applyQuaternion(this.controlsQuaternion);

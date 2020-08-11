@@ -4,10 +4,10 @@
  * @typedef {import('../../net/models/InputAction').default} InputAction
  */
 
-import FlyingObjectBaseController from "./FlyingObjectBaseController";
+import SpaceFighterBaseController from "./SpaceFighterBaseController";
 import {syncStateMixin} from "./_mixins";
 
-export default class RemoteFlyingObjectController extends FlyingObjectBaseController {
+export default class RemoteSpaceFighterController extends SpaceFighterBaseController {
 
     rollAnglePrev = 0;
 
@@ -27,4 +27,4 @@ export default class RemoteFlyingObjectController extends FlyingObjectBaseContro
 
 }
 
-Object.assign(RemoteFlyingObjectController.prototype, syncStateMixin);
+Object.assign(RemoteSpaceFighterController.prototype, syncStateMixin);

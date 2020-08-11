@@ -3,7 +3,7 @@
  * @typedef {import('../../net/models/InputAction').default} InputAction
  */
 
-import FlyingObjectBaseController from "./FlyingObjectBaseController";
+import SpaceFighterBaseController from "./SpaceFighterBaseController";
 
 export const syncStateMixin = {
     /**
@@ -16,7 +16,7 @@ export const syncStateMixin = {
         this.controlZInWorldCoords.set(0, 0, 1).applyQuaternion(this.controlsQuaternion);
 
         // calc rotation direction, yaw and pitch targets
-        this.rotationDirection = FlyingObjectBaseController.calculateRotationDirection(this.gameObject.nx, this.gameObject.ny,
+        this.rotationDirection = SpaceFighterBaseController.calculateRotationDirection(this.gameObject.nx, this.gameObject.ny,
                                                                                        objectState.angularVelocity.x, objectState.angularVelocity.y);
         this.wYawTarget = this.controlX.clone().applyQuaternion(this.controlsQuaternion).dot(this.rotationDirection);
         this.wPitchTarget = this.controlY.clone().applyQuaternion(this.controlsQuaternion).dot(this.rotationDirection);

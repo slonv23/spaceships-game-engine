@@ -4,12 +4,12 @@
  * @typedef {import('../../frontend/input/Keyboard').default} Keyboard
  */
 
-import FlyingObjectSingleplayerController from "./FlyingObjectSingleplayerController";
+import SpaceFighterSingleplayerController from "./SpaceFighterSingleplayerController";
 import {syncStateMixin} from "./_mixins";
 import InputAction from "../../net/models/InputAction";
-import FlyingObject from '../../physics/object/FlyingObject';
+import SpaceFighter from "../../physics/object/SpaceFighter";
 
-export default class FlyingObjectMultiplayerController extends FlyingObjectSingleplayerController {
+export default class SpaceFighterMultiplayerController extends SpaceFighterSingleplayerController {
 
     rollAnglePrev = 0;
 
@@ -41,8 +41,8 @@ export default class FlyingObjectMultiplayerController extends FlyingObjectSingl
 
         const inputAction = new InputAction();
         const mousePos = this._calcMousePosInDimlessUnits();
-        inputAction.pitch = -mousePos[1] * FlyingObject.angularVelocityMax.y;
-        inputAction.yaw = mousePos[0] * FlyingObject.angularVelocityMax.x;
+        inputAction.pitch = -mousePos[1] * SpaceFighter.angularVelocityMax.y;
+        inputAction.yaw = mousePos[0] * SpaceFighter.angularVelocityMax.x;
         // TODO:
         inputAction.rollAngle = 0; // targetRollAngleWithCorrection;
         inputAction.rotationSpeed = 0; // this.rotationSpeed;
@@ -52,4 +52,4 @@ export default class FlyingObjectMultiplayerController extends FlyingObjectSingl
 
 }
 
-Object.assign(FlyingObjectMultiplayerController.prototype, syncStateMixin);
+Object.assign(SpaceFighterMultiplayerController.prototype, syncStateMixin);
