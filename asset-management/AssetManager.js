@@ -1,6 +1,7 @@
 import * as THREE from "three";
 
 import GLTFLoader from "./GltfLoader";
+import {config} from "../globals";
 
 export default class AssetManager {
 
@@ -47,7 +48,7 @@ export default class AssetManager {
     }
 
     modelFilepath(subpath) {
-        return this.modelsDir + '/' + subpath;
+        return this.assets3dDir + '/' + subpath;
     }
 
     spriteFilepath(subpath) {
@@ -100,14 +101,30 @@ export default class AssetManager {
      * @returns {Promise<object>}
      */
     _load3dAsset(subpath) {
-        return new Promise((resolve, reject) => {
-            this.gltfLoader.load(this.modelFilepath(subpath), (gltf) => {
-                resolve(gltf);
-            }, undefined, function (e) {
-                console.error(e);
+        return this._loadGltf(this.modelFilepath(subpath));
+    }
 
-                reject(e);
-            });
+    _loadGltf(filepath) {
+        return new Promise((resolve, reject) => {
+            if (config.env === "node") {
+                const fs = require('fs');
+                const path = require('path');
+
+                const buffer = fs.readFileSync(path.join(config.rootDir, filepath), null).buffer;
+                this.gltfLoader.parse(buffer, '', gltf => {
+                    resolve(gltf);
+                }, err => {
+                    console.error(err);
+                    reject(err);
+                })
+            } else {
+                this.gltfLoader.load(filepath, gltf => {
+                    resolve(gltf);
+                }, undefined, err => {
+                    console.error(err);
+                    reject(err);
+                });
+            }
         });
     }
 
@@ -119,7 +136,6 @@ export default class AssetManager {
         return new Promise((resolve, reject) => {
             this.textureLoader.load(this.spriteFilepath(subpath), (texture) => {
                 const material = new THREE.SpriteMaterial({map: texture});
-
                 resolve(new THREE.Sprite(material));
             }, null, (e) => {
                 console.error(e);
