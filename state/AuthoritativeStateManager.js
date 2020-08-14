@@ -86,10 +86,10 @@ export default class AuthoritativeStateManager extends Emitter {
         }
 
         const gameObjectDef = this.gameObjectTypes[type];
-        if (!(gameObjectDef.objectClass.prototype instanceof AbstractObject)) {
+        let gameObject = gameObjectDef.objectFactory(objectId, this.assetManager);
+        if (!(gameObject instanceof AbstractObject)) {
             throw new Error('Class must be inherited from AbstractObject');
         }
-        let gameObject = gameObjectDef.objectFactory(objectId, this.assetManager);
         this.dispatchEvent("object-created", gameObject);
 
         let controller = this.controllersByObjectId[objectId];

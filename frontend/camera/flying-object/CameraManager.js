@@ -10,7 +10,7 @@ export default class CameraManager {
 
     static lenBtwSpaceshipAndPosLookAt = 8;
 
-    static lenBtwCameraAndPosLookAt = 10;
+    static lenBtwCameraAndPosLookAt = 12; //10;
 
     /** @type {THREE.PerspectiveCamera} */
     camera;

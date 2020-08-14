@@ -48,14 +48,13 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
 
     ticksWaiting = 0;
 
-    constructor(diContainer, multiplayerService, logger) {
-        super(diContainer);
+    constructor(diContainer, assetManager, multiplayerService, logger) {
+        super(diContainer, assetManager);
         this.multiplayerService = multiplayerService;
         this.logger = logger;
     }
 
     async postConstruct({packetPeriodFrames, inputGatheringPeriodFrames, fps}) {
-        await super.postConstruct();
         this.packetPeriodFrames = packetPeriodFrames;
         this.inputGatheringPeriodFrames = inputGatheringPeriodFrames;
         this.frameLengthMs = 1000 / fps;

@@ -66,7 +66,7 @@ export default class FlyingObject extends AbstractObject {
             // alternative way to update axes:
             // this.object3d.matrix.makeRotationFromQuaternion(this.quaternion);
 
-            this.object3d.position.copy(this.position);
+            this.object3d.position.copy(this.position); // TODO I think we can omit update of position (test)
             this.object3d.matrix.setPosition(this.position);
         }
     }

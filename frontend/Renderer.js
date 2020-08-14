@@ -76,9 +76,13 @@ export default class Renderer {
         this.renderer.autoClear = false;
 
         if (options.useDefaultLight) {
-            const light = new THREE.HemisphereLight(0xbbbbff, 0x444422);
-            light.position.set(0, 1, 0);
+            //const light = new THREE.HemisphereLight(0xbbbbff, 0x444422);
+            const light = new THREE.PointLight();
+            light.position.set(0, 100, 0);
             this.scene.add(light);
+
+            const ambientLight = new THREE.AmbientLight(0xC0C0C0); // soft white light
+            scene.add(ambientLight);
         }
 
         return Promise.resolve();

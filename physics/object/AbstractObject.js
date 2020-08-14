@@ -11,7 +11,7 @@ export default class AbstractObject {
     id;
 
      /**
-      * @param {*} id 
+      * @param {*} id - TODO why should we have id assigned to object if we not manipulate it directly?
       * @param {Object3D} [object3d]
       */
     constructor(id, object3d) {
