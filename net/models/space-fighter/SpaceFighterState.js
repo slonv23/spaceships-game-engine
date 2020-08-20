@@ -1,11 +1,11 @@
 /**
  * @typedef {import('three')} THREE
- * @typedef {import('./InputAction').default} InputAction
+ * @typedef {import('./S').default} SpaceFighterInput
  */
 
-import AbstractModel from "./AbstractModel";
+import AbstractModel from "../AbstractModel";
 
-export default class ObjectState extends AbstractModel {
+export default class SpaceFighterState extends AbstractModel {
 
     /** @type {number} */
     id;
@@ -28,7 +28,7 @@ export default class ObjectState extends AbstractModel {
     /** @type {THREE.Quaternion} */
     controlQuaternion;
 
-    /** @type {InputAction[]} */
+    /** @type {SpaceFighterInput[]} */
     actions;
 
 }

@@ -3,8 +3,8 @@
  * @typedef {import('../object-control/space-fighter/RemoteSpaceFighterController').default} RemoteSpaceFighterController
  * @typedef {import('../object-control/space-fighter/SpaceFighterMultiplayerController').default} SpaceFighterMultiplayerController
  * @typedef {import('../net/models/WorldState').default} WorldState
- * @typedef {import('../net/models/ObjectState').default} ObjectState
- * @typedef {import('../net/models/InputAction').default} InputAction
+ * @typedef {import('../net/models/ObjectState').default} SpaceFighterState
+ * @typedef {import('../net/models/InputAction').default} SpaceFighterInput
  * @typedef {import('../net/service/MultiplayerService').default} MultiplayerService
  * @typedef {import('../asset-management/AssetManager').default} AssetManager
  * @typedef {import('../logging/AbstractLogger').default} AbstractLogger
@@ -184,7 +184,7 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
 
         const worldObjectsCount = worldState.objectStates.length;
         for (let i = 0; i < worldObjectsCount; i++) {
-            /** @type {ObjectState} */
+            /** @type {SpaceFighterState} */
             const objectState = worldState.objectStates[i];
             if (this.playerObjectId === objectState.id) {
                 // we should not re-process input actions of player object retransmitted back from server

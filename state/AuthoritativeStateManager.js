@@ -1,7 +1,7 @@
 /**
  * @typedef {import('../object-control/AbstractController').default} AbstractController
  * @typedef {import('../object-control/space-fighter/RemoteSpaceFighterController').default} RemoteSpaceFighterController
- * @typedef {import('../net/models/InputAction').default} InputAction
+ * @typedef {import('../net/models/InputAction').default} SpaceFighterInput
  * @typedef {import('../asset-management/AssetManager').default} AssetManager
  * @typedef {import('di-container-js').default} DiContainer
  */
@@ -31,7 +31,7 @@ export default class AuthoritativeStateManager extends Emitter {
 
     /** @type {number} */
     currentFrameIndex = 0;
-    /** @type {object.<number, object.<number, InputAction>>} */
+    /** @type {object.<number, object.<number, SpaceFighterInput>>} */
     inputActionsByObjectId = {};
 
     constructor(diContainer, assetManager) {
@@ -71,7 +71,7 @@ export default class AuthoritativeStateManager extends Emitter {
     }*/
 
 
-    registerController()
+    //registerController()
 
     registerGameObjectType(objectTypeName, objectFactory, defaultControllerRef = null) {
         this.gameObjectTypes[objectTypeName] = {objectFactory, defaultControllerRef};

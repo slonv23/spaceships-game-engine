@@ -4,7 +4,7 @@
  * @typedef {import('di-container-js').default} DiContainer
  * @typedef {import('../models/SpawnResponse').default} SpawnResponse
  * @typedef {import('../models/WorldState').default} WorldState
- * @typedef {import('../models/InputAction').default} InputAction
+ * @typedef {import('../models/InputAction').default} SpaceFighterInput
  */
 import SpawnRequest from '../models/SpawnRequest';
 import Emitter from "../../util/Emitter";
@@ -67,12 +67,13 @@ export default class MultiplayerService extends Emitter {
     }
 
     /**
-     * @param {InputAction} inputAction
+     * TODO rename scheduleObjectAction
+     * @param {SpaceFighterInput} inputAction
      * @param {number} currentFrameIndex
      */
     scheduleInputAction(inputAction, currentFrameIndex) {
         const halfRttFramesLength = Math.ceil((this.ping / 2) / this.frameLengthMs); // half of rtt represented in number of frames
-        inputAction.frameIndex = currentFrameIndex + halfRttFramesLength + 10; // +1 frame to make prediction more reliable
+        inputAction.frameIndex = currentFrameIndex + halfRttFramesLength + 10; // + N frames to make prediction more reliable
         this.networkClient.sendMessage(this._buildMessage(inputAction, true));
     }
 

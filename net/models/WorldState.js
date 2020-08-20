@@ -1,6 +1,6 @@
 /**
  * @typedef {import('three')} THREE
- * @typedef {import('./ObjectState').default} ObjectState
+ * @typedef {import('./ObjectState').default} SpaceFighterState
  */
 
 import AbstractModel from "./AbstractModel";
@@ -9,7 +9,7 @@ export default class WorldState extends AbstractModel {
 
     /** @type {number} */
     frameIndex;
-    /** @type {ObjectState[]} */
+    /** @type {SpaceFighterState[]} */
     objectStates;
 
 }

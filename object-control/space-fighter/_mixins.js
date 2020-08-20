@@ -1,13 +1,13 @@
 /**
- * @typedef {import('../../net/models/ObjectState').default} ObjectState
- * @typedef {import('../../net/models/InputAction').default} InputAction
+ * @typedef {import('../../net/models/ObjectState').default} SpaceFighterState
+ * @typedef {import('../../net/models/InputAction').default} SpaceFighterInput
  */
 
 import SpaceFighterBaseController from "./SpaceFighterBaseController";
 
 export const syncStateMixin = {
     /**
-     * @param {ObjectState} objectState
+     * @param {SpaceFighterState} objectState
      */
     _sync(objectState) {
         this._syncObject(objectState);
@@ -23,7 +23,7 @@ export const syncStateMixin = {
     },
 
     /**
-     * @param {ObjectState} objectState
+     * @param {SpaceFighterState} objectState
      * @protected
      */
     _syncObject(objectState) {
@@ -45,7 +45,7 @@ export const syncStateMixin = {
     },
 
     /**
-     * @param {InputAction} inputAction
+     * @param {SpaceFighterInput} inputAction
      */
     processInput(inputAction) {
         this.gameObject.rollAngleBtwCurrentAndTargetOrientation += this.rollAnglePrev - inputAction.rollAngle;
