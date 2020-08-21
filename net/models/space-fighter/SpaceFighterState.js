@@ -4,13 +4,12 @@
  */
 
 import AbstractModel from "../AbstractModel";
+/**
+ * @typedef {import('../ObjectAction').default} ObjectAction
+ */
 
 export default class SpaceFighterState extends AbstractModel {
 
-    /** @type {number} */
-    id;
-    /** @type {number} */
-    objectType;
     /** @type {THREE.Vector3} */
     position;
     /** @type {THREE.Quaternion} */
@@ -28,7 +27,7 @@ export default class SpaceFighterState extends AbstractModel {
     /** @type {THREE.Quaternion} */
     controlQuaternion;
 
-    /** @type {SpaceFighterInput[]} */
+    /** @type {ObjectAction[]} */
     actions;
 
 }
