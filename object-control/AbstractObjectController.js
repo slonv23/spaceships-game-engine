@@ -5,6 +5,7 @@
  */
 
 import AbstractController from "./AbstractController";
+import AbstractObject from "../physics/object/AbstractObject";
 
 export default class AbstractObjectController extends AbstractController {
 
@@ -14,10 +15,13 @@ export default class AbstractObjectController extends AbstractController {
     initialized = false;
 
     /**
-     * @param {AbstractObject} gameObject
+     * @param {number} objectId
      */
-    init(gameObject) {
-        this.gameObject = gameObject;
+    init(objectId) {
+        this.gameObject = this.gameObjectFactory(objectId, this.assetManager);
+        if (!(this.gameObject instanceof AbstractObject)) {
+            throw new Error('Game object instance\'s class must be inherited from AbstractObject');
+        }
         this.initialized = true;
     }
 

@@ -41,17 +41,17 @@ export default class SpaceFighterBaseController extends AbstractObjectController
         return nx.clone().multiplyScalar(yaw).add(ny.clone().multiplyScalar(pitch));
     }
 
-    constructor(logger) {
-        super();
+    constructor(logger, assetManager) {
+        super(assetManager);
         this.logger = logger;
     }
 
     /**
-     * @param {SpaceFighter} gameObject
+     * @param {number} objectId
      */
-    init(gameObject) {
-        super.init(gameObject);
-        this.controlZInWorldCoords = gameObject.nz;
+    init(objectId) {
+        super.init(objectId);
+        this.controlZInWorldCoords = this.gameObject.nz;
     }
 
     _updateControlsQuaternion(delta) {

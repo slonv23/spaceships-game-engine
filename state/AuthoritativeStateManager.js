@@ -22,8 +22,6 @@ export default class AuthoritativeStateManager extends Emitter {
     gameObjectTypes = {};
     /** @type {number} */
     lastObjectId = 0;
-    /** @type {string} */
-    defaultGameObjectType;
     /** @type {DiContainer} */
     diContainer;
     /** @type {AssetManager} */
@@ -73,17 +71,19 @@ export default class AuthoritativeStateManager extends Emitter {
 
     //registerController()
 
-    registerGameObjectType(objectTypeName, objectFactory, defaultControllerRef = null) {
-        this.gameObjectTypes[objectTypeName] = {objectFactory, defaultControllerRef};
+    associateControllerWithGameObjectType(gameObjectTypeId, controllerRef) {
+        this.gameObjectTypes[gameObjectTypeId] = {
+            controllerRef
+        };
     }
 
     /**
      * @param {number|null} objectId - if 'null' will be auto-generated
-     * @param {number} type
+     * @param {number|null} gameObjectTypeId
      * @param {symbol|string|null} [controllerRef]
      * @returns {Promise<AbstractController>}
      */
-    async createObject(objectId, type, controllerRef = null) {
+    async createGameObject(objectId, gameObjectTypeId, controllerRef = null) {
         if (!objectId) {
             objectId = ++this.lastObjectId;
         }
@@ -97,9 +97,10 @@ export default class AuthoritativeStateManager extends Emitter {
 
         let controller = this.controllersByObjectId[objectId];
         if (!controller) {
-            controller = await this.createObjectController(objectId, controllerRef ? controllerRef : gameObjectDef.defaultControllerRef);
+            const gameObjectDef = this.gameObjectTypes[gameObjectTypeId];
+            controller = await this.createObjectController(objectId, controllerRef ? controllerRef : gameObjectDef.controllerRef);
         }
-        controller.init(gameObject);
+        controller.init(objectId);
         this.initializedControllers.push(controller);
         this.initializedControllersCount++;
 

@@ -1,4 +1,4 @@
-import AbstractController from "../AbstractController";
+import AbstractProjectileController from "./AbstractProjectileController";
 
-export default class ProjectileSequenceController extends AbstractController {
+export default class ProjectileSequenceController extends AbstractProjectileController {
 }

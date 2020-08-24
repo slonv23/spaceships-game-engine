@@ -1,7 +1,5 @@
 /**
  * @typedef {import('three')} THREE
- * @typedef {import('../../net/models/ObjectState').default} SpaceFighterState
- * @typedef {import('../../net/models/InputAction').default} SpaceFighterInput
  */
 
 import SpaceFighterBaseController from "./SpaceFighterBaseController";

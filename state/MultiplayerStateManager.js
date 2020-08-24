@@ -140,7 +140,7 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
             /** @type {RemoteSpaceFighterController} */
             let controller = this.controllersByObjectId[objectId];
             if (!controller || !controller.initialized) {
-                controller = await this.createObject(objectId, actualObjectState.objectType);
+                controller = await this.createGameObject(objectId, actualObjectState.objectType);
             }
 
             controller.sync(actualObjectState, futureObjectState);
@@ -184,6 +184,7 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
 
         const worldObjectsCount = worldState.objectStates.length;
         for (let i = 0; i < worldObjectsCount; i++) {
+            // TODO one of check
             /** @type {SpaceFighterState} */
             const objectState = worldState.objectStates[i];
             if (this.playerObjectId === objectState.id) {
