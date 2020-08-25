@@ -191,8 +191,8 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
                 continue;
             }
 
-            if (!this.inputActionsByObjectId[objectState.id]) {
-                this.inputActionsByObjectId[objectState.id] = {};
+            if (!this.objectActionsByObjectId[objectState.id]) {
+                this.objectActionsByObjectId[objectState.id] = {};
             }
 
             const actions = objectState[objectState.state].actions;
@@ -205,7 +205,7 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
     };
 
     addObjectAction(objectId, objectAction) {
-        this.inputActionsByObjectId[objectId][objectAction.frameIndex] = objectAction;
+        this.objectActionsByObjectId[objectId][objectAction.frameIndex] = objectAction;
     }
 
     /**
@@ -215,7 +215,7 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
     specifyPlayerControllerAndControlledObject(playerObjectId, playerController) {
         this.playerObjectId = playerObjectId;
         this.playerController = playerController;
-        this.inputActionsByObjectId[playerObjectId] = {}
+        this.objectActionsByObjectId[playerObjectId] = {}
     }
 
 }

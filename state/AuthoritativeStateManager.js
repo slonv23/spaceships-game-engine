@@ -30,7 +30,7 @@ export default class AuthoritativeStateManager extends Emitter {
     /** @type {number} */
     currentFrameIndex = 0;
     /** @type {object.<number, object.<number, SpaceFighterInput>>} */
-    inputActionsByObjectId = {};
+    objectActionsByObjectId = {};
 
     constructor(diContainer, assetManager) {
         super();
@@ -49,7 +49,7 @@ export default class AuthoritativeStateManager extends Emitter {
 
         for (let i = 0; i < this.initializedControllersCount; i++) {
             const id = this.initializedControllers[i].gameObject.id;
-            const inputAction = this.inputActionsByObjectId[id][this.currentFrameIndex];
+            const inputAction = this.objectActionsByObjectId[id][this.currentFrameIndex];
             if (inputAction) {
                 this.initializedControllers[i].processInput(inputAction);
                 processedActions.push(inputAction);
@@ -95,7 +95,7 @@ export default class AuthoritativeStateManager extends Emitter {
         this.initializedControllersCount++;
 
         // allocate array for input actions, this is not needed in SP mode TODO refactor
-        this.inputActionsByObjectId[objectId] = {};
+        this.objectActionsByObjectId[objectId] = {};
 
         return controller;
     }
@@ -114,14 +114,14 @@ export default class AuthoritativeStateManager extends Emitter {
         return controller;
     }
 
-    addInputAction(objectId, action) {
+    addObjectAction(objectId, action) {
         const actionFrameIndex = action.frameIndex <= this.currentFrameIndex ? this.currentFrameIndex + 1 : action.frameIndex;
-        this.inputActionsByObjectId[objectId][actionFrameIndex] = action;
+        this.objectActionsByObjectId[objectId][actionFrameIndex] = action;
     }
 
     _cleanup() {
-        for (const objectId in this.inputActionsByObjectId) {
-            this._cleanActions(this.inputActionsByObjectId[objectId]);
+        for (const objectId in this.objectActionsByObjectId) {
+            this._cleanActions(this.objectActionsByObjectId[objectId]);
         }
     }
 
