@@ -68,9 +68,6 @@ export default class AuthoritativeStateManager extends Emitter {
         }
     }*/
 
-
-    //registerController()
-
     associateControllerWithGameObjectType(gameObjectTypeId, controllerRef) {
         this.gameObjectTypes[gameObjectTypeId] = {
             controllerRef
@@ -87,13 +84,6 @@ export default class AuthoritativeStateManager extends Emitter {
         if (!objectId) {
             objectId = ++this.lastObjectId;
         }
-
-        /*const gameObjectDef = this.gameObjectTypes[type];
-        let gameObject = gameObjectDef.objectFactory(objectId, this.assetManager);
-        if (!(gameObject instanceof AbstractObject)) {
-            throw new Error('Class must be inherited from AbstractObject');
-        }
-        this.dispatchEvent("object-created", gameObject);*/
 
         let controller = this.controllersByObjectId[objectId];
         if (!controller) {

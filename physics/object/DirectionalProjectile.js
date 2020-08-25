@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import AbstractObject from "./AbstractObject";
 import {createQuaternionForRotation} from "../../util/math";
 
-export class DirectionalProjectile extends AbstractObject {
+export default class DirectionalProjectile extends AbstractObject {
 
     /** @type {THREE.Vector3} */
     velocity = new THREE.Vector3(0, 0, 0);

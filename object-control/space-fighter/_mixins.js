@@ -1,6 +1,7 @@
 /**
  * @typedef {import('../../net/models/ObjectState').default} SpaceFighterState
- * @typedef {import('../../net/models/InputAction').default} SpaceFighterInput
+ * @typedef {import('../../net/models/ObjectAction').default} ObjectAction
+ * @typedef {import('../../net/models/space-fighter/SpaceFighterInput').default} SpaceFighterInput
  */
 
 import SpaceFighterBaseController from "./SpaceFighterBaseController";
@@ -45,13 +46,31 @@ export const syncStateMixin = {
     },
 
     /**
+     * @param {ObjectAction} objectAction
+     */
+    processInput(objectAction) {
+        switch (objectAction.action) {
+            case 'spaceFighterInput':
+                this.handleInputAction(objectAction[objectAction.action]);
+                break;
+            case 'spaceFighterOpenFire':
+                break;
+            case 'spaceFighterDestroy':
+                break;
+            case 'spaceFighterStopFire':
+                break;
+        }
+    },
+
+    /**
      * @param {SpaceFighterInput} inputAction
      */
-    processInput(inputAction) {
+    handleInputAction(inputAction) {
         this.gameObject.rollAngleBtwCurrentAndTargetOrientation += this.rollAnglePrev - inputAction.rollAngle;
         this.rollAnglePrev = inputAction.rollAngle;
         this.wYawTarget = inputAction.yaw;
         this.wPitchTarget = inputAction.pitch;
         this.rotationSpeed = inputAction.rotationSpeed;
-    }
+    },
+
 };

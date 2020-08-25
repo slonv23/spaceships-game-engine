@@ -4,11 +4,12 @@
  * @typedef {import('di-container-js').default} DiContainer
  * @typedef {import('../models/SpawnResponse').default} SpawnResponse
  * @typedef {import('../models/WorldState').default} WorldState
- * @typedef {import('../models/InputAction').default} SpaceFighterInput
+ * @typedef {import('../models/AbstractModel').default} AbstractModel
  */
 import SpawnRequest from '../models/SpawnRequest';
 import Emitter from "../../util/Emitter";
 import {unixTimestampMs} from "../../util/date";
+import ObjectAction from "../models/ObjectAction";
 
 export default class MultiplayerService extends Emitter {
 
@@ -67,14 +68,22 @@ export default class MultiplayerService extends Emitter {
     }
 
     /**
-     * TODO rename scheduleObjectAction
-     * @param {SpaceFighterInput} inputAction
+     * @param {AbstractModel} specificAction
      * @param {number} currentFrameIndex
+     * @returns {ObjectAction}
      */
-    scheduleInputAction(inputAction, currentFrameIndex) {
+    scheduleObjectAction(specificAction, currentFrameIndex) {
         const halfRttFramesLength = Math.ceil((this.ping / 2) / this.frameLengthMs); // half of rtt represented in number of frames
-        inputAction.frameIndex = currentFrameIndex + halfRttFramesLength + 10; // + N frames to make prediction more reliable
-        this.networkClient.sendMessage(this._buildMessage(inputAction, true));
+        const frameIndex = currentFrameIndex + halfRttFramesLength + 10; // + N frames to make prediction more reliable
+
+        const objectAction = new ObjectAction();
+        objectAction.action = this.messageSerializerDeserializer.getFieldNameInsideOneOfForModel(specificAction);
+        objectAction.frameIndex = frameIndex;
+        objectAction[objectAction.action] = specificAction;
+
+        this.networkClient.sendMessage(this._buildMessage(objectAction, true));
+
+        return objectAction;
     }
 
     _buildMessage(data, ack = false) {
@@ -82,7 +91,7 @@ export default class MultiplayerService extends Emitter {
         if (ack) {
             wrapperProps.requestSentTimestamp = unixTimestampMs();
         }
-        return this.messageSerializerDeserializer.serializeRequest(data, wrapperProps)
+        return this.messageSerializerDeserializer.serializeRequest(data, wrapperProps);
     }
 
     _handleMessagesBeforeSpawn = (event) => {

@@ -106,14 +106,14 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
             // here we add one packet period length to currentFrameIndex (which is index of current interpolated frame)
             const frameOffset = this.currentFrameIndex + this.packetPeriodFrames;
 
-            this.multiplayerService.scheduleInputAction(inputAction, frameOffset);
+            const objectAction = this.multiplayerService.scheduleObjectAction(inputAction, frameOffset);
 
             // we should apply input action in the preceding "window" for player's object
             // because simulation for it runs without interpolation
-            inputAction.frameIndex -= this.packetPeriodFrames;
+            objectAction.frameIndex -= this.packetPeriodFrames;
 
-            this.logger.debug(`Input action will be applied on frame #${inputAction.frameIndex}`);
-            this.addInputAction(this.playerObjectId, inputAction);
+            this.logger.debug(`Input action will be applied on frame #${objectAction.frameIndex}`);
+            this.addObjectAction(this.playerObjectId, objectAction);
         }
     }
 
@@ -184,7 +184,6 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
 
         const worldObjectsCount = worldState.objectStates.length;
         for (let i = 0; i < worldObjectsCount; i++) {
-            // TODO one of check
             /** @type {SpaceFighterState} */
             const objectState = worldState.objectStates[i];
             if (this.playerObjectId === objectState.id) {
@@ -196,14 +195,17 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
                 this.inputActionsByObjectId[objectState.id] = {};
             }
 
-            for (let j = 0, actionsCount = objectState.actions.length; j < actionsCount; j++) {
-                this.addInputAction(objectState.id, objectState.actions[j]);
+            const actions = objectState[objectState.state].actions;
+            if (actions) {
+                for (let j = 0, actionsCount = actions.length; j < actionsCount; j++) {
+                    this.addObjectAction(objectState.id, actions[j]);
+                }
             }
         }
     };
 
-    addInputAction(objectId, action) {
-        this.inputActionsByObjectId[objectId][action.frameIndex] = action;
+    addObjectAction(objectId, objectAction) {
+        this.inputActionsByObjectId[objectId][objectAction.frameIndex] = objectAction;
     }
 
     /**

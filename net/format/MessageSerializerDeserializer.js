@@ -69,22 +69,37 @@ export default class MessageSerializerDeserializer {
 
     /**
      * @param {AbstractModel} model
-     * @param {Type} wrapperType
+     * @param {Type} [wrapperType]
      * @param {object} [wrapperProps]
+     * @param {string} [oneOfFieldName]
      * @returns {Uint8Array}
      */
-    serialize(model, wrapperType, wrapperProps = {}) {
+    serialize(model, wrapperType = null, wrapperProps = {}, oneOfFieldName = 'message') {
+        const protobufMessage = this.convertToProtobufMessage(model)
+        const wrappedMessage = this.wrapMessage(wrapperType, oneOfFieldName, this.getFieldNameInsideOneOfForModel(model), protobufMessage, wrapperProps);
+        return this.protobufToBinary(wrapperType, wrappedMessage);
+    }
+
+    /**
+     * @param {AbstractModel} model
+     * @returns {string}
+     */
+    getFieldNameInsideOneOfForModel(model) {
+        return lowerFirst(model.constructor.name);
+    }
+
+    /**
+     * @param {AbstractModel} model
+     * @returns {Message}
+     */
+    convertToProtobufMessage(model) {
         const modelName = model.constructor.name;
         const type = this.modelNameToClass[modelName]._protobufType;
         if (!type) {
             throw new Error(`Failed to get protobuf type associated with model ${modelName}`);
         }
 
-        const payload = this._buildPayload(model);
-
-        const wrappedMessage = this._wrapMessage(wrapperType, lowerFirst(modelName), type.create(payload), wrapperProps);
-
-        return this._toByteArray(wrapperType, wrappedMessage);
+        return type.create(this._buildPayload(model));
     }
 
     _buildPayload(model) {
@@ -102,7 +117,7 @@ export default class MessageSerializerDeserializer {
         if (Array.isArray(property)) {
             return property.map(propElem => this._buildProperty(propElem));
         } else if (property instanceof AbstractModel) {
-            return this._buildPayload(property);
+            return this.convertToProtobufMessage(property); // this._buildPayload(property);
         } else if (property instanceof THREE.Vector3) {
             return this.serializeVector(property);
         } else if (property instanceof THREE.Quaternion) {
@@ -200,15 +215,15 @@ export default class MessageSerializerDeserializer {
 
     /**
      * @param {Type} wrapperType
+     * @param {string} oneOfFieldName
      * @param {string} messageName
      * @param {Message} message
      * @param {object} [wrapperProps]
      * @returns {Message}
-     * @private
      */
-    _wrapMessage(wrapperType, messageName, message, wrapperProps = {}) {
+    wrapMessage(wrapperType, oneOfFieldName, messageName, message, wrapperProps = {}) {
         const wrappedMsg = wrapperType.create({[messageName]: message});
-        wrappedMsg.message = messageName;
+        wrappedMsg[oneOfFieldName] = messageName;
         for (const key in wrapperProps) {
             wrappedMsg[key] = wrapperProps[key];
         }
@@ -249,9 +264,8 @@ export default class MessageSerializerDeserializer {
      * @param {Type} msgType
      * @param {Message} msg
      * @returns {Uint8Array}
-     * @private
      */
-    _toByteArray(msgType, msg) {
+    protobufToBinary(msgType, msg) {
         const writer = new protobuf.Writer();
         msgType.encodeDelimited(msg, writer);
         return writer.finish();
