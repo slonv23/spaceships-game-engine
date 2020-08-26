@@ -15,4 +15,8 @@ export default class ObjectState extends AbstractModel {
     /** @type {?SpaceFighterState} */
     spaceFighterState;
 
+    get actions() {
+        return this.spaceFighterState.actions;
+    }
+
 }

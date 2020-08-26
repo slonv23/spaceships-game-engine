@@ -195,7 +195,7 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
                 this.objectActionsByObjectId[objectState.id] = {};
             }
 
-            const actions = objectState[objectState.state].actions;
+            const actions = objectState.actions;
             if (actions) {
                 for (let j = 0, actionsCount = actions.length; j < actionsCount; j++) {
                     this.addObjectAction(objectState.id, actions[j]);

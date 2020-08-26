@@ -1,6 +1,7 @@
 /**
- * @typedef {import('../../net/models/ObjectState').default} SpaceFighterState
+ * @typedef {import('../../net/models/ObjectState').default} ObjectState
  * @typedef {import('../../net/models/ObjectAction').default} ObjectAction
+ * @typedef {import('../../net/models/space-fighter/SpaceFighterState').default} SpaceFighterState
  * @typedef {import('../../net/models/space-fighter/SpaceFighterInput').default} SpaceFighterInput
  */
 
@@ -8,17 +9,21 @@ import SpaceFighterBaseController from "./SpaceFighterBaseController";
 
 export const syncStateMixin = {
     /**
-     * @param {SpaceFighterState} objectState
+     * @param {ObjectState} objectState
      */
     _sync(objectState) {
-        this._syncObject(objectState);
+        /** @type {SpaceFighterState} */
+        const spaceFighterState = objectState.spaceFighterState;
+        this._syncObject(spaceFighterState);
 
-        this.controlsQuaternion.copy(objectState.controlQuaternion);
+        this.controlsQuaternion.copy(spaceFighterState.controlQuaternion);
         this.controlZInWorldCoords.set(0, 0, 1).applyQuaternion(this.controlsQuaternion);
 
         // calc rotation direction, yaw and pitch targets
-        this.rotationDirection = SpaceFighterBaseController.calculateRotationDirection(this.gameObject.nx, this.gameObject.ny,
-                                                                                       objectState.angularVelocity.x, objectState.angularVelocity.y);
+        this.rotationDirection = SpaceFighterBaseController.calculateRotationDirection(this.gameObject.nx,
+                                                                                       this.gameObject.ny,
+                                                                                       spaceFighterState.angularVelocity.x,
+                                                                                       spaceFighterState.angularVelocity.y);
         this.wYawTarget = this.controlX.clone().applyQuaternion(this.controlsQuaternion).dot(this.rotationDirection);
         this.wPitchTarget = this.controlY.clone().applyQuaternion(this.controlsQuaternion).dot(this.rotationDirection);
     },
@@ -49,16 +54,13 @@ export const syncStateMixin = {
      * @param {ObjectAction} objectAction
      */
     processInput(objectAction) {
-        switch (objectAction.action) {
-            case 'spaceFighterInput':
-                this.handleInputAction(objectAction[objectAction.action]);
-                break;
-            case 'spaceFighterOpenFire':
-                break;
-            case 'spaceFighterDestroy':
-                break;
-            case 'spaceFighterStopFire':
-                break;
+        if (objectAction.spaceFighterInput) {
+            this.handleInputAction(objectAction[objectAction.action]);
+        } else if (objectAction.spaceFighterOpenFire) {
+            // eslint-disable-next-line no-empty
+        } else if (objectAction.spaceFighterDestroy) {
+            // eslint-disable-next-line no-empty
+        } else if (objectAction.spaceFighterStopFire) {
         }
     },
 

@@ -3,6 +3,7 @@
  * @typedef {import('../../frontend/input/Mouse').default} Mouse
  * @typedef {import('../../frontend/input/Keyboard').default} Keyboard
  * @typedef {import('../../logging/AbstractLogger').default} AbstractLogger
+ * @typedef {import('../../asset-management/AssetManager').default} AssetManager
  */
 
 import SpaceFighter from "../../physics/object/SpaceFighter";
@@ -29,26 +30,15 @@ export default class SpaceFighterSingleplayerController extends SpaceFighterBase
       * @param {Mouse} mouseInterface
       * @param {Keyboard} keyboardInterface
       * @param {AbstractLogger} logger
+      * @param {AssetManager} assetManager
       */
-    constructor(mouseInterface, keyboardInterface, logger) {
-        super(logger);
+    constructor(mouseInterface, keyboardInterface, logger, assetManager) {
+        super(logger, assetManager);
         this.mouse = mouseInterface;
         this.keyboard = keyboardInterface;
 
         this.controlCircleRadius = Math.min(window.innerWidth, window.innerHeight) * 0.2;
         this.controlCircleRadiusSq = this.controlCircleRadius ** 2;
-    }
-
-    postConstruct({enableAxesHelper} = {}) {
-        this.enableAxesHelper = enableAxesHelper;
-    }
-
-    /**
-     * @param {SpaceFighter} gameObject
-     */
-    init(gameObject) {
-        super.init(gameObject);
-        this.controlZInWorldCoords = gameObject.nz;
     }
 
     /**

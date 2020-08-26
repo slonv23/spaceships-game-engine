@@ -1755,11 +1755,13 @@ export default ( function () {
 			var parser = this;
 			var defs = this.json[ type + ( type === 'mesh' ? 'es' : 's' ) ] || [];
 
-			dependencies = Promise.all( defs.map( function ( def, index ) {
-
-				return parser.getDependency( type, index );
-
-			} ) );
+			dependencies = Promise.all(defs.map(function (def, index) {
+				if (typeof window === 'undefined' && (type === 'texture' || type === 'material')) {
+					return null;
+				} else {
+					return parser.getDependency(type, index);
+				}
+			}).filter(Boolean));
 
 			this.cache.add( type, dependencies );
 
