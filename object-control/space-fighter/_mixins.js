@@ -55,7 +55,7 @@ export const syncStateMixin = {
      */
     processInput(objectAction) {
         if (objectAction.spaceFighterInput) {
-            this.handleInputAction(objectAction[objectAction.action]);
+            this.handleInputAction(objectAction.spaceFighterInput);
         } else if (objectAction.spaceFighterOpenFire) {
             // eslint-disable-next-line no-empty
         } else if (objectAction.spaceFighterDestroy) {
