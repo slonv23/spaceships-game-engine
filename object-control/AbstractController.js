@@ -39,7 +39,7 @@ export default class AbstractController {
     async postConstruct({gameObjectFactory}) {
         this.gameObjectFactory = gameObjectFactory;
         if (this.diContainer.isProvided('renderer')) {
-            this.renderer = this.diContainer.get('renderer');
+            this.renderer = await this.diContainer.get('renderer');
         }
     }
 
