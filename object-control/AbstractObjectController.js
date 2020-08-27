@@ -18,10 +18,7 @@ export default class AbstractObjectController extends AbstractController {
      * @param {number} objectId
      */
     init(objectId) {
-        this.gameObject = this.gameObjectFactory(objectId, this.assetManager);
-        if (!(this.gameObject instanceof AbstractObject)) {
-            throw new Error('Game object instance\'s class must be inherited from AbstractObject');
-        }
+        this.gameObject = this.createObject(objectId);
         this.initialized = true;
     }
 

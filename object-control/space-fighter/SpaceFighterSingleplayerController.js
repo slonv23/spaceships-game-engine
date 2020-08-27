@@ -26,14 +26,17 @@ export default class SpaceFighterSingleplayerController extends SpaceFighterBase
     /** @type {THREE.Vector3} */
     normalToRotationDirection;
 
+    static dependencies() {
+        return ['mouseInterface', 'keyboardInterface', ...SpaceFighterBaseController.dependencies()];
+    }
+
      /**
       * @param {Mouse} mouseInterface
       * @param {Keyboard} keyboardInterface
-      * @param {AbstractLogger} logger
-      * @param {AssetManager} assetManager
+      * @param {Array} args
       */
-    constructor(mouseInterface, keyboardInterface, logger, assetManager) {
-        super(logger, assetManager);
+    constructor(mouseInterface, keyboardInterface, ...args) {
+        super(...args);
         this.mouse = mouseInterface;
         this.keyboard = keyboardInterface;
 

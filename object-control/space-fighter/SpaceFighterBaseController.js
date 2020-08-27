@@ -37,12 +37,16 @@ export default class SpaceFighterBaseController extends AbstractObjectController
     /** @type {number} */
     rotationSpeed = 0;
 
+    static dependencies() {
+        return ['logger', ...AbstractObjectController.dependencies()];
+    }
+
     static calculateRotationDirection(nx, ny, yaw, pitch) {
         return nx.clone().multiplyScalar(yaw).add(ny.clone().multiplyScalar(pitch));
     }
 
-    constructor(logger, assetManager) {
-        super(assetManager);
+    constructor(logger, ...args) {
+        super(...args);
         this.logger = logger;
     }
 
