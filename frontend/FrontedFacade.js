@@ -44,11 +44,6 @@ export default class FrontendFacade {
 
     postConstruct({fps = 60} = {}) {
         this.timestep = 1000 / fps;
-        this.stateManager.addEventListener("object-created", (event) => {
-            /** @type {AbstractObject} */
-            const gameObject = event.detail;
-            this.renderer.scene.add(gameObject.object3d);
-        })
     }
 
     startGameLoop() {

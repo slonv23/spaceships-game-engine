@@ -1,5 +1,9 @@
 export default class MouseInterface {
 
+    lmbPressed = false;
+
+    rmbPressed = false;
+
     /**
      * @type {number[]} mouse position
      * position[0] - x offset, x є [-screenWidth scrennWidth]
@@ -8,12 +12,30 @@ export default class MouseInterface {
     position = [.5, .5];
 
     constructor() {
-        window.addEventListener('mousemove', this.onMouseMove, false);
+        window.addEventListener('mousemove', this.handleMouseMove, false);
+        window.addEventListener('mousedown', this.handleMouseDown, false);
+        window.addEventListener('mouseup', this.handleMouseUp, false);
     }
 
-    onMouseMove = (e) => {
+    handleMouseMove = (e) => {
         this.position[0] = e.clientX - window.innerWidth * 0.5;
         this.position[1] = e.clientY - window.innerHeight * 0.5;
+    };
+
+    handleMouseDown = (e) => {
+        if (e.button === 0) {
+            this.lmbPressed = true;
+        } else if (e.button === 2) {
+            this.rmbPressed = true;
+        }
+    };
+
+    handleMouseUp = (e) => {
+        if (e.button === 0) {
+            this.lmbPressed = false;
+        } else if (e.button === 2) {
+            this.rmbPressed = false;
+        }
     };
 
 }

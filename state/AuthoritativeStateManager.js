@@ -5,8 +5,6 @@
  * @typedef {import('../asset-management/AssetManager').default} AssetManager
  * @typedef {import('di-container-js').default} DiContainer
  */
-
-import AbstractObject from '../physics/object/AbstractObject';
 import AbstractController from '../object-control/AbstractController';
 import Emitter from '../util/Emitter';
 
@@ -97,6 +95,7 @@ export default class AuthoritativeStateManager extends Emitter {
         // allocate array for input actions, this is not needed in SP mode TODO refactor
         this.objectActionsByObjectId[objectId] = {};
 
+        this.dispatchEvent("game-object-created", controller);
         return controller;
     }
 
