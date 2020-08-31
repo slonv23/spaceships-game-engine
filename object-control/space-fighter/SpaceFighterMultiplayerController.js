@@ -21,6 +21,12 @@ export default class SpaceFighterMultiplayerController extends SpaceFighterSingl
         this._calculateRotationDirection();
         this._calculateNormalToRotationDirection(); // used by camera manager
         this._updateAngularVelocities();
+
+        if (!this.activeProjectileSequence && this.mouse.lmbPressed) {
+            this.launchProjectiles();
+        } else if (this.activeProjectileSequence && !this.mouse.lmbPressed)  {
+            this.stopFiring();
+        }
     }
 
     update(delta) {

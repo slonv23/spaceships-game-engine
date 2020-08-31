@@ -1,4 +1,5 @@
 /**
+ * @typedef {import('../projectile/AbstractProjectileController').default} AbstractProjectileController
  * @typedef {import('../../physics/object/SpaceFighter').default} SpaceFighter
  * @typedef {import('../../logging/AbstractLogger').default} AbstractLogger
  */
@@ -37,6 +38,12 @@ export default class SpaceFighterBaseController extends AbstractObjectController
     /** @type {number} */
     rotationSpeed = 0;
 
+    /** @type {AbstractProjectileController[]} */
+    projectileSequences = [];
+
+    /** @type {AbstractProjectileController} */
+    activeProjectileSequence = null;
+
     static dependencies() {
         return ['logger', ...AbstractObjectController.dependencies()];
     }
@@ -48,6 +55,33 @@ export default class SpaceFighterBaseController extends AbstractObjectController
     constructor(logger, ...args) {
         super(...args);
         this.logger = logger;
+    }
+
+    async postConstruct(config) {
+        await super.postConstruct(config);
+        this.projectileSequenceControllerRef = config.projectileSequenceControllerRef;
+    }
+
+    async launchProjectiles() {
+        /** @type {AbstractProjectileController} */
+        const projectileSequenceController = await this.diContainer.get(this.projectileSequenceControllerRef);
+        projectileSequenceController.launch();
+        this.projectileSequences.push(projectileSequenceController);
+        return projectileSequenceController;
+    }
+
+    stopFiring() {
+        this.activeProjectileSequence.stop();
+    }
+
+    /**
+     * @param {number} delta
+     * @returns {Promise<void>}
+     */
+    updateProjectiles(delta) {
+        for (const projectileSequence of this.projectileSequences) {
+            projectileSequence.update(delta);
+        }
     }
 
     /**

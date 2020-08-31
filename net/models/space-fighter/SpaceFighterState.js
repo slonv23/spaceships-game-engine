@@ -26,6 +26,8 @@ export default class SpaceFighterState extends AbstractModel {
     rollAngleBtwCurrentAndTargetOrientation = 0;
     /** @type {THREE.Quaternion} */
     controlQuaternion;
+    /** @type {boolean} */
+    shooting;
 
     /** @type {ObjectAction[]} */
     actions;
