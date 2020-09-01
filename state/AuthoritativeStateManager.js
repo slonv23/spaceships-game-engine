@@ -36,15 +36,16 @@ export default class AuthoritativeStateManager extends Emitter {
         this.assetManager = assetManager;
     }
 
-    update(delta) {
+    async update(delta) {
         this.currentFrameIndex++;
-        this._applyInputActionsAndUpdateObjects(delta);
+        await this._applyInputActionsAndUpdateObjects(delta);
         this._cleanup();
     }
 
-    _applyInputActionsAndUpdateObjects(delta) {
+    async _applyInputActionsAndUpdateObjects(delta) {
         const processedActions = [];
 
+        const promises = [];
         for (let i = 0; i < this.initializedControllersCount; i++) {
             const id = this.initializedControllers[i].gameObject.id;
             const inputAction = this.objectActionsByObjectId[id][this.currentFrameIndex];
@@ -53,8 +54,10 @@ export default class AuthoritativeStateManager extends Emitter {
                 processedActions.push(inputAction);
             }
 
-            this.initializedControllers[i].update(delta);
+            promises.push(this.initializedControllers[i].update(delta));
         }
+
+        await Promise.all(promises);
 
         this.dispatchEvent("actions-processed", processedActions);
     }

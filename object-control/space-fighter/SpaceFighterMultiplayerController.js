@@ -16,22 +16,23 @@ export default class SpaceFighterMultiplayerController extends SpaceFighterSingl
     /**
      * @param {number} delta
      */
-    updateControlParams(delta) {
+    async updateControlParams(delta) {
         this._updateControlsQuaternion(delta);
         this._calculateRotationDirection();
         this._calculateNormalToRotationDirection(); // used by camera manager
         this._updateAngularVelocities();
 
+        this.updateProjectiles(delta);
         if (!this.activeProjectileSequence && this.mouse.lmbPressed) {
-            this.launchProjectiles();
+            await this.launchProjectiles();
         } else if (this.activeProjectileSequence && !this.mouse.lmbPressed)  {
             this.stopFiring();
         }
     }
 
-    update(delta) {
+    async update(delta) {
         this.gameObject.update(delta);
-        this.updateControlParams(delta);
+        await this.updateControlParams(delta);
     }
 
     sync(actualObjectState, futureObjectState) {

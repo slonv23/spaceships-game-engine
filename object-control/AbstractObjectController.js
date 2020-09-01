@@ -25,16 +25,16 @@ export default class AbstractObjectController extends AbstractController {
     /**
      * @param {number} delta
      */
-    update(delta) {
+    async update(delta) {
         this.gameObject.update(delta);
-        this.updateControlParams(delta);
+        await this.updateControlParams(delta);
     }
 
     /**
      * @param {number} delta
      */
     // eslint-disable-next-line no-unused-vars
-    updateControlParams(delta) {
+    async updateControlParams(delta) {
         throw new Error("Not implemented");
     }
 

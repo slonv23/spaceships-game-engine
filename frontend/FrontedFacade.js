@@ -57,7 +57,7 @@ export default class FrontendFacade {
         });
     }
 
-    gameLoop = (timestamp) => {
+    gameLoop = async (timestamp) => {
         if (timestamp < this.lastFrameTimeMs + this.timestep) {
             requestAnimationFrame(this.gameLoop);
             return;
@@ -66,7 +66,7 @@ export default class FrontendFacade {
         this.lastFrameTimeMs = timestamp;
 
         while (this.delta >= this.timestep) {
-            this.stateManager.update(this.timestep);
+            await this.stateManager.update(this.timestep);
             // TODO do not update camera while stateManager is not ready
             this._cameraManager.updateCamera(this.timestep);
             this.delta -= this.timestep;
@@ -79,9 +79,9 @@ export default class FrontendFacade {
 
     /**
      * @param {string} spriteName
-     * @returns {Promise<THREE.Sprite>}
+     * @returns {THREE.Sprite}
      */
-    async createSprite(spriteName) {
+    createSprite(spriteName) {
         const sprite = this.assetManager.getSprite(spriteName).clone();
         this.renderer.sceneOrtho.add(sprite);
 

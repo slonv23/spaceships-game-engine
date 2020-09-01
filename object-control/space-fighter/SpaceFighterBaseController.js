@@ -65,18 +65,21 @@ export default class SpaceFighterBaseController extends AbstractObjectController
     async launchProjectiles() {
         /** @type {AbstractProjectileController} */
         const projectileSequenceController = await this.diContainer.get(this.projectileSequenceControllerRef);
-        projectileSequenceController.launch();
+
+        this.activeProjectileSequence = projectileSequenceController;
         this.projectileSequences.push(projectileSequenceController);
+
+        projectileSequenceController.launch(this.gameObject.position, this.gameObject.nz);
         return projectileSequenceController;
     }
 
     stopFiring() {
         this.activeProjectileSequence.stop();
+        this.activeProjectileSequence = null;
     }
 
     /**
      * @param {number} delta
-     * @returns {Promise<void>}
      */
     updateProjectiles(delta) {
         for (const projectileSequence of this.projectileSequences) {
@@ -104,7 +107,7 @@ export default class SpaceFighterBaseController extends AbstractObjectController
     /**
      * @param {number} delta
      */
-    updateControlParams(delta) {
+    async updateControlParams(delta) {
         this._updateControlsQuaternion(delta);
         this._calculateRotationDirection();
         this._calculateNormalToRotationDirection(); // used by camera manager

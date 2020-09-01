@@ -2,7 +2,8 @@ import AbstractController from "../AbstractController";
 
 export default class AbstractProjectileController extends AbstractController {
 
-    launch() {
+    // eslint-disable-next-line no-unused-vars
+    launch(position, direction) {
         throw new Error("Not implemented");
     }
 

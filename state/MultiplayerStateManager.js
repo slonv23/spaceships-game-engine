@@ -62,7 +62,7 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
         this.multiplayerService.addEventListener('worldStateUpdate', this.handleInitialWorldStateUpdates);
     }
 
-    update(delta) {
+    async update(delta) {
         if (this.currentFrameIndex !== 0) {
             this.logger.debug(`[FRM#${this.currentFrameIndex}]`);
         }
@@ -82,14 +82,14 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
             }
 
             this.currentFrameIndex = this.nextFrameIndex;
-            this._syncWorldState(this.nextWorldState, this.latestWorldState);
+            await this._syncWorldState(this.nextWorldState, this.latestWorldState);
 
             this.nextWorldState = this.latestWorldState;
             this.nextFrameIndex = this.latestFrameIndex;
             this.latestWorldState = null;
             this._cleanup();
         } else if ((this.currentFrameIndex + 1) < this.nextFrameIndex) {
-            this._applyInputActionsAndUpdateObjects(delta);
+            await this._applyInputActionsAndUpdateObjects(delta);
             this.currentFrameIndex++;
         } else {
             // this.currentFrameIndex === this.nextFrameIndex
