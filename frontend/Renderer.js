@@ -81,7 +81,7 @@ export default class Renderer {
             light.position.set(0, 100, 0);
             this.scene.add(light);
 
-            const ambientLight = new THREE.AmbientLight(0xC0C0C0); // soft white light
+            const ambientLight = new THREE.AmbientLight(0xF3F3F3); // soft white light
             scene.add(ambientLight);
         }
 

@@ -1,21 +1,29 @@
 /**
+ * @typedef {import('three')} THREE
  * @typedef {import('../../physics/object/DirectionalProjectile').default} DirectionalProjectile
  */
-import AbstractProjectileController from "./AbstractProjectileController";
+import AbstractController from "../AbstractController";
 
-export default class ProjectileSequenceController extends AbstractProjectileController {
+export default class ProjectileSequenceController extends AbstractController {
 
     /** @type {DirectionalProjectile[]} */
     projectiles = [];
 
-    launch(position, direction) {
-        /** @type {DirectionalProjectile} */
-        const projectile = this.gameObjectFactory(null);
-        projectile.velocity.z = -0.007;
-        projectile.position.copy(position);
-        projectile.direction.copy(direction);
-        this.renderer.scene.add(projectile.object3d);
-        this.projectiles.push(projectile);
+    /**
+     * @param {THREE.Vector3[]} positions
+     * @param {THREE.Vector3} target
+     */
+    launch(positions, target) {
+        for (const position of positions) {
+            //const direction = target.clone().sub(position);
+            /** @type {DirectionalProjectile} */
+            const projectile = this.gameObjectFactory(null);
+            projectile.velocity.z = 0.006;
+            projectile.position.copy(position);
+            projectile.changeDirection(target/*direction*/);
+            this.renderer.scene.add(projectile.object3d);
+            this.projectiles.push(projectile);
+        }
     }
 
     async update(dt) {

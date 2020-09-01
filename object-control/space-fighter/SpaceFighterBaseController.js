@@ -1,5 +1,5 @@
 /**
- * @typedef {import('../projectile/AbstractProjectileController').default} AbstractProjectileController
+ * @typedef {import('../projectile/ProjectileSequenceController').default} ProjectileSequenceController
  * @typedef {import('../../physics/object/SpaceFighter').default} SpaceFighter
  * @typedef {import('../../logging/AbstractLogger').default} AbstractLogger
  */
@@ -38,11 +38,15 @@ export default class SpaceFighterBaseController extends AbstractObjectController
     /** @type {number} */
     rotationSpeed = 0;
 
-    /** @type {AbstractProjectileController[]} */
+    /** @type {ProjectileSequenceController[]} */
     projectileSequences = [];
 
-    /** @type {AbstractProjectileController} */
+    /** @type {ProjectileSequenceController} */
     activeProjectileSequence = null;
+
+    leftProjectileOffset = new THREE.Vector3(-3.18142, 0.185841, -0.214785);
+
+    rightProjectileOffset = new THREE.Vector3(3.18142, 0.185841, -0.214785);
 
     static dependencies() {
         return ['logger', ...AbstractObjectController.dependencies()];
@@ -63,13 +67,17 @@ export default class SpaceFighterBaseController extends AbstractObjectController
     }
 
     async launchProjectiles() {
-        /** @type {AbstractProjectileController} */
+        /** @type {ProjectileSequenceController} */
         const projectileSequenceController = await this.diContainer.get(this.projectileSequenceControllerRef);
 
         this.activeProjectileSequence = projectileSequenceController;
         this.projectileSequences.push(projectileSequenceController);
 
-        projectileSequenceController.launch(this.gameObject.position, this.gameObject.nz);
+        const positions = [
+            this.leftProjectileOffset.clone().applyMatrix4(this.gameObject.object3d.matrix),
+            this.rightProjectileOffset.clone().applyMatrix4(this.gameObject.object3d.matrix)
+        ];
+        projectileSequenceController.launch(positions, this.gameObject.nz.clone()/*.multiplyScalar(-10)*/);
         return projectileSequenceController;
     }
 
@@ -82,9 +90,10 @@ export default class SpaceFighterBaseController extends AbstractObjectController
      * @param {number} delta
      */
     updateProjectiles(delta) {
+        /*console.log('Update projectiles!')
         for (const projectileSequence of this.projectileSequences) {
             projectileSequence.update(delta);
-        }
+        }*/
     }
 
     /**
