@@ -25,8 +25,14 @@ export const syncStateMixin = {
                                                                                        this.gameObject.ny,
                                                                                        spaceFighterState.angularVelocity.x,
                                                                                        spaceFighterState.angularVelocity.y);
-        this.wYawTarget = this.controlX.clone().applyQuaternion(this.controlsQuaternion).dot(this.rotationDirection);
-        this.wPitchTarget = this.controlY.clone().applyQuaternion(this.controlsQuaternion).dot(this.rotationDirection);
+        this.wYawTarget = this.controlX.clone()
+            .applyQuaternion(this.controlsRotQuaternion)
+            .applyQuaternion(this.controlsQuaternion)
+            .dot(this.rotationDirection);
+        this.wPitchTarget = this.controlY.clone()
+            .applyQuaternion(this.controlsRotQuaternion)
+            .applyQuaternion(this.controlsQuaternion)
+            .dot(this.rotationDirection);
     },
 
     /**
