@@ -15,12 +15,12 @@ export default class ProjectileSequenceController extends AbstractController {
      */
     launch(positions, target) {
         for (const position of positions) {
-            //const direction = target.clone().sub(position);
+            const direction = position.clone().sub(target).normalize();
             /** @type {DirectionalProjectile} */
             const projectile = this.gameObjectFactory(null);
-            projectile.velocity.z = 0.006;
+            projectile.velocity.z = -0.05;
             projectile.position.copy(position);
-            projectile.changeDirection(target/*direction*/);
+            projectile.changeDirection(direction); //target/*direction*/);
             this.renderer.scene.add(projectile.object3d);
             this.projectiles.push(projectile);
         }
