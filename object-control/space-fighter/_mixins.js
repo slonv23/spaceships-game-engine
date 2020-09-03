@@ -17,6 +17,7 @@ export const syncStateMixin = {
         this._syncObject(spaceFighterState);
 
         this.controlsQuaternion.copy(spaceFighterState.controlQuaternion);
+        this.controlsRotQuaternion.copy(spaceFighterState.controlRotQuaternion);
         this.controlZInWorldCoords.set(0, 0, 1).applyQuaternion(this.controlsQuaternion);
 
         // calc rotation direction, yaw and pitch targets
