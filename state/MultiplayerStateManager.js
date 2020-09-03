@@ -64,7 +64,7 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
 
     async update(delta) {
         if (this.currentFrameIndex !== 0) {
-            this.logger.debug(`[FRM#${this.currentFrameIndex}]`);
+            //this.logger.debug(`[FRM#${this.currentFrameIndex}]`);
         }
 
         if (this.latestWorldState) {

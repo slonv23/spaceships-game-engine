@@ -56,15 +56,20 @@ export default class SpaceFighterSingleplayerController extends SpaceFighterBase
         this._correctObjectRollAngle();
     }
 
-    _applyUserInputForRotation() {
+    _determineRotationSpeed() {
         const pressedKey = this.keyboard.getFirstPressedKey();
 
-        this.rotationSpeed = 0;
         if (pressedKey === browserKeycodes.ARROW_LEFT) {
-            this.rotationSpeed = 0.0006;
+            return 0.0006;
         } else if (pressedKey === browserKeycodes.ARROW_RIGHT) {
-            this.rotationSpeed = -0.0006;
+            return -0.0006;
         }
+
+        return 0;
+    }
+
+    _applyUserInputForRotation() {
+        this.rotationSpeed = this._determineRotationSpeed();
     }
 
     _applyUserInputForAngularVelocities() {
@@ -82,8 +87,9 @@ export default class SpaceFighterSingleplayerController extends SpaceFighterBase
     }
 
     _calcTargetSideAngle() {
-        return -this.wYawTarget / SpaceFighter.angularVelocityMax.x * Math.PI / 6;
-        //return this.wYawTarget / SpaceFighter.angularVelocityMax.x * Math.PI / 6;
+        //return -Math.PI / 6;
+        //return -this.wYawTarget / SpaceFighter.angularVelocityMax.x * Math.PI / 6;
+        return this.wYawTarget / SpaceFighter.angularVelocityMax.x * Math.PI / 6;
     }
 
     _calcSideAngle() {

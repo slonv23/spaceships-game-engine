@@ -30,6 +30,7 @@ export default class SpaceFighter extends FlyingObject {
             this.angularAcceleration.z = result.acceleration;
             angleChange.z = result.distanceChange;
             this.rollAngleBtwCurrentAndTargetOrientation -= result.distanceChange;
+            console.log('this.rollAngleBtwCurrentAndTargetOrientation: ' + this.rollAngleBtwCurrentAndTargetOrientation);
         } else {
             this.angularVelocity.z = 0;
             this.angularAcceleration.z = 0;
@@ -40,3 +41,5 @@ export default class SpaceFighter extends FlyingObject {
     }
 
 }
+
+const self = SpaceFighter;

@@ -8,6 +8,7 @@ import SpaceFighterSingleplayerController from "./SpaceFighterSingleplayerContro
 import {syncStateMixin} from "./_mixins";
 import SpaceFighterInput from "../../net/models/space-fighter/SpaceFighterInput";
 import SpaceFighter from "../../physics/object/SpaceFighter";
+import browserKeycodes from "../../util/browser-keycodes";
 
 export default class SpaceFighterMultiplayerController extends SpaceFighterSingleplayerController {
 
@@ -43,16 +44,17 @@ export default class SpaceFighterMultiplayerController extends SpaceFighterSingl
         const currentSideAngle = this._calcSideAngle() * this._calcRotationDirection();
         const targetSideAngle = this._calcTargetSideAngle();
         const angleChange = targetSideAngle - currentSideAngle;
-        const targetRollAngleWithCorrection = this.gameObject.rollAngleBtwCurrentAndTargetOrientation
-                                               + this.rollAnglePrev - angleChange;
+        const targetRollAngleWithCorrection = angleChange; //this.gameObject.rollAngleBtwCurrentAndTargetOrientation;
+                                               //+ (angleChange - this.rollAnglePrev);
+        console.log('targetRollAngleWithCorrection: ' + targetRollAngleWithCorrection);
 
         const inputAction = new SpaceFighterInput();
         const mousePos = this._calcMousePosInDimlessUnits();
         inputAction.pitch = -mousePos[1] * SpaceFighter.angularVelocityMax.y;
         inputAction.yaw = mousePos[0] * SpaceFighter.angularVelocityMax.x;
         // TODO:
-        inputAction.rollAngle = 0; // targetRollAngleWithCorrection;
-        inputAction.rotationSpeed = 0; // this.rotationSpeed;
+        inputAction.rollAngle = targetRollAngleWithCorrection;
+        inputAction.rotationSpeed = this._determineRotationSpeed();
 
         return inputAction;
     }
