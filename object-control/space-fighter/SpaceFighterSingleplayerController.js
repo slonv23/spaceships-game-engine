@@ -100,7 +100,7 @@ export default class SpaceFighterSingleplayerController extends SpaceFighterBase
         const denominator = Math.sqrt(this.rotationDirectionForNonRotated.lengthSq() * this.rotationDirection.lengthSq());
         if (denominator !== 0) {
             console.log('_calcSideAngle: ' + this.rotationDirectionForNonRotated.angleTo(this.rotationDirection))
-            return this.rotationDirectionForNonRotated.angleTo(this.rotationDirection);
+            return -this.rotationDirectionForNonRotated.angleTo(this.rotationDirection);
         } else {
             console.log('_calcSideAngle: ' + 0);
             // if yaw and pitch are too small than rotation direction will be close to zero vector
