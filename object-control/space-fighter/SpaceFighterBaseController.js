@@ -110,6 +110,7 @@ export default class SpaceFighterBaseController extends AbstractObjectController
         this.controlsQuaternion.multiplyQuaternions(createQuaternionForRotation(this.controlZInWorldCoords, this.gameObject.nz), this.controlsQuaternion);
         if (this.rotationSpeed !== 0) {
             this.controlsRotQuaternion.multiply(new THREE.Quaternion(0, 0, this.rotationSpeed * delta * 0.5, 1));
+            this.controlsRotQuaternion.normalize();
             //this.controlsQuaternion.multiply(new THREE.Quaternion(0, 0, this.rotationSpeed * delta * 0.5, 1));
         }
         this.controlsQuaternion.normalize();
@@ -131,6 +132,7 @@ export default class SpaceFighterBaseController extends AbstractObjectController
         this.rotationDirection = SpaceFighterBaseController.calculateRotationDirection(this.controlX, this.controlY,
             this.wYawTarget, this.wPitchTarget);
         //this.rotationDirection = this.controlX.clone().multiplyScalar(this.wYawTarget).add(this.controlY.clone().multiplyScalar(this.wPitchTarget));
+        //const tmp = this.rotationDirection.applyQuaternion(this.controlsRotQuaternion);
         this.rotationDirection.applyQuaternion(this.controlsRotQuaternion).applyQuaternion(this.controlsQuaternion);
     }
 
