@@ -87,9 +87,9 @@ export default class SpaceFighterSingleplayerController extends SpaceFighterBase
     }
 
     _calcTargetSideAngle() {
-        //return -Math.PI / 6;
+        return Math.PI / 6;
         //return -this.wYawTarget / SpaceFighter.angularVelocityMax.x * Math.PI / 6;
-        return this.wYawTarget / SpaceFighter.angularVelocityMax.x * Math.PI / 6;
+        //return this.wYawTarget / SpaceFighter.angularVelocityMax.x * Math.PI / 6;
     }
 
     _calcSideAngle() {
