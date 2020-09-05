@@ -109,8 +109,10 @@ export default class SpaceFighterBaseController extends AbstractObjectController
     _updateControlsQuaternion(delta) {
         this.controlsQuaternion.multiplyQuaternions(createQuaternionForRotation(this.controlZInWorldCoords, this.gameObject.nz), this.controlsQuaternion);
         if (this.rotationSpeed !== 0) {
-            this.controlsRotQuaternion.multiply(new THREE.Quaternion(0, 0, this.rotationSpeed * delta * 0.5, 1));
+            const deltaAngle = this.rotationSpeed * delta;
+            this.controlsRotQuaternion.multiply(new THREE.Quaternion(0, 0, deltaAngle * 0.5, 1));
             this.controlsRotQuaternion.normalize();
+            this.gameObject.rollAngleBtwCurrentAndTargetOrientation += deltaAngle;
             //this.controlsQuaternion.multiply(new THREE.Quaternion(0, 0, this.rotationSpeed * delta * 0.5, 1));
         }
         this.controlsQuaternion.normalize();

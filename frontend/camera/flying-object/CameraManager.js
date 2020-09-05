@@ -62,11 +62,12 @@ export default class CameraManager {
 
         //const rotationDirectionBasedOnCameraAxes = this.cameraX.clone().multiplyScalar(this.controller.wYawTarget).add(this.cameraY.clone().multiplyScalar(this.controller.wPitchTarget));
         const rotationDirectionBasedOnCameraAxes =
-            SpaceFighterBaseController.calculateRotationDirection(this.cameraX, this.cameraY,
-                                                                  controller.wYawTarget, controller.wPitchTarget);
+            SpaceFighterBaseController.calculateRotationDirection(this.cameraX, this.cameraY, controller.wYawTarget, controller.wPitchTarget);
+
         let angleBtwControlAndCameraAxes = 0;
-        // rotationDirectionBasedOnCameraAxes.dot(controller.rotationDirection) !== 1
-        if (rotationDirectionBasedOnCameraAxes.lengthSq() * controller.rotationDirection.lengthSq() > 0.0001) {
+        // TODO avoid zero vectors
+        const denominator = Math.sqrt(rotationDirectionBasedOnCameraAxes.lengthSq() * controller.rotationDirection.lengthSq());
+        if (denominator  !== 0) {
             angleBtwControlAndCameraAxes = rotationDirectionBasedOnCameraAxes.angleTo(controller.rotationDirection);
         }
 

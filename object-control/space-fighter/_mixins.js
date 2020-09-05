@@ -12,6 +12,7 @@ export const syncStateMixin = {
      * @param {ObjectState} objectState
      */
     _sync(objectState) {
+        return;
         /** @type {SpaceFighterState} */
         const spaceFighterState = objectState.spaceFighterState;
         this._syncObject(spaceFighterState);
