@@ -75,7 +75,8 @@ export const syncStateMixin = {
      * @param {SpaceFighterInput} inputAction
      */
     handleInputAction(inputAction) {
-        this.gameObject.rollAngleBtwCurrentAndTargetOrientation += inputAction.rollAngle - this.rollAnglePrev; //;this.rollAnglePrev - inputAction.rollAngle; //this.rollAnglePrev - inputAction.rollAngle;
+        this.gameObject.rollAngleBtwCurrentAndTargetOrientation += inputAction.rollAngle;
+        // inputAction.rollAngle - this.rollAnglePrev //;this.rollAnglePrev - inputAction.rollAngle;
         this.rollAnglePrev = inputAction.rollAngle;
         this.wYawTarget = inputAction.yaw;
         this.wPitchTarget = inputAction.pitch;
