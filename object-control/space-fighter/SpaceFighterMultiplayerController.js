@@ -46,7 +46,8 @@ export default class SpaceFighterMultiplayerController extends SpaceFighterSingl
         const angleChange = targetSideAngle - currentSideAngle;
         const targetRollAngleWithCorrection = angleChange - this.gameObject.rollAngleBtwCurrentAndTargetOrientation; //targetSideAngle; //angleChange; //this.gameObject.rollAngleBtwCurrentAndTargetOrientation;
                                                //+ (angleChange - this.rollAnglePrev);
-        console.log('targetRollAngleWithCorrection: ' + targetRollAngleWithCorrection);
+        //console.log('targetRollAngleWithCorrection: ' + targetRollAngleWithCorrection);
+        console.log('Actual angle diff current angle: ' + (currentSideAngle - this.gameObject.rollAngleBtwCurrentAndTargetOrientation));
 
         const inputAction = new SpaceFighterInput();
         const mousePos = this._calcMousePosInDimlessUnits();

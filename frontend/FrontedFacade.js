@@ -70,7 +70,9 @@ export default class FrontendFacade {
             // TODO do not update camera while stateManager is not ready
             this._cameraManager.updateCamera(this.timestep);
             this.delta -= this.timestep;
+            console.log('Do job in loop');
         }
+        console.log('Loop ended');
 
         this.renderer.render();
 
