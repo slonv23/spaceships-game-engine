@@ -8,6 +8,8 @@ import SpaceFighterBaseController from "../../../object-control/space-fighter/Sp
 
 export default class CameraManager {
 
+    static verticalShift = 2;
+
     static lenBtwSpaceshipAndPosLookAt = 8;
 
     static lenBtwCameraAndPosLookAt = 12; //10;
@@ -90,7 +92,7 @@ export default class CameraManager {
         let diffY = cameraAndObjectDirectionsDiff.dot(this.cameraY);
 
         const maxShiftX = 3, maxShiftY = 4, sphereRadius = 7; // sphereRadius = 6;
-        const targetPositionShift = new THREE.Vector2(100 * diffX * maxShiftX, 2 - 100 * diffY * maxShiftY);
+        const targetPositionShift = new THREE.Vector2(100 * diffX * maxShiftX, self.verticalShift - 100 * diffY * maxShiftY);
 
         // smoothing
         const currentAndTargetPosShiftDiff = targetPositionShift.sub(this.cameraPositionShift);

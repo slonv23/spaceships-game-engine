@@ -7,6 +7,7 @@ import * as THREE from "three";
 
 import {createQuaternionForRotation} from "../../util/math";
 import AbstractObjectController from "../AbstractObjectController";
+import CameraManager from "../../frontend/camera/flying-object/CameraManager";
 
 export default class SpaceFighterBaseController extends AbstractObjectController {
 
@@ -80,7 +81,11 @@ export default class SpaceFighterBaseController extends AbstractObjectController
             this.leftProjectileOffset.clone().applyMatrix4(this.gameObject.object3d.matrix),
             this.rightProjectileOffset.clone().applyMatrix4(this.gameObject.object3d.matrix)
         ];
-        projectileSequenceController.launch(positions, this.gameObject.nz.clone().multiplyScalar(-60).add(this.gameObject.position));
+
+        const target = this.gameObject.nz.clone().multiplyScalar(-60)
+            .add(this.gameObject.ny.clone().multiplyScalar(CameraManager.verticalShift * 60 / CameraManager.lenBtwSpaceshipAndPosLookAt))
+            .add(this.gameObject.position);
+        projectileSequenceController.launch(positions, target);//this.gameObject.nz.clone().multiplyScalar(-60).add(this.gameObject.position));
         return projectileSequenceController;
     }
 

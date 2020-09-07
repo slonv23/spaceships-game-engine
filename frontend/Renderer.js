@@ -69,7 +69,7 @@ export default class Renderer {
         this.scene = scene;
         this.sceneOrtho = new THREE.Scene();
         this.camera = camera;
-        this.cameraOrtho = new THREE.OrthographicCamera(-width / 2, width / 2, height / 2, - height / 2, 1, 10);
+        this.cameraOrtho = new THREE.OrthographicCamera(-width / 2, width / 2, height / 2, - height / 2, 0, 1000);
         this.cameraOrtho.position.z = 10;
         this.camera.matrixAutoUpdate = false;
         this.renderer = renderer;
