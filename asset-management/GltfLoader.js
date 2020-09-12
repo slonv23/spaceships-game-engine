@@ -11,9 +11,10 @@ import * as THREE from 'three';
 
 export default ( function () {
 
-	function GLTFLoader( manager = undefined ) {
+	function GLTFLoader(/* manager = undefined */) {
 
-		this.manager = ( manager !== undefined ) ? manager : THREE.DefaultLoadingManager;
+		//this.manager = ( manager !== undefined ) ? manager : THREE.DefaultLoadingManager;
+		this.manager = THREE.DefaultLoadingManager;
 		this.dracoLoader = null;
 
 	}
