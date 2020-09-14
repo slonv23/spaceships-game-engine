@@ -2,17 +2,22 @@
  * @typedef {import('../projectile/ProjectileSequenceController').default} ProjectileSequenceController
  * @typedef {import('../../physics/object/SpaceFighter').default} SpaceFighter
  * @typedef {import('../../logging/AbstractLogger').default} AbstractLogger
+ * @typedef {import('../../frontend/Renderer').default} Renderer
+ * @typedef {import('../../../../node_modules/di-container-js/ComponentFactory')} ComponentFactory
  */
 import * as THREE from "three";
 
 import {createQuaternionForRotation} from "../../util/math";
 import AbstractObjectController from "../AbstractObjectController";
 import CameraManager from "../../frontend/camera/flying-object/CameraManager";
+import SpaceFighter from "../../physics/object/SpaceFighter";
 
 export default class SpaceFighterBaseController extends AbstractObjectController {
 
     /** @type {AbstractLogger} */
     logger;
+    /** @type {ComponentFactory} */
+    projectileSequenceControllerFactory;
 
     /** @type {SpaceFighter} */
     gameObject;
@@ -53,27 +58,22 @@ export default class SpaceFighterBaseController extends AbstractObjectController
     rightProjectileOffset = new THREE.Vector3(3.18142, 0.185841, -0.214785);
 
     static dependencies() {
-        return ['logger', ...AbstractObjectController.dependencies()];
+        return ['logger', 'projectileSequenceControllerFactory', ...AbstractObjectController.dependencies()];
     }
 
     static calculateRotationDirection(nx, ny, yaw, pitch) {
         return nx.clone().multiplyScalar(yaw).add(ny.clone().multiplyScalar(pitch));
     }
 
-    constructor(logger, ...args) {
+    constructor(logger, projectileSequenceControllerFactory, ...args) {
         super(...args);
         this.logger = logger;
+        this.projectileSequenceControllerFactory = projectileSequenceControllerFactory;
     }
 
-    async postConstruct(config) {
-        await super.postConstruct(config);
-        this.projectileSequenceControllerRef = config.projectileSequenceControllerRef;
-    }
-
-    async launchProjectiles() {
+    launchProjectiles() {
         /** @type {ProjectileSequenceController} */
-        const projectileSequenceController = await this.diContainer.get(this.projectileSequenceControllerRef, true);
-
+        const projectileSequenceController = this.projectileSequenceControllerFactory.create();
         this.activeProjectileSequence = projectileSequenceController;
         this.projectileSequences.push(projectileSequenceController);
 
@@ -105,10 +105,30 @@ export default class SpaceFighterBaseController extends AbstractObjectController
 
     /**
      * @param {number} objectId
+     * @param {Renderer} [renderer]
      */
-    init(objectId) {
-        super.init(objectId);
+    init(objectId, renderer) {
+        super.init(objectId, renderer);
         this.controlZInWorldCoords = this.gameObject.nz;
+    }
+
+    createObject(objectId) {
+        const asset = this.assetManager.get3dAsset('spaceFighter');
+
+        const model = asset.scene.children[0].clone(); //asset.scene.children[0].children[0].clone();
+        model.matrixAutoUpdate = false;
+
+        return new SpaceFighter(objectId, model);
+    }
+
+    /**
+     * @param {number} delta
+     */
+    updateControlParams(delta) {
+        this._updateControlsQuaternion(delta);
+        this._calculateRotationDirection();
+        this._calculateNormalToRotationDirection(); // used by camera manager
+        this._updateAngularVelocities();
     }
 
     _updateControlsQuaternion(delta) {
@@ -124,22 +144,11 @@ export default class SpaceFighterBaseController extends AbstractObjectController
         this.controlZInWorldCoords.set(0, 0, 1).applyQuaternion(this.controlsQuaternion);
     }
 
-    /**
-     * @param {number} delta
-     */
-    async updateControlParams(delta) {
-        this._updateControlsQuaternion(delta);
-        this._calculateRotationDirection();
-        this._calculateNormalToRotationDirection(); // used by camera manager
-        this._updateAngularVelocities();
-    }
 
     _calculateRotationDirection() {
         /** @type {THREE.Vector3} */
         this.rotationDirection = SpaceFighterBaseController.calculateRotationDirection(this.controlX, this.controlY,
-            this.wYawTarget, this.wPitchTarget);
-        //this.rotationDirection = this.controlX.clone().multiplyScalar(this.wYawTarget).add(this.controlY.clone().multiplyScalar(this.wPitchTarget));
-        //const tmp = this.rotationDirection.applyQuaternion(this.controlsRotQuaternion);
+                                                                                       this.wYawTarget, this.wPitchTarget);
         this.rotationDirection.applyQuaternion(this.controlsRotQuaternion).applyQuaternion(this.controlsQuaternion);
     }
 

@@ -55,6 +55,7 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
     }
 
     async postConstruct({packetPeriodFrames, inputGatheringPeriodFrames, fps}) {
+        await super.postConstruct();
         this.packetPeriodFrames = packetPeriodFrames;
         this.inputGatheringPeriodFrames = inputGatheringPeriodFrames;
         this.frameLengthMs = 1000 / fps;
@@ -62,7 +63,7 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
         this.multiplayerService.addEventListener('worldStateUpdate', this.handleInitialWorldStateUpdates);
     }
 
-    async update(delta) {
+    update(delta) {
         if (this.currentFrameIndex !== 0) {
             //this.logger.debug(`[FRM#${this.currentFrameIndex}]`);
         }
@@ -82,14 +83,14 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
             }
 
             this.currentFrameIndex = this.nextFrameIndex;
-            await this._syncWorldState(this.nextWorldState, this.latestWorldState);
+            this._syncWorldState(this.nextWorldState, this.latestWorldState);
 
             this.nextWorldState = this.latestWorldState;
             this.nextFrameIndex = this.latestFrameIndex;
             this.latestWorldState = null;
             this._cleanup();
         } else if ((this.currentFrameIndex + 1) < this.nextFrameIndex) {
-            await this._applyInputActionsAndUpdateObjects(delta);
+            this._applyInputActionsAndUpdateObjects(delta);
             this.currentFrameIndex++;
         } else {
             // this.currentFrameIndex === this.nextFrameIndex
@@ -117,7 +118,7 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
         }
     }
 
-    async _syncWorldState(actualWorldState, futureWorldState) {
+    _syncWorldState(actualWorldState, futureWorldState) {
         const actualWorldStateObjectsCount = actualWorldState.objectStates.length;
         const futureWorldStateObjectsCount = futureWorldState.objectStates.length;
 
@@ -140,7 +141,7 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
             /** @type {RemoteSpaceFighterController} */
             let controller = this.controllersByObjectId[objectId];
             if (!controller || !controller.initialized) {
-                controller = await this.createGameObject(objectId, actualObjectState.objectType);
+                controller = this.createGameObject(objectId, actualObjectState.objectType);
             }
 
             controller.sync(actualObjectState, futureObjectState);

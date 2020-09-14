@@ -4,6 +4,7 @@
  * @typedef {import('../net/models/InputAction').default} SpaceFighterInput
  * @typedef {import('../asset-management/AssetManager').default} AssetManager
  * @typedef {import('di-container-js').default} DiContainer
+ * @typedef {import('../../../node_modules/di-container-js/ComponentFactory')} ComponentFactory
  */
 import AbstractController from '../object-control/AbstractController';
 import Emitter from '../util/Emitter';
@@ -36,16 +37,21 @@ export default class AuthoritativeStateManager extends Emitter {
         this.assetManager = assetManager;
     }
 
-    async update(delta) {
+    async postConstruct() {
+        if (this.diContainer.isInitialized('renderer') || this.diContainer.isProvided('renderer')) {
+            this.renderer = await this.diContainer.get('renderer');
+        }
+    }
+
+    update(delta) {
         this.currentFrameIndex++;
-        await this._applyInputActionsAndUpdateObjects(delta);
+        this._applyInputActionsAndUpdateObjects(delta);
         this._cleanup();
     }
 
-    async _applyInputActionsAndUpdateObjects(delta) {
+    _applyInputActionsAndUpdateObjects(delta) {
         const processedActions = [];
 
-        const promises = [];
         for (let i = 0; i < this.initializedControllersCount; i++) {
             const id = this.initializedControllers[i].gameObject.id;
             const inputAction = this.objectActionsByObjectId[id][this.currentFrameIndex];
@@ -54,10 +60,8 @@ export default class AuthoritativeStateManager extends Emitter {
                 processedActions.push(inputAction);
             }
 
-            promises.push(this.initializedControllers[i].update(delta));
+            this.initializedControllers[i].update(delta);
         }
-
-        await Promise.all(promises);
 
         this.dispatchEvent("actions-processed", processedActions);
     }
@@ -69,19 +73,21 @@ export default class AuthoritativeStateManager extends Emitter {
         }
     }*/
 
-    associateControllerWithGameObjectType(gameObjectTypeId, controllerRef) {
-        this.gameObjectTypes[gameObjectTypeId] = {
-            controllerRef
-        };
+    /**
+     * @param {number} gameObjectTypeId
+     * @param {ComponentFactory} controllerFactory
+     */
+    associateControllerFactoryWithGameObjectType(gameObjectTypeId, controllerFactory) {
+        this.gameObjectTypes[gameObjectTypeId] = {controllerFactory};
     }
 
     /**
      * @param {number|null} objectId - if 'null' will be auto-generated
      * @param {number|null} gameObjectTypeId
-     * @param {symbol|string|null} [controllerRef]
+     * @param {ComponentFactory|null} [controllerFactoryOverride]
      * @returns {Promise<AbstractController>}
      */
-    async createGameObject(objectId, gameObjectTypeId, controllerRef = null) {
+    createGameObject(objectId, gameObjectTypeId, controllerFactoryOverride = null) {
         if (!objectId) {
             objectId = ++this.lastObjectId;
         }
@@ -89,9 +95,10 @@ export default class AuthoritativeStateManager extends Emitter {
         let controller = this.controllersByObjectId[objectId];
         if (!controller) {
             const gameObjectDef = this.gameObjectTypes[gameObjectTypeId];
-            controller = await this.createObjectController(objectId, controllerRef ? controllerRef : gameObjectDef.controllerRef);
+            const controllerFactory = controllerFactoryOverride ? controllerFactoryOverride : gameObjectDef.controllerFactory;
+            controller = this.createObjectController(objectId, controllerFactory);
         }
-        controller.init(objectId);
+        controller.init(objectId, this.renderer);
         this.initializedControllers.push(controller);
         this.initializedControllersCount++;
 
@@ -102,8 +109,13 @@ export default class AuthoritativeStateManager extends Emitter {
         return controller;
     }
 
-    async createObjectController(objectId, controllerRef) {
-        let controller = await this.diContainer.get(controllerRef, true);
+    /**
+     * @param {number} objectId
+     * @param {ComponentFactory} controllerFactory
+     * @returns {AbstractController}
+     */
+    createObjectController(objectId, controllerFactory) {
+        let controller = controllerFactory.create();
         if (!controller) {
             throw new Error('Component not found');
         }

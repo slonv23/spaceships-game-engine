@@ -10,9 +10,6 @@ export default class AbstractController {
     /** @type {AssetManager} */
     assetManager;
 
-    /** @type {Function} */
-    gameObjectFactory;
-
     /** @type {DiContainer} */
     diContainer;
 
@@ -32,19 +29,11 @@ export default class AbstractController {
      * @param {number} delta
      */
     // eslint-disable-next-line no-unused-vars
-    async update(delta) {
+    update(delta) {
         throw new Error("Not implemented");
     }
 
-    async postConstruct({gameObjectFactory}) {
-        this.gameObjectFactory = gameObjectFactory;
-        if (this.diContainer.isProvided('renderer')) {
-            this.renderer = await this.diContainer.get('renderer');
-        }
-    }
-
-    createObject(objectId) {
-        const gameObject = this.gameObjectFactory(objectId, this.assetManager);
+    addObjectToScene(gameObject) {
         if (!(gameObject instanceof AbstractObject)) {
             throw new Error('Game object instance\'s class must be inherited from AbstractObject');
         }

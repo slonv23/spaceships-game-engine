@@ -16,25 +16,35 @@ export default class AbstractObjectController extends AbstractController {
 
     /**
      * @param {number} objectId
+     * @param {Renderer} [renderer]
      */
-    init(objectId) {
+    init(objectId, renderer) {
+        this.renderer = renderer;
+
         this.gameObject = this.createObject(objectId);
+        this.addObjectToScene(this.gameObject);
+
         this.initialized = true;
     }
 
     /**
      * @param {number} delta
      */
-    async update(delta) {
+    update(delta) {
         this.gameObject.update(delta);
-        await this.updateControlParams(delta);
+        this.updateControlParams(delta);
     }
 
     /**
      * @param {number} delta
      */
     // eslint-disable-next-line no-unused-vars
-    async updateControlParams(delta) {
+    updateControlParams(delta) {
+        throw new Error("Not implemented");
+    }
+
+    // eslint-disable-next-line no-unused-vars
+    createObject(objectId) {
         throw new Error("Not implemented");
     }
 
