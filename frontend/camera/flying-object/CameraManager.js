@@ -88,6 +88,7 @@ export default class CameraManager {
         // update camera position
         this.camera.position.copy(controller.gameObject.position.clone().add(this.cameraZ.clone().multiplyScalar(self.lenBtwCameraAndPosLookAt)));
 
+        // использовать угловые скорости?
         let diffX = -cameraAndObjectDirectionsDiff.dot(this.cameraX);
         let diffY = cameraAndObjectDirectionsDiff.dot(this.cameraY);
 
