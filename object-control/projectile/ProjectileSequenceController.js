@@ -4,8 +4,6 @@
 import * as THREE from "three";
 
 import AbstractController from "../AbstractController";
-import GunRoundVertShader from "../../frontend/shader/gun-round.vert";
-import GunRoundFragShader from "../../frontend/shader/gun-round.frag";
 import DirectionalProjectile from "../../physics/object/DirectionalProjectile";
 
 export default class ProjectileSequenceController extends AbstractController {
@@ -44,15 +42,19 @@ export default class ProjectileSequenceController extends AbstractController {
         const geometry = new THREE.SphereGeometry(0.1, 16, 16);
         geometry.applyMatrix(new THREE.Matrix4().makeScale( 2.0, 2.0, 8.0));
 
-        const material = new THREE.ShaderMaterial({
-            vertexShader:   GunRoundVertShader,
-            fragmentShader: GunRoundFragShader,
-            transparent: true,
-        });
-
-        const model = new THREE.Mesh(geometry, material);
+        const material = this.createProjectileMaterial();
+        let model;
+        if (material) {
+            model = new THREE.Mesh(geometry, material);
+        } else {
+            model = new THREE.Mesh(geometry);
+        }
 
         return new DirectionalProjectile(null, model);
+    }
+
+    createProjectileMaterial() {
+        return null;
     }
 
 }

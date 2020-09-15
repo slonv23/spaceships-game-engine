@@ -57,7 +57,7 @@ export default class FrontendFacade {
         });
     }
 
-    gameLoop = async (timestamp) => {
+    gameLoop = (timestamp) => {
         if (timestamp < this.lastFrameTimeMs + this.timestep) {
             requestAnimationFrame(this.gameLoop);
             return;
@@ -66,13 +66,11 @@ export default class FrontendFacade {
         this.lastFrameTimeMs = timestamp;
 
         while (this.delta >= this.timestep) {
-            await this.stateManager.update(this.timestep);
+            this.stateManager.update(this.timestep);
             // TODO do not update camera while stateManager is not ready
             this._cameraManager.updateCamera(this.timestep);
             this.delta -= this.timestep;
-            console.log('Do job in loop');
         }
-        console.log('Loop ended');
 
         this.renderer.render();
 
