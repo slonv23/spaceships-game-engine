@@ -5,6 +5,10 @@ import * as THREE from 'three';
 
 import {linearTransition, createQuaternionForRotation} from "../../../util/math";
 import SpaceFighterBaseController from "../../../object-control/space-fighter/SpaceFighterBaseController";
+import SpaceFighter from "../../../physics/object/SpaceFighter";
+
+const wYawMax = SpaceFighter.angularVelocityMax.x;
+const wPitchMax = SpaceFighter.angularVelocityMax.y;
 
 export default class CameraManager {
 
@@ -37,6 +41,9 @@ export default class CameraManager {
 
     cameraPositionConvergeSpeed = 0;
 
+    /** @type {THREE.Vector3} */
+    gameObjectNzPrev = new THREE.Vector3();
+
     /**
      * @param {THREE.PerspectiveCamera} camera
      * @param {SpaceFighterBaseController} controller
@@ -45,6 +52,9 @@ export default class CameraManager {
         this.camera = camera;
         this.controller = controller;
         this.camera.matrixWorld.extractBasis(this.cameraX, this.cameraY, this.cameraZ);
+        debugger;
+        //this.gameObjectNzPrev = controller.gameObject.nz.clone();
+        debugger;
     }
 
     updateCamera(delta) {
@@ -53,69 +63,39 @@ export default class CameraManager {
             return;
         }
 
-        let cameraAndObjectDirectionsDiff = controller.gameObject.nz.clone().sub(this.cameraZ);
-
-        this.cameraQuaternion.multiplyQuaternions(createQuaternionForRotation(this.cameraZ, controller.gameObject.nz),
-                                                  this.cameraQuaternion);
-        // this.cameraZ.set(0, 0, 1).applyQuaternion(this.cameraQuaternion);
+        this.calculateCameraPosition();
         this.cameraZ.copy(controller.gameObject.nz);
-        this.cameraY.set(0, 1, 0).applyQuaternion(this.cameraQuaternion);
-        this.cameraX.set(1, 0, 0).applyQuaternion(this.cameraQuaternion);
-
-        //const rotationDirectionBasedOnCameraAxes = this.cameraX.clone().multiplyScalar(this.controller.wYawTarget).add(this.cameraY.clone().multiplyScalar(this.controller.wPitchTarget));
-        const rotationDirectionBasedOnCameraAxes =
-            SpaceFighterBaseController.calculateRotationDirection(this.cameraX, this.cameraY, controller.wYawTarget, controller.wPitchTarget);
-
-        let angleBtwControlAndCameraAxes = 0;
-        // TODO avoid zero vectors
-        const denominator = Math.sqrt(rotationDirectionBasedOnCameraAxes.lengthSq() * controller.rotationDirection.lengthSq());
-        if (denominator  !== 0) {
-            angleBtwControlAndCameraAxes = rotationDirectionBasedOnCameraAxes.angleTo(controller.rotationDirection);
-        }
-
-        // rotate camera
-        if (Math.abs(angleBtwControlAndCameraAxes) > 0.0001) {
-            const direction = -Math.sign(rotationDirectionBasedOnCameraAxes.dot(controller.normalToRotationDirection));
-            const acceleration = controller.rotationSpeed !== 0 ? 5e-7 : 1e-6;
-
-            const result = linearTransition(direction * angleBtwControlAndCameraAxes, this.rotationSpeed, acceleration, delta);
-            this.rotationSpeed = result.speed;
-            let angleChange = result.distanceChange;
-            this.cameraQuaternion.multiply(new THREE.Quaternion(0, 0, angleChange * 0.5, 1));
-        }
-        this.cameraQuaternion.normalize();
-
-        // update camera position
-        this.camera.position.copy(controller.gameObject.position.clone().add(this.cameraZ.clone().multiplyScalar(self.lenBtwCameraAndPosLookAt)));
-
-        // использовать угловые скорости?
-        let diffX = -cameraAndObjectDirectionsDiff.dot(this.cameraX);
-        let diffY = cameraAndObjectDirectionsDiff.dot(this.cameraY);
-
-        const maxShiftX = 3, maxShiftY = 4, sphereRadius = 7; // sphereRadius = 6;
-        const targetPositionShift = new THREE.Vector2(100 * diffX * maxShiftX, self.verticalShift - 100 * diffY * maxShiftY);
-
-        // smoothing
-        const currentAndTargetPosShiftDiff = targetPositionShift.sub(this.cameraPositionShift);
-        if (currentAndTargetPosShiftDiff.length() > 0.0001) { // TODO optimize
-            const result = linearTransition(currentAndTargetPosShiftDiff.length(), this.cameraPositionConvergeSpeed, 1e-5, delta);
-            const multiplier = result.distanceChange;
-            this.cameraPositionConvergeSpeed = result.speed;
-            this.cameraPositionShift.add(currentAndTargetPosShiftDiff.normalize().multiplyScalar(multiplier));
-        }
-
-        const positionZ = sphereRadius - Math.sqrt(sphereRadius*sphereRadius - this.cameraPositionShift.x ** 2 - this.cameraPositionShift.y ** 2);
-        let currentPosAndTargetPosDiff =
-            this.cameraY.clone().multiplyScalar(this.cameraPositionShift.y)
-                                .add(this.cameraX.clone().multiplyScalar(this.cameraPositionShift.x))
-                                .add(this.cameraZ.clone().multiplyScalar(positionZ));
-
-        this.camera.position.add(currentPosAndTargetPosDiff);
-
+        this.cameraY.copy(controller.gameObject.ny);
+        this.cameraX.copy(controller.gameObject.nx);
         const matrixWorld = this.camera.matrixWorld;
         matrixWorld.makeBasis(this.cameraX, this.cameraY, this.cameraZ);
         matrixWorld.setPosition(this.camera.position);
         this.camera.matrixWorldInverse.getInverse(this.camera.matrixWorld);
+        return;
+
+    }
+
+    calculateCameraPosition() {
+        const controller = this.controller;
+        const directionChange = controller.gameObject.nz.clone().sub(this.gameObjectNzPrev);
+        this.gameObjectNzPrev.copy(controller.gameObject.nz);
+        let diffX = -directionChange.dot(this.cameraX);
+        let diffY = directionChange.dot(this.cameraY);
+
+        const positionUnshifted = controller.gameObject.position.clone()
+            .add(controller.gameObject.nz.clone().multiplyScalar(self.lenBtwCameraAndPosLookAt));
+
+        const maxShiftX = 3, maxShiftY = 4, sphereRadius = 7; // sphereRadius = 6;
+        const targetPositionShift = new THREE.Vector2(100 * diffX * maxShiftX, self.verticalShift - 100 * diffY * maxShiftY);
+        const positionZ = sphereRadius - Math.sqrt(sphereRadius*sphereRadius - this.cameraPositionShift.x ** 2 - this.cameraPositionShift.y ** 2);
+
+
+        let currentPosAndTargetPosDiff =
+            this.controller.gameObject.ny.clone().multiplyScalar(targetPositionShift.y)//this.cameraPositionShift.y)
+                .add(this.controller.gameObject.nx.clone().multiplyScalar(targetPositionShift.x))//this.cameraPositionShift.x))
+                .add(this.controller.gameObject.nz.clone().multiplyScalar(positionZ));
+
+        this.camera.position.copy(positionUnshifted.add(currentPosAndTargetPosDiff));
     }
 
     _calcPosLookAt() {
