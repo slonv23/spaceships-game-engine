@@ -57,6 +57,8 @@ export default class SpaceFighterBaseController extends AbstractObjectController
 
     rightProjectileOffset = new THREE.Vector3(3.18142, 0.185841, -0.214785);
 
+    _aimingPoint = null;
+
     static dependencies() {
         return ['logger', 'projectileSequenceControllerFactory', ...AbstractObjectController.dependencies()];
     }
@@ -69,39 +71,6 @@ export default class SpaceFighterBaseController extends AbstractObjectController
         super(...args);
         this.logger = logger;
         this.projectileSequenceControllerFactory = projectileSequenceControllerFactory;
-    }
-
-    launchProjectiles() {
-        /** @type {ProjectileSequenceController} */
-        const projectileSequenceController = this.projectileSequenceControllerFactory.create();
-        projectileSequenceController.renderer = this.renderer;
-        this.activeProjectileSequence = projectileSequenceController;
-        this.projectileSequences.push(projectileSequenceController);
-
-        const positions = [
-            this.leftProjectileOffset.clone().applyMatrix4(this.gameObject.object3d.matrix),
-            this.rightProjectileOffset.clone().applyMatrix4(this.gameObject.object3d.matrix)
-        ];
-
-        const target = this.gameObject.nz.clone().multiplyScalar(-60)
-            .add(this.gameObject.ny.clone().multiplyScalar(CameraManager.verticalShift * 60 / CameraManager.lenBtwSpaceshipAndPosLookAt))
-            .add(this.gameObject.position);
-        projectileSequenceController.launch(positions, target);//this.gameObject.nz.clone().multiplyScalar(-60).add(this.gameObject.position));
-        return projectileSequenceController;
-    }
-
-    stopFiring() {
-        this.activeProjectileSequence.stop();
-        this.activeProjectileSequence = null;
-    }
-
-    /**
-     * @param {number} delta
-     */
-    updateProjectiles(delta) {
-        for (const projectileSequence of this.projectileSequences) {
-            projectileSequence.update(delta);
-        }
     }
 
     /**
@@ -126,10 +95,57 @@ export default class SpaceFighterBaseController extends AbstractObjectController
      * @param {number} delta
      */
     updateControlParams(delta) {
+        this._resetAimingPoint(); // reset aiming point so it will be recalculated on demand
         this._updateControlsQuaternion(delta);
         this._calculateRotationDirection();
         this._calculateNormalToRotationDirection(); // used by camera manager
         this._updateAngularVelocities();
+    }
+
+    getAimingPoint = () => {
+        if (!this._aimingPoint) {
+            console.log('Recalculate aiming point');
+            this._aimingPoint = this.gameObject.nz.clone().multiplyScalar(-60).add(this.gameObject.position);
+        }
+
+        return this._aimingPoint;
+    };
+
+    launchProjectiles() {
+        /** @type {ProjectileSequenceController} */
+        const projectileSequenceController = this.projectileSequenceControllerFactory.create();
+        projectileSequenceController.renderer = this.renderer;
+        projectileSequenceController.setAimingPointResolver(this.getAimingPoint);
+        // Object.defineProperty(projectileSequenceController, 'aimingPoint', {get: this.getAimingPoint});
+
+        this.activeProjectileSequence = projectileSequenceController;
+        this.projectileSequences.push(projectileSequenceController);
+
+        const positions = [
+            this.leftProjectileOffset.clone().applyMatrix4(this.gameObject.object3d.matrix),
+            this.rightProjectileOffset.clone().applyMatrix4(this.gameObject.object3d.matrix)
+        ];
+
+        projectileSequenceController.launch(positions);
+        return projectileSequenceController;
+    }
+
+    stopFiring() {
+        this.activeProjectileSequence.stop();
+        this.activeProjectileSequence = null;
+    }
+
+    /**
+     * @param {number} delta
+     */
+    updateProjectiles(delta) {
+        for (const projectileSequence of this.projectileSequences) {
+            projectileSequence.update(delta);
+        }
+    }
+
+    _resetAimingPoint() {
+        this._aimingPoint = null;
     }
 
     _updateControlsQuaternion(delta) {

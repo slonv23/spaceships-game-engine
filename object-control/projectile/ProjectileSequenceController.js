@@ -11,11 +11,14 @@ export default class ProjectileSequenceController extends AbstractController {
     /** @type {DirectionalProjectile[]} */
     projectiles = [];
 
+    _aimingPointResolver;
+
     /**
      * @param {THREE.Vector3[]} positions
-     * @param {THREE.Vector3} target
      */
-    launch(positions, target) {
+    launch(positions) {
+        /** @type {THREE.Vector3} target */
+        const target = this._aimingPointResolver();
         for (const position of positions) {
             const direction = position.clone().sub(target).normalize();
             /** @type {DirectionalProjectile} */
@@ -55,6 +58,10 @@ export default class ProjectileSequenceController extends AbstractController {
 
     createProjectileMaterial() {
         return null;
+    }
+
+    setAimingPointResolver(aimingPointResolver) {
+        this._aimingPointResolver = aimingPointResolver;
     }
 
 }

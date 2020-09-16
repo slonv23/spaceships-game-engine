@@ -49,12 +49,11 @@ export default class CameraManager {
      * @param {SpaceFighterBaseController} controller
      */
     init(camera, controller) {
+        // TODO controller game object can be null, refactor
         this.camera = camera;
         this.controller = controller;
         this.camera.matrixWorld.extractBasis(this.cameraX, this.cameraY, this.cameraZ);
-        debugger;
         //this.gameObjectNzPrev = controller.gameObject.nz.clone();
-        debugger;
     }
 
     updateCamera(delta) {
@@ -63,10 +62,13 @@ export default class CameraManager {
             return;
         }
 
-        this.calculateCameraPosition();
-        this.cameraZ.copy(controller.gameObject.nz);
-        this.cameraY.copy(controller.gameObject.ny);
-        this.cameraX.copy(controller.gameObject.nx);
+        this.calculateCameraPosition(delta);
+        this.calculateCameraDirection();
+
+        //this.cameraZ.copy(controller.gameObject.nz);
+        //this.cameraY.copy(controller.gameObject.ny);
+        //this.cameraX.copy(controller.gameObject.nx);
+
         const matrixWorld = this.camera.matrixWorld;
         matrixWorld.makeBasis(this.cameraX, this.cameraY, this.cameraZ);
         matrixWorld.setPosition(this.camera.position);
@@ -75,7 +77,20 @@ export default class CameraManager {
 
     }
 
-    calculateCameraPosition() {
+    calculateCameraDirection() {
+        /** @type {THREE.Vector3} */
+        const aimingPoint = this.controller.getAimingPoint();
+        const targetDirection = this.camera.position.clone().sub(aimingPoint).normalize(); //aimingPoint.clone().sub(this.camera.position).normalize();
+
+        this.cameraQuaternion.multiplyQuaternions(createQuaternionForRotation(this.cameraZ, targetDirection),
+                                                  this.cameraQuaternion);
+        // this.cameraZ.set(0, 0, 1).applyQuaternion(this.cameraQuaternion);
+        this.cameraZ.copy(targetDirection);
+        this.cameraY.set(0, 1, 0).applyQuaternion(this.cameraQuaternion);
+        this.cameraX.set(1, 0, 0).applyQuaternion(this.cameraQuaternion);
+    }
+
+    calculateCameraPosition(delta) {
         const controller = this.controller;
         const directionChange = controller.gameObject.nz.clone().sub(this.gameObjectNzPrev);
         this.gameObjectNzPrev.copy(controller.gameObject.nz);
@@ -87,15 +102,23 @@ export default class CameraManager {
 
         const maxShiftX = 3, maxShiftY = 4, sphereRadius = 7; // sphereRadius = 6;
         const targetPositionShift = new THREE.Vector2(100 * diffX * maxShiftX, self.verticalShift - 100 * diffY * maxShiftY);
+
+        // smoothing
+        const currentAndTargetPosShiftDiff = targetPositionShift.sub(this.cameraPositionShift);
+        if (currentAndTargetPosShiftDiff.length() > 0.0001) { // TODO optimize
+            const result = linearTransition(currentAndTargetPosShiftDiff.length(), this.cameraPositionConvergeSpeed, 1e-5, delta);
+            const multiplier = result.distanceChange;
+            this.cameraPositionConvergeSpeed = result.speed;
+            this.cameraPositionShift.add(currentAndTargetPosShiftDiff.normalize().multiplyScalar(multiplier));
+        }
         const positionZ = sphereRadius - Math.sqrt(sphereRadius*sphereRadius - this.cameraPositionShift.x ** 2 - this.cameraPositionShift.y ** 2);
 
-
-        let currentPosAndTargetPosDiff =
-            this.controller.gameObject.ny.clone().multiplyScalar(targetPositionShift.y)//this.cameraPositionShift.y)
-                .add(this.controller.gameObject.nx.clone().multiplyScalar(targetPositionShift.x))//this.cameraPositionShift.x))
+        let cameraPositionShiftInGameObjectLocalCoords =
+            this.controller.gameObject.ny.clone().multiplyScalar(this.cameraPositionShift.y)//this.cameraPositionShift.y)
+                .add(this.controller.gameObject.nx.clone().multiplyScalar(this.cameraPositionShift.x))//this.cameraPositionShift.x))
                 .add(this.controller.gameObject.nz.clone().multiplyScalar(positionZ));
 
-        this.camera.position.copy(positionUnshifted.add(currentPosAndTargetPosDiff));
+        this.camera.position.copy(positionUnshifted.add(cameraPositionShiftInGameObjectLocalCoords));
     }
 
     _calcPosLookAt() {

@@ -17,6 +17,7 @@ export default class SpaceFighterMultiplayerController extends SpaceFighterSingl
      * @param {number} delta
      */
     updateControlParams(delta) {
+        this._resetAimingPoint(); // reset aiming point so it will be recalculated on demand
         this._updateControlsQuaternion(delta);
         this._calculateRotationDirection();
         this._calculateNormalToRotationDirection(); // used by camera manager
