@@ -33,6 +33,8 @@ export default class SpaceFighterBaseController extends AbstractObjectController
 
     /** @type {THREE.Vector3} */
     rotationDirection = new THREE.Vector3();
+    /** @type {THREE.Vector3} */
+    rotationDirectionInLocalCoords = new THREE.Vector3();
 
     /** @type {THREE.Quaternion} used to convert control axes from local spaceship coordinate system (CS) to world CS */
     controlsQuaternion = new THREE.Quaternion();
@@ -64,6 +66,7 @@ export default class SpaceFighterBaseController extends AbstractObjectController
     }
 
     static calculateRotationDirection(nx, ny, yaw, pitch) {
+        // TODO return previous rotation direction if resulting vector is zero length vector
         return nx.clone().multiplyScalar(yaw).add(ny.clone().multiplyScalar(pitch));
     }
 
@@ -104,7 +107,6 @@ export default class SpaceFighterBaseController extends AbstractObjectController
 
     getAimingPoint = () => {
         if (!this._aimingPoint) {
-            console.log('Recalculate aiming point');
             this._aimingPoint = this.gameObject.nz.clone().multiplyScalar(-60).add(this.gameObject.position);
         }
 
@@ -166,6 +168,7 @@ export default class SpaceFighterBaseController extends AbstractObjectController
         /** @type {THREE.Vector3} */
         this.rotationDirection = SpaceFighterBaseController.calculateRotationDirection(this.controlX, this.controlY,
                                                                                        this.wYawTarget, this.wPitchTarget);
+        this.rotationDirectionInLocalCoords = this.rotationDirection.clone();
         this.rotationDirection.applyQuaternion(this.controlsRotQuaternion).applyQuaternion(this.controlsQuaternion);
     }
 
