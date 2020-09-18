@@ -77,35 +77,27 @@ export default class CameraManager {
         const controller = this.controller;
         const rotationDirectionBasedOnCameraAxes =
             SpaceFighterBaseController.calculateRotationDirection(this.cameraX, this.cameraY,
-                controller.gameObject.angularVelocity.x, controller.gameObject.angularVelocity.y);
-                                                                  //controller.wYawTarget, controller.wPitchTarget);
+                                                                  controller.wYawTarget, controller.wPitchTarget);
 
-        const rotationDirectionInCameraCoords = controller.gameObject.nx.clone().multiplyScalar(controller.gameObject.angularVelocity.x)
-            .add(controller.gameObject.ny.clone().multiplyScalar(controller.gameObject.angularVelocity.y))
-            .applyQuaternion(this.cameraQuaternion);
-
-        /*const rotationDirectionInCameraCoords = controller.rotationDirectionInLocalCoords.clone()
-            .applyQuaternion(controller.gameObject.quaternion)
-            .applyQuaternion(this.cameraQuaternion);*/
+        const gameObjectToCameraQuaternion = createQuaternionForRotation(controller.gameObject.nz, this.cameraZ);
+        const rotationDirectionMappedToCamera = controller.rotationDirection.clone().applyQuaternion(gameObjectToCameraQuaternion);
 
         let angleBtwControlAndCameraAxes = 0;
         // TODO avoid zero vectors (this happens because wYaw and wPitch are equal to zero)
-        const denominator = Math.sqrt(rotationDirectionBasedOnCameraAxes.lengthSq() * rotationDirectionInCameraCoords.lengthSq());
+        const denominator = Math.sqrt(rotationDirectionBasedOnCameraAxes.lengthSq() * rotationDirectionMappedToCamera.lengthSq());
         if (denominator !== 0) {
-            angleBtwControlAndCameraAxes = rotationDirectionBasedOnCameraAxes.angleTo(rotationDirectionInCameraCoords);
+            angleBtwControlAndCameraAxes = rotationDirectionBasedOnCameraAxes.angleTo(rotationDirectionMappedToCamera);
         }
 
         // rotate camera
-        console.log('angleBtwControlAndCameraAxes: ' + angleBtwControlAndCameraAxes);
         if (Math.abs(angleBtwControlAndCameraAxes) > 0.0001) {
-            //debugger;
-            /*const direction = -Math.sign(rotationDirectionBasedOnCameraAxes.dot(controller.normalToRotationDirection));
+            const direction = -Math.sign(rotationDirectionBasedOnCameraAxes.dot(controller.normalToRotationDirection));
             const acceleration = controller.rotationSpeed !== 0 ? 5e-7 : 1e-6;
 
             const result = linearTransition(direction * angleBtwControlAndCameraAxes, this.rotationSpeed, acceleration, delta);
             this.rotationSpeed = result.speed;
             let angleChange = result.distanceChange;
-            this.cameraQuaternion.multiply(new THREE.Quaternion(0, 0, angleChange * 0.5, 1));*/
+            this.cameraQuaternion.multiply(new THREE.Quaternion(0, 0, angleChange * 0.5, 1));
         }
     }
 
