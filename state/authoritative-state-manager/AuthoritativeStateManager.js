@@ -1,13 +1,13 @@
 /**
- * @typedef {import('../object-control/AbstractController').default} AbstractController
- * @typedef {import('../object-control/space-fighter/RemoteSpaceFighterController').default} RemoteSpaceFighterController
+ * @typedef {import('../../object-control/AbstractController').default} AbstractController
+ * @typedef {import('../../object-control/space-fighter/RemoteSpaceFighterController').default} RemoteSpaceFighterController
  * @typedef {import('../net/models/InputAction').default} SpaceFighterInput
- * @typedef {import('../asset-management/AssetManager').default} AssetManager
+ * @typedef {import('../../asset-management/AssetManager').default} AssetManager
  * @typedef {import('di-container-js').default} DiContainer
- * @typedef {import('../../../node_modules/di-container-js/ComponentFactory')} ComponentFactory
+ * @typedef {import('di-container-js/ComponentFactory')} ComponentFactory
  */
-import AbstractController from '../object-control/AbstractController';
-import Emitter from '../util/Emitter';
+import AbstractController from '../../object-control/AbstractController';
+import Emitter from '../../util/Emitter';
 
 export default class AuthoritativeStateManager extends Emitter {
 

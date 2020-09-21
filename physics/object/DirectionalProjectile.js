@@ -12,6 +12,9 @@ export default class DirectionalProjectile extends AbstractObject {
 
     direction = new THREE.Vector3(0, 0, 1);
 
+    /** @type {AbstractObject} */
+    intersectsWith;
+
     update(dt) {
         this.position.addScaledVector(this.direction, this.velocity.z * dt);
         this.object3d.matrix.setPosition(this.position);

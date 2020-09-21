@@ -1,7 +1,7 @@
 /**
  * @typedef {import('three')} THREE
  * @typedef {import('../asset-management/AssetManager').default} AssetManager
- * @typedef {import('../state/MultiplayerStateManager').default} StateManager
+ * @typedef {import('../state/multiplayer-state-manager/MultiplayerStateManager').default} StateManager
  * @typedef {import('./Renderer').default} Renderer
  * @typedef {import('./camera/flying-object/CameraManager').default} CameraManager
  */

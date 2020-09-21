@@ -17,11 +17,12 @@ export default class AbstractController {
     renderer;
 
     static dependencies() {
-        return ['assetManager', 'diContainer']
+        return ['assetManager', 'stateManager', 'diContainer'];
     }
 
-    constructor(assetManager, diContainer) {
+    constructor(assetManager, stateManager, diContainer) {
         this.assetManager = assetManager;
+        this.stateManager = stateManager;
         this.diContainer = diContainer;
     }
 

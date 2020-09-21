@@ -146,6 +146,10 @@ export default class SpaceFighterBaseController extends AbstractObjectController
         }
     }
 
+    findHits() {
+
+    }
+
     _resetAimingPoint() {
         this._aimingPoint = null;
     }

@@ -7,6 +7,5 @@ diContainer.registerClass("frontendFacade", FrontendFacade);
 diContainer.registerClass("renderer", Renderer);
 
 // register other components
-import '../state';
 import '../asset-management';
 import './input';
