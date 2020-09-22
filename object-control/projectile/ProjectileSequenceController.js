@@ -147,7 +147,8 @@ export default class ProjectileSequenceController extends AbstractController {
      * @param {AbstractObject} gameObject
      */
     isProjectileIntersectsWithObject(projectile, gameObject) {
-
+        const rayCaster = new THREE.Raycaster(projectile.position, projectile.direction);
+        return rayCaster.intersectObject(gameObject.object3d).length > 0;
     }
 
 }
