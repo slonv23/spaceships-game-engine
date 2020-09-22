@@ -107,7 +107,7 @@ export default class ProjectileSequenceController extends AbstractController {
      */
     findHitsWithObject(gameObject) {
         if (!this.isProjectileIntersectsWithObject(this.projectiles[0], gameObject)) {
-            const projectilePosDiffGameObjectPos = gameObject.position.clone().sub(this.projectiles[0].position);
+            const projectilePosDiffGameObjectPos = this.projectiles[0].position.clone().sub(gameObject.position);
             const isAhead = this.projectiles[0].direction.dot(projectilePosDiffGameObjectPos) > 0;
             if (isAhead) {
                 // no need to check all projectiles is sequence, they are all behind of the gameObject
@@ -120,7 +120,7 @@ export default class ProjectileSequenceController extends AbstractController {
 
         const lastProjectile = this.projectiles[this.projectiles.length - 1];
         if (!this.isProjectileIntersectsWithObject(lastProjectile, gameObject)) {
-            const projectilePosDiffGameObjectPos = gameObject.position.clone().sub(lastProjectile.position);
+            const projectilePosDiffGameObjectPos = lastProjectile.position.clone().sub(gameObject.position);
             const isBefore = lastProjectile.direction.dot(projectilePosDiffGameObjectPos) < 0;
             if (isBefore) {
                 // no need to check all projectiles is sequence, they are all ahead of the gameObject
