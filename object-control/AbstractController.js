@@ -28,6 +28,7 @@ export default class AbstractController {
 
     /**
      * @param {number} delta
+     * @abstract
      */
     // eslint-disable-next-line no-unused-vars
     update(delta) {

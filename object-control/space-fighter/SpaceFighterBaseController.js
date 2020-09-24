@@ -9,7 +9,6 @@ import * as THREE from "three";
 
 import {createQuaternionForRotation} from "../../util/math";
 import AbstractObjectController from "../AbstractObjectController";
-import CameraManager from "../../frontend/camera/flying-object/CameraManager";
 import SpaceFighter from "../../physics/object/SpaceFighter";
 
 export default class SpaceFighterBaseController extends AbstractObjectController {
@@ -58,6 +57,9 @@ export default class SpaceFighterBaseController extends AbstractObjectController
     leftProjectileOffset = new THREE.Vector3(-3.18142, 0.185841, -0.214785);
 
     rightProjectileOffset = new THREE.Vector3(3.18142, 0.185841, -0.214785);
+
+    /** @type {number} - HP percentage */
+    health = 100;
 
     _aimingPoint = null;
 
