@@ -107,7 +107,7 @@ export default class ProjectileSequenceController extends AbstractController {
      */
     findHitsWithObject(gameObject) {
         if (!this.isProjectileIntersectsWithObject(this.projectiles[0], gameObject)) {
-            const projectilePosDiffGameObjectPos = this.projectiles[0].position.clone().sub(gameObject.position);
+            const projectilePosDiffGameObjectPos = gameObject.position.clone().sub(this.projectiles[0].position);
             const isAhead = this.projectiles[0].direction.dot(projectilePosDiffGameObjectPos) > 0;
             if (isAhead) {
                 // no need to check all projectiles is sequence, they are all behind of the gameObject
@@ -120,7 +120,7 @@ export default class ProjectileSequenceController extends AbstractController {
 
         const lastProjectile = this.projectiles[this.projectiles.length - 1];
         if (!this.isProjectileIntersectsWithObject(lastProjectile, gameObject)) {
-            const projectilePosDiffGameObjectPos = lastProjectile.position.clone().sub(gameObject.position);
+            const projectilePosDiffGameObjectPos = gameObject.position.clone().sub(lastProjectile.position); //lastProjectile.position.clone().sub(gameObject.position);
             const isBefore = lastProjectile.direction.dot(projectilePosDiffGameObjectPos) < 0;
             if (isBefore) {
                 // no need to check all projectiles is sequence, they are all ahead of the gameObject
@@ -132,7 +132,7 @@ export default class ProjectileSequenceController extends AbstractController {
         }
 
         const closestProjectile =
-            binarySearchClosestInUniqueArray(this.projectiles, projectile => projectile.position.distanceTo(gameObject.position),
+            binarySearchClosestInUniqueArray(this.projectiles, projectile => projectile.position.distanceToSquared(gameObject.position),
                                              0, this.projectiles.length - 1);
 
         if (this.isProjectileIntersectsWithObject(closestProjectile, gameObject)) {
@@ -148,7 +148,8 @@ export default class ProjectileSequenceController extends AbstractController {
      */
     isProjectileIntersectsWithObject(projectile, gameObject) {
         const rayCaster = new THREE.Raycaster(projectile.position, projectile.direction);
-        return rayCaster.intersectObject(gameObject.object3d).length > 0;
+        const intersections = rayCaster.intersectObject(gameObject.object3d);
+        return (intersections.length / 2) % 2 !== 0
     }
 
 }

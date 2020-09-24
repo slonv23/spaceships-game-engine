@@ -1,7 +1,7 @@
 /**
  * @typedef {import('../../object-control/AbstractController').default} AbstractController
  * @typedef {import('../../object-control/space-fighter/RemoteSpaceFighterController').default} RemoteSpaceFighterController
- * @typedef {import('../net/models/InputAction').default} SpaceFighterInput
+ * @typedef {import('../../net/models/space-fighter/SpaceFighterInput').default} SpaceFighterInput
  * @typedef {import('../../asset-management/AssetManager').default} AssetManager
  * @typedef {import('di-container-js').default} DiContainer
  * @typedef {import('di-container-js/ComponentFactory')} ComponentFactory
@@ -72,6 +72,14 @@ export default class AuthoritativeStateManager extends Emitter {
             this.initializedControllers[i].update(delta);
         }
     }*/
+
+    /**
+     * @param {AbstractController} controller
+     */
+    addController(controller) {
+        this.initializedControllers.push(controller);
+        this.initializedControllersCount++;
+    }
 
     /**
      * @param {number} gameObjectTypeId
