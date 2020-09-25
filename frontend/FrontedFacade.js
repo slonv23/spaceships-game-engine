@@ -35,10 +35,10 @@ export default class FrontendFacade {
         updateCamera: () => {}
     };
 
-    constructor(assetManager, multiplayerStateManager, renderer, diContainer) {
+    constructor(assetManager, stateManager, renderer, diContainer) {
         this.assetManager = assetManager;
         this.renderer = renderer;
-        this.stateManager = multiplayerStateManager;
+        this.stateManager = stateManager;
         this.diContainer = diContainer;
     }
 

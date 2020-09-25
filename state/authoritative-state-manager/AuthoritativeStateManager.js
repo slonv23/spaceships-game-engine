@@ -8,6 +8,7 @@
  */
 import AbstractController from '../../object-control/AbstractController';
 import Emitter from '../../util/Emitter';
+import AbstractObjectController from "../../object-control/AbstractObjectController";
 
 export default class AuthoritativeStateManager extends Emitter {
 
@@ -53,11 +54,14 @@ export default class AuthoritativeStateManager extends Emitter {
         const processedActions = [];
 
         for (let i = 0; i < this.initializedControllersCount; i++) {
-            const id = this.initializedControllers[i].gameObject.id;
-            const inputAction = this.objectActionsByObjectId[id][this.currentFrameIndex];
-            if (inputAction) {
-                this.initializedControllers[i].processInput(inputAction);
-                processedActions.push(inputAction);
+            // TODO make separate lists for object controllers
+            if (this.initializedControllers[i] instanceof AbstractObjectController) {
+                const id = this.initializedControllers[i].gameObject.id;
+                const inputAction = this.objectActionsByObjectId[id][this.currentFrameIndex];
+                if (inputAction) {
+                    this.initializedControllers[i].processInput(inputAction);
+                    processedActions.push(inputAction);
+                }
             }
 
             this.initializedControllers[i].update(delta);
