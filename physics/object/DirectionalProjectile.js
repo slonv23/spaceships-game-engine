@@ -12,6 +12,9 @@ export default class DirectionalProjectile extends AbstractObject {
 
     direction = new THREE.Vector3(0, 0, 1);
 
+    /** @type {number} */
+    index;
+
     /** @type {AbstractObject} */
     intersectsWith;
 

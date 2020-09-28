@@ -1,6 +1,7 @@
 /**
  * @typedef {import('../../physics/object/AbstractObject').default} AbstractObject
  * @typedef {import('../../physics/object/DirectionalProjectile').default} DirectionalProjectile
+ * @typedef {import('../../physics/object/FlyingObject').default} FlyingObject
  */
 import * as THREE from "three";
 
@@ -13,7 +14,12 @@ const FRAMES_BTW_SHOOTS = 10;
 export default class ProjectileSequenceController extends AbstractController {
 
     /** @type {DirectionalProjectile[]} */
-    projectiles = [];
+    projectiles = []; // TODO create projectiles pool and re-use them instead of removing
+
+    activeProjectilesCount = 0;
+
+    startIndex = 0;
+    endIndex = 0;
 
     positions;
 
@@ -26,6 +32,9 @@ export default class ProjectileSequenceController extends AbstractController {
     /** @type {AbstractObject} */
     releaser;
 
+    /** @type {number} projectiles are removed if minimum squared distance to any game object is greater than this value */
+    distanceToObjectLimitSq = 1000;
+
     /**
      * @param {THREE.Vector3[]} positions
      */
@@ -34,7 +43,7 @@ export default class ProjectileSequenceController extends AbstractController {
         this._launchProjectiles();
     }
 
-    async update(dt) {
+    update(dt) {
         if (this.active) {
             this.framesFromLastShoot++;
             if (this.framesFromLastShoot === FRAMES_BTW_SHOOTS) {
@@ -43,7 +52,9 @@ export default class ProjectileSequenceController extends AbstractController {
             }
         }
         this.projectiles.forEach(projectile => {
-            projectile.update(dt);
+            if (projectile) {
+                projectile.update(dt);
+            }
         });
     }
 
@@ -64,6 +75,9 @@ export default class ProjectileSequenceController extends AbstractController {
 
             this.addObjectToScene(projectile);
             this.projectiles.push(projectile);
+            projectile.index = this.projectiles.length - 1;
+            this.endIndex = projectile.index;
+            this.activeProjectilesCount++;
         }
     }
 
@@ -98,55 +112,141 @@ export default class ProjectileSequenceController extends AbstractController {
         this.releaser = gameObject;
     }
 
-    findHits() {
+    findAndHandleHits() {
+        if (!this.activeProjectilesCount) {
+            // TODO remove seq
+            return;
+        }
 
+        let minDistanceToObjects = Infinity;
+        for (const objectId in this.stateManager.controllersByObjectId) {
+            const gameObjectController = this.stateManager.controllersByObjectId[objectId];
+            if (objectId !== this.releaser.id.toString()) {
+                const hits = this.findHitsWithObject(gameObjectController.gameObject);
+                for (const projectile of hits) {
+                    gameObjectController.health = Math.max(0, gameObjectController.health - 10);
+                    this._removeProjectile(this.projectiles[projectile.index]);
+                }
+            }
+
+            const dist = this._distFromObjectToFirstProjectile(gameObjectController.gameObject);
+            if (dist < minDistanceToObjects) {
+                minDistanceToObjects = dist;
+            }
+        }
+
+        if (minDistanceToObjects > this.distanceToObjectLimitSq) {
+            this._removeProjectile(this.projectiles[this.startIndex]);
+        }
     }
 
     /**
      * @param {AbstractObject} gameObject
      */
     findHitsWithObject(gameObject) {
-        if (!this.isProjectileIntersectsWithObject(this.projectiles[0], gameObject)) {
-            const projectilePosDiffGameObjectPos = gameObject.position.clone().sub(this.projectiles[0].position);
-            const isAhead = this.projectiles[0].direction.dot(projectilePosDiffGameObjectPos) > 0;
-            if (isAhead) {
+        // TODO find the minimum distance from projectiles of sequence to any object and remove projectiles if dist > certain value
+        //  by removing I mean setting array element to null to preserve indexes
+        // TODO check first two projectiles
+        // TODO if !active and don't have visible projectiles than remove sequence
+
+        const firstPair = [this.projectiles[this.startIndex]];
+        if (this.startIndex % 2 === 0) {
+            firstPair.push(this.projectiles[this.startIndex+1]);
+        }
+
+        const intersectionsWithFirstPair = this._findIntersectionsWithProjectiles(gameObject, firstPair);
+        if (intersectionsWithFirstPair.length) {
+            return intersectionsWithFirstPair;
+        } else {
+            const projectilePosDiffGameObjectPos = gameObject.position.clone().sub(this.projectiles[this.startIndex].position);
+            const isGameObjectAhead = this.projectiles[this.startIndex].direction.dot(projectilePosDiffGameObjectPos) > 0;
+            if (isGameObjectAhead) {
                 // no need to check all projectiles is sequence, they are all behind of the gameObject
-                return null;
+                return [];
             }
-        } else {
-            // handle intersection
-            return [this.projectiles[0]];
         }
 
-        const lastProjectile = this.projectiles[this.projectiles.length - 1];
-        if (!this.isProjectileIntersectsWithObject(lastProjectile, gameObject)) {
-            const projectilePosDiffGameObjectPos = gameObject.position.clone().sub(lastProjectile.position); //lastProjectile.position.clone().sub(gameObject.position);
-            const isBefore = lastProjectile.direction.dot(projectilePosDiffGameObjectPos) < 0;
-            if (isBefore) {
+        const lastPair = [this.projectiles[this.endIndex]];
+        if (this.endIndex % 2 === 1) {
+            lastPair.push(this.projectiles[this.endIndex - 1]);
+        }
+        const intersectionsWithLastPair = this._findIntersectionsWithProjectiles(gameObject, lastPair);
+        if (intersectionsWithLastPair.length) {
+            return intersectionsWithLastPair;
+        } else {
+            const projectilePosDiffGameObjectPos = gameObject.position.clone().sub(this.projectiles[this.endIndex].position);
+            const isGameObjectBefore = this.projectiles[this.endIndex].direction.dot(projectilePosDiffGameObjectPos) < 0;
+            if (isGameObjectBefore) {
                 // no need to check all projectiles is sequence, they are all ahead of the gameObject
-                return null;
+                return [];
             }
-        } else {
-            // handle intersection
-            return [this.projectiles[this.projectiles.length - 1]];
         }
 
+        // get two most closest projectiles
         const closestProjectile =
-            binarySearchClosestInUniqueArray(this.projectiles, projectile => projectile.position.distanceToSquared(gameObject.position),
-                                             0, this.projectiles.length - 1);
+            binarySearchClosestInUniqueArray(this.projectiles,
+                                             projectile => projectile.position.distanceToSquared(gameObject.position),
+                                             this.startIndex + 1 + (1 - this.startIndex % 2), this.endIndex - 1 - (this.endIndex % 2));
+        const nextProjectileInPair = closestProjectile.index % 2 === 0 ? (
+            this.projectiles[closestProjectile.index + 1]
+        ) : this.projectiles[closestProjectile.index - 1];
 
-        if (this.isProjectileIntersectsWithObject(closestProjectile, gameObject)) {
-            return [closestProjectile];
+        return this._findIntersectionsWithProjectiles(gameObject, [closestProjectile, nextProjectileInPair]);
+    }
+
+    _findIntersectionsWithProjectiles(gameObject, projectiles) {
+        const intersections = [];
+        for (const projectile of projectiles) {
+            if (this.isProjectileIntersectsWithObject(projectile, gameObject)) {
+                intersections.push(projectile);
+            }
+        }
+
+        return intersections;
+    }
+
+    /**
+     * @param {FlyingObject} gameObject
+     * @returns {number}
+     * @private
+     */
+    _distFromObjectToFirstProjectile(gameObject) {
+        const projectile = this.projectiles[this.startIndex];
+        if (projectile) {
+            // projectile already removed
+            return gameObject.position.clone().sub(projectile.position).lengthSq();
         } else {
-            return null;
+            return 0;
         }
     }
 
     /**
      * @param {DirectionalProjectile} projectile
+     * @private
+     */
+    _removeProjectile(projectile) {
+        this.projectiles[projectile.index] = null;
+        this.renderer.scene.remove(projectile.object3d);
+        this.activeProjectilesCount--;
+        if (projectile.index === this.startIndex) {
+            while (this.startIndex < (this.projectiles.length - 1) && !this.projectiles[this.startIndex]) {
+                this.startIndex++;
+            }
+        } else if (projectile.index === this.endIndex) {
+            while (this.endIndex !== 0 && !this.projectiles[this.endIndex]) {
+                this.endIndex--;
+            }
+        }
+    }
+
+    /**
+     * @param {DirectionalProjectile|null} projectile
      * @param {AbstractObject} gameObject
      */
     isProjectileIntersectsWithObject(projectile, gameObject) {
+        if (!projectile) {
+            return false;
+        }
         const rayCaster = new THREE.Raycaster(projectile.position, projectile.direction);
         const intersections = rayCaster.intersectObject(gameObject.object3d);
         return (intersections.length / 2) % 2 !== 0

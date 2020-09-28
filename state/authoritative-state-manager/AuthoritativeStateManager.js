@@ -1,5 +1,6 @@
 /**
  * @typedef {import('../../object-control/AbstractController').default} AbstractController
+ * @typedef {import('../../object-control/AbstractObjectController').default} AbstractObjectController
  * @typedef {import('../../object-control/space-fighter/RemoteSpaceFighterController').default} RemoteSpaceFighterController
  * @typedef {import('../../net/models/space-fighter/SpaceFighterInput').default} SpaceFighterInput
  * @typedef {import('../../asset-management/AssetManager').default} AssetManager
@@ -16,7 +17,7 @@ export default class AuthoritativeStateManager extends Emitter {
     initializedControllers = [];
     /** @type {number} */
     initializedControllersCount = 0;
-    /** @type {object.<string, AbstractController>} */
+    /** @type {object.<string, AbstractObjectController>} */
     controllersByObjectId = {};
     /** @type {object.<string, object>} */
     gameObjectTypes = {};

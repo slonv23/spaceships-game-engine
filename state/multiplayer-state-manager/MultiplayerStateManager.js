@@ -189,6 +189,7 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
             const objectState = worldState.objectStates[i];
             if (this.playerObjectId === objectState.id) {
                 // we should not re-process input actions of player object retransmitted back from server
+                // TODO not true for all actions, should save open-fire action
                 continue;
             }
 

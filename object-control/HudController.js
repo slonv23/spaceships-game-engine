@@ -8,6 +8,7 @@ import * as THREE from 'three';
 import AbstractController from "./AbstractController";
 import SpaceFighterBaseController from "./space-fighter/SpaceFighterBaseController";
 import AbstractObjectController from "./AbstractObjectController";
+import SpaceFighterMultiplayerController from "./space-fighter/SpaceFighterMultiplayerController";
 
 export default class HudController extends AbstractController {
 
@@ -27,7 +28,7 @@ export default class HudController extends AbstractController {
     handleGameObjectCreated = (event) => {
         /** @type {AbstractObjectController} controller */
         const controller = event.detail;
-        if (controller instanceof SpaceFighterBaseController) {
+        if ((controller instanceof SpaceFighterBaseController)/* && !(controller instanceof SpaceFighterMultiplayerController)*/) {
             this.gameObjectHuds.push(new GameObjectHud(controller, this.renderer));
         }
     };
@@ -50,6 +51,8 @@ class GameObjectHud {
     /** @type {THREE.Object3D} */
     healthBar;
 
+    healthBarWidth = 3.5;
+
     healthBarScale;
     overallScale;
 
@@ -70,25 +73,38 @@ class GameObjectHud {
     }
 
     createHealthBarContainer() {
-        const geometry = new THREE.PlaneGeometry(100, 2, 1, 1);
+        const geometry = new THREE.PlaneGeometry(this.healthBarWidth, 0.5, 1, 1);
         const material = new THREE.MeshBasicMaterial({color: 0xffff00});
         material.side = THREE.DoubleSide;
         return new THREE.Mesh(geometry, material);
     }
 
     createHealthBar() {
-        const geometry = new THREE.PlaneGeometry(100, 2, 1, 1);
+        const geometry = new THREE.PlaneGeometry(this.healthBarWidth, 0.5, 1, 1);
         const material = new THREE.MeshBasicMaterial({color: 0x46eb34});
         material.side = THREE.DoubleSide;
         return new THREE.Mesh(geometry, material);
     }
 
     updatePositionAndScales() {
-        const position = this.gameObjectController.gameObject.position.clone();
+        const cameraZAxis = new THREE.Vector3();
+        const cameraYAxis = new THREE.Vector3();
+        const cameraXAxis = new THREE.Vector3();
+        cameraZAxis.setFromMatrixColumn(this.renderer.camera.matrixWorld, 2);
+        cameraYAxis.setFromMatrixColumn(this.renderer.camera.matrixWorld, 1);
+        cameraXAxis.setFromMatrixColumn(this.renderer.camera.matrixWorld, 0);
+
+        const position = this.gameObjectController.gameObject.position.clone()
+            //.add(this.gameObjectController.gameObject.ny.clone().multiplyScalar(3));
+            .add(cameraYAxis.multiplyScalar(3));
+
         this.healthBarContainer.matrix.copy(this.renderer.camera.matrixWorld);
         this.healthBar.matrix.copy(this.renderer.camera.matrixWorld);
-        this.healthBarContainer.matrix.setPosition(position);
-        this.healthBar.matrix.setPosition(position);
+        this.healthBarContainer.matrix.setPosition(position.clone().sub(cameraZAxis.multiplyScalar(0.001)));
+
+        const healthBarScale = this.gameObjectController.health / 100;
+        this.healthBar.matrix.scale(new THREE.Vector3(healthBarScale, 1, 1));
+        this.healthBar.matrix.setPosition(position.sub(cameraXAxis.multiplyScalar((this.healthBarWidth - this.healthBarWidth * healthBarScale) / 2)));
     }
 
 }
