@@ -119,7 +119,7 @@ export default class SpaceFighterBaseController extends AbstractObjectController
         /** @type {ProjectileSequenceController} */
         const projectileSequenceController = this.projectileSequenceControllerFactory.create();
         projectileSequenceController.renderer = this.renderer;
-        projectileSequenceController.releaser = this.gameObject;
+        projectileSequenceController.setReleaser(this.gameObject);
         projectileSequenceController.setAimingPointResolver(this.getAimingPoint);
         // Object.defineProperty(projectileSequenceController, 'aimingPoint', {get: this.getAimingPoint});
 
@@ -144,9 +144,13 @@ export default class SpaceFighterBaseController extends AbstractObjectController
      * @param {number} delta
      */
     updateProjectiles(delta) {
-        for (const projectileSequence of this.projectileSequences) {
+        for (let i = 0; i < this.projectileSequences.length; i++) {
+            const projectileSequence = this.projectileSequences[i];
             projectileSequence.update(delta);
             projectileSequence.findAndHandleHits();
+            if (projectileSequence.shouldBeRemoved()) {
+                this.projectileSequences.splice(i, 1);
+            }
         }
     }
 

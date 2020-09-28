@@ -26,7 +26,7 @@ export default class DirectionalProjectile extends AbstractObject {
     changeDirection(newDirection) {
         // TODO create constants for each vector that represent primary axes, i.e. (1, 0, 0), (0, 1, 0) ...
         this.object3d.matrix.makeRotationFromQuaternion(createQuaternionForRotation(new THREE.Vector3(0, 0, 1), newDirection));
-        this.direction = newDirection;
+        this.direction.copy(newDirection);
     }
 
 }

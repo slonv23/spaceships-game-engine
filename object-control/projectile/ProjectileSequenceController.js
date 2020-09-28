@@ -39,6 +39,7 @@ export default class ProjectileSequenceController extends AbstractController {
      * @param {THREE.Vector3[]} positions
      */
     launch(positions) {
+        // TODO also set resolver for positions
         this.positions = positions;
         this._launchProjectiles();
     }
@@ -114,7 +115,6 @@ export default class ProjectileSequenceController extends AbstractController {
 
     findAndHandleHits() {
         if (!this.activeProjectilesCount) {
-            // TODO remove seq
             return;
         }
 
@@ -125,8 +125,12 @@ export default class ProjectileSequenceController extends AbstractController {
                 const hits = this.findHitsWithObject(gameObjectController.gameObject);
                 for (const projectile of hits) {
                     gameObjectController.health = Math.max(0, gameObjectController.health - 10);
-                    this._removeProjectile(this.projectiles[projectile.index]);
+                    this._removeProjectile(projectile);
                 }
+            }
+
+            if (!this.activeProjectilesCount) {
+                return;
             }
 
             const dist = this._distFromObjectToFirstProjectile(gameObjectController.gameObject);
@@ -144,11 +148,6 @@ export default class ProjectileSequenceController extends AbstractController {
      * @param {AbstractObject} gameObject
      */
     findHitsWithObject(gameObject) {
-        // TODO find the minimum distance from projectiles of sequence to any object and remove projectiles if dist > certain value
-        //  by removing I mean setting array element to null to preserve indexes
-        // TODO check first two projectiles
-        // TODO if !active and don't have visible projectiles than remove sequence
-
         const firstPair = [this.projectiles[this.startIndex]];
         if (this.startIndex % 2 === 0) {
             firstPair.push(this.projectiles[this.startIndex+1]);
@@ -183,13 +182,23 @@ export default class ProjectileSequenceController extends AbstractController {
         }
 
         // get two most closest projectiles
-        const closestProjectile =
-            binarySearchClosestInUniqueArray(this.projectiles,
-                                             projectile => projectile.position.distanceToSquared(gameObject.position),
-                                             this.startIndex + 1 + (1 - this.startIndex % 2), this.endIndex - 1 - (this.endIndex % 2));
-        const nextProjectileInPair = closestProjectile.index % 2 === 0 ? (
-            this.projectiles[closestProjectile.index + 1]
-        ) : this.projectiles[closestProjectile.index - 1];
+        const projectilesToCheck = this.projectiles
+            .slice(this.startIndex + 1 + (1 - this.startIndex % 2), this.endIndex - 1 - (this.endIndex % 2))
+            .filter(Boolean);
+        if (!projectilesToCheck.length) {
+            return [];
+        }
+
+        const closestProjectile = binarySearchClosestInUniqueArray(
+            projectilesToCheck,
+            projectile => {
+                projectile.position.distanceToSquared(gameObject.position)
+                console.log(projectilesToCheck);
+            },
+            0,
+            projectilesToCheck.length - 1
+        );
+        const nextProjectileInPair = this.projectiles[closestProjectile.index + 1 - 2 * (closestProjectile.index % 2)];
 
         return this._findIntersectionsWithProjectiles(gameObject, [closestProjectile, nextProjectileInPair]);
     }
@@ -229,7 +238,7 @@ export default class ProjectileSequenceController extends AbstractController {
         this.renderer.scene.remove(projectile.object3d);
         this.activeProjectilesCount--;
         if (projectile.index === this.startIndex) {
-            while (this.startIndex < (this.projectiles.length - 1) && !this.projectiles[this.startIndex]) {
+            while (this.startIndex < this.projectiles.length && !this.projectiles[this.startIndex]) {
                 this.startIndex++;
             }
         } else if (projectile.index === this.endIndex) {
@@ -250,6 +259,10 @@ export default class ProjectileSequenceController extends AbstractController {
         const rayCaster = new THREE.Raycaster(projectile.position, projectile.direction);
         const intersections = rayCaster.intersectObject(gameObject.object3d);
         return (intersections.length / 2) % 2 !== 0
+    }
+
+    shouldBeRemoved() {
+        return !this.activeProjectilesCount && !this.active;
     }
 
 }
