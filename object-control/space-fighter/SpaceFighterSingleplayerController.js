@@ -79,36 +79,43 @@ export default class SpaceFighterSingleplayerController extends SpaceFighterBase
     }
 
     _correctObjectRollAngle() {
-        const currentSideAngle = this._calcSideAngle() * this._calcRotationDirection();
-        const targetSideAngle = this._calcTargetSideAngle();
+        const currentSideAngle = this._calcSideAngle(this.wYawTarget, this.wPitchTarget);
+        const targetSideAngle = this._calcTargetSideAngle(this.wYawTarget);
         const angleChange = targetSideAngle - currentSideAngle;
         //const angleChange = -targetSideAngle - currentSideAngle;
         this.gameObject.rollOnAngle(angleChange);
     }
 
-    _calcTargetSideAngle() {
+    _calcTargetSideAngle(wYawTarget) {
         //return -Math.PI / 6;
-        return -this.wYawTarget / SpaceFighter.angularVelocityMax.x * Math.PI / 6;
+        return -wYawTarget / SpaceFighter.angularVelocityMax.x * Math.PI / 6;
         //return this.wYawTarget / SpaceFighter.angularVelocityMax.x * Math.PI / 6;
     }
 
-    _calcSideAngle() {
+    _calcSideAngle(wYawTarget, wPitchTarget) {
         const nx = this.gameObject.nx.clone();
         const ny = this.gameObject.ny.clone();
-        this.rotationDirectionForNonRotated = nx.multiplyScalar(this.wYawTarget).add(ny.multiplyScalar(this.wPitchTarget));
+        const rotationDirectionForNonRotated = nx.multiplyScalar(wYawTarget).add(ny.multiplyScalar(wPitchTarget));
+        const rotationDirection = this._getRotationDirectionForYawAndPitch(wYawTarget, wPitchTarget);
+        const normalToRotationDirection = this.gameObject.nz.clone().cross(rotationDirection);
 
-        // TODO avoid zero vectors
-        const denominator = Math.sqrt(this.rotationDirectionForNonRotated.lengthSq() * this.rotationDirection.lengthSq());
+        return this._calcSideAngleUnsigned(rotationDirection, rotationDirectionForNonRotated)
+            * this._calcRotationDirection(normalToRotationDirection, rotationDirectionForNonRotated);
+    }
+
+    _calcSideAngleUnsigned(rotationDirection, rotationDirectionForNonRotated) {
+        const denominator = Math.sqrt(rotationDirectionForNonRotated.lengthSq() * rotationDirection.lengthSq());
         if (denominator !== 0) {
-            return this.rotationDirectionForNonRotated.angleTo(this.rotationDirection);
+            return rotationDirectionForNonRotated.angleTo(rotationDirection);
         } else {
             // if yaw and pitch are too small than rotation direction will be close to zero vector
             return 0;
         }
     }
 
-    _calcRotationDirection() {
-        const directionSign = Math.sign(this.normalToRotationDirection.dot(this.rotationDirectionForNonRotated));
+
+    _calcRotationDirection(normalToRotationDirection, rotationDirectionForNonRotated) {
+        const directionSign = Math.sign(normalToRotationDirection.dot(rotationDirectionForNonRotated));
         return directionSign < 0 ? -1 : 1;
     }
 

@@ -32,8 +32,6 @@ export default class SpaceFighterBaseController extends AbstractObjectController
 
     /** @type {THREE.Vector3} */
     rotationDirection = new THREE.Vector3();
-    /** @type {THREE.Vector3} */
-    rotationDirectionInLocalCoords = new THREE.Vector3();
 
     /** @type {THREE.Quaternion} used to convert control axes from local spaceship coordinate system (CS) to world CS */
     controlsQuaternion = new THREE.Quaternion();
@@ -115,23 +113,26 @@ export default class SpaceFighterBaseController extends AbstractObjectController
         return this._aimingPoint;
     };
 
+    getPositions = () => {
+        return [
+            this.leftProjectileOffset.clone().applyMatrix4(this.gameObject.object3d.matrix),
+            this.rightProjectileOffset.clone().applyMatrix4(this.gameObject.object3d.matrix)
+        ];
+    };
+
     launchProjectiles() {
         /** @type {ProjectileSequenceController} */
         const projectileSequenceController = this.projectileSequenceControllerFactory.create();
         projectileSequenceController.renderer = this.renderer;
         projectileSequenceController.setReleaser(this.gameObject);
         projectileSequenceController.setAimingPointResolver(this.getAimingPoint);
+        projectileSequenceController.setPositionsResolver(this.getPositions);
         // Object.defineProperty(projectileSequenceController, 'aimingPoint', {get: this.getAimingPoint});
 
         this.activeProjectileSequence = projectileSequenceController;
         this.projectileSequences.push(projectileSequenceController);
 
-        const positions = [
-            this.leftProjectileOffset.clone().applyMatrix4(this.gameObject.object3d.matrix),
-            this.rightProjectileOffset.clone().applyMatrix4(this.gameObject.object3d.matrix)
-        ];
-
-        projectileSequenceController.launch(positions);
+        projectileSequenceController.launch();
         return projectileSequenceController;
     }
 
@@ -178,10 +179,15 @@ export default class SpaceFighterBaseController extends AbstractObjectController
 
     _calculateRotationDirection() {
         /** @type {THREE.Vector3} */
-        this.rotationDirection = SpaceFighterBaseController.calculateRotationDirection(this.controlX, this.controlY,
-                                                                                       this.wYawTarget, this.wPitchTarget);
-        this.rotationDirectionInLocalCoords = this.rotationDirection.clone();
-        this.rotationDirection.applyQuaternion(this.controlsRotQuaternion).applyQuaternion(this.controlsQuaternion);
+        this.rotationDirection = this._getRotationDirectionForYawAndPitch(this.wYawTarget, this.wPitchTarget);
+    }
+
+    _getRotationDirectionForYawAndPitch(wYaw, wPitch) {
+        /** @type {THREE.Vector3} */
+        const rotationDirection = SpaceFighterBaseController.calculateRotationDirection(this.controlX, this.controlY,
+                                                                                        wYaw, wPitch);
+        rotationDirection.applyQuaternion(this.controlsRotQuaternion).applyQuaternion(this.controlsQuaternion);
+        return rotationDirection;
     }
 
     _calculateNormalToRotationDirection() {

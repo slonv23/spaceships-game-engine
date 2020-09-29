@@ -21,9 +21,8 @@ export default class ProjectileSequenceController extends AbstractController {
     startIndex = 0;
     endIndex = 0;
 
-    positions;
-
     _aimingPointResolver;
+    _positionsResolver;
 
     framesFromLastShoot = 0;
 
@@ -35,12 +34,7 @@ export default class ProjectileSequenceController extends AbstractController {
     /** @type {number} projectiles are removed if minimum squared distance to any game object is greater than this value */
     distanceToObjectLimitSq = 1000;
 
-    /**
-     * @param {THREE.Vector3[]} positions
-     */
-    launch(positions) {
-        // TODO also set resolver for positions
-        this.positions = positions;
+    launch() {
         this._launchProjectiles();
     }
 
@@ -66,7 +60,8 @@ export default class ProjectileSequenceController extends AbstractController {
     _launchProjectiles() {
         /** @type {THREE.Vector3} target */
         const target = this._aimingPointResolver();
-        for (const position of this.positions) {
+        const positions = this._positionsResolver();
+        for (const position of positions) {
             const direction = position.clone().sub(target).normalize();
             /** @type {DirectionalProjectile} */
             const projectile = this.createProjectile();
@@ -103,6 +98,10 @@ export default class ProjectileSequenceController extends AbstractController {
 
     setAimingPointResolver(aimingPointResolver) {
         this._aimingPointResolver = aimingPointResolver;
+    }
+
+    setPositionsResolver(positionsResolver) {
+        this._positionsResolver = positionsResolver;
     }
 
     /**

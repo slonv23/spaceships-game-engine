@@ -41,15 +41,18 @@ export default class SpaceFighterMultiplayerController extends SpaceFighterSingl
     }
 
     getInputActionForCurrentState() {
-        const currentSideAngle = this._calcSideAngle() * this._calcRotationDirection();
-        const targetSideAngle = this._calcTargetSideAngle();
+        const mousePos = this._calcMousePosInDimlessUnits();
+        const wPitchTarget =  -mousePos[1] * SpaceFighter.angularVelocityMax.y;
+        const wYawTarget = mousePos[0] * SpaceFighter.angularVelocityMax.x;
+
+        const currentSideAngle = this._calcSideAngle(wYawTarget, wPitchTarget);
+        const targetSideAngle = this._calcTargetSideAngle(wYawTarget);
         const angleChange = targetSideAngle - currentSideAngle;
         const targetRollAngleWithCorrection = angleChange - this.gameObject.rollAngleBtwCurrentAndTargetOrientation;
 
         const inputAction = new SpaceFighterInput();
-        const mousePos = this._calcMousePosInDimlessUnits();
-        inputAction.pitch = -mousePos[1] * SpaceFighter.angularVelocityMax.y;
-        inputAction.yaw = mousePos[0] * SpaceFighter.angularVelocityMax.x;
+        inputAction.pitch = wPitchTarget;
+        inputAction.yaw = wYawTarget;
         inputAction.rollAngle = targetRollAngleWithCorrection;
         inputAction.rotationSpeed = this._determineRotationSpeed();
 
