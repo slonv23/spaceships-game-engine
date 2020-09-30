@@ -21,8 +21,10 @@ export default class ProjectileSequenceController extends AbstractController {
     startIndex = 0;
     endIndex = 0;
 
-    _aimingPointResolver;
-    _positionsResolver;
+    /**
+     * @type {Function}
+     */
+    _initialDataResolver;
 
     framesFromLastShoot = 0;
 
@@ -58,9 +60,8 @@ export default class ProjectileSequenceController extends AbstractController {
     }
 
     _launchProjectiles() {
-        /** @type {THREE.Vector3} target */
-        const target = this._aimingPointResolver();
-        const positions = this._positionsResolver();
+        const {target, positions} = this._initialDataResolver();
+
         for (const position of positions) {
             const direction = position.clone().sub(target).normalize();
             /** @type {DirectionalProjectile} */
@@ -96,12 +97,8 @@ export default class ProjectileSequenceController extends AbstractController {
         return null;
     }
 
-    setAimingPointResolver(aimingPointResolver) {
-        this._aimingPointResolver = aimingPointResolver;
-    }
-
-    setPositionsResolver(positionsResolver) {
-        this._positionsResolver = positionsResolver;
+    setInitialDataResolver(initialDataResolver) {
+        this._initialDataResolver = initialDataResolver;
     }
 
     /**

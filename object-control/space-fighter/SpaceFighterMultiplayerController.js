@@ -1,15 +1,24 @@
 /**
  * @typedef {import('three')} THREE
+ * @typedef {import('../../state/multiplayer-state-manager/MultiplayerStateManager').default} MultiplayerStateManager
  * @typedef {import('../../frontend/input/Mouse').default} Mouse
  * @typedef {import('../../frontend/input/Keyboard').default} Keyboard
+ * @typedef {import('../../net/models/space-fighter/SpaceFighterOpenFire').default} SpaceFighterOpenFire
  */
 
 import SpaceFighterSingleplayerController from "./SpaceFighterSingleplayerController";
 import {syncStateMixin} from "./_mixins";
 import SpaceFighterInput from "../../net/models/space-fighter/SpaceFighterInput";
 import SpaceFighter from "../../physics/object/SpaceFighter";
+import SpaceFighterBaseController from "./SpaceFighterBaseController";
 
+/**
+ * @property {MultiplayerStateManager} stateManager
+ */
 export default class SpaceFighterMultiplayerController extends SpaceFighterSingleplayerController {
+
+    prevStates = Array(this.stateManager.packetPeriodFrames);
+    prevStateIndex = -1;
 
     rollAnglePrev = 0;
 
@@ -34,6 +43,7 @@ export default class SpaceFighterMultiplayerController extends SpaceFighterSingl
     update(delta) {
         this.gameObject.update(delta);
         this.updateControlParams(delta);
+        this._saveState();
     }
 
     sync(actualObjectState, futureObjectState) {
@@ -57,6 +67,54 @@ export default class SpaceFighterMultiplayerController extends SpaceFighterSingl
         inputAction.rotationSpeed = this._determineRotationSpeed();
 
         return inputAction;
+    }
+
+    /**
+     * @param {number} frameIndex
+     * @param {SpaceFighterOpenFire} spaceFighterOpenFire
+     */
+    handleOpenFireAction(frameIndex, spaceFighterOpenFire) {
+        const offset = this.stateManager.currentFrameIndex - frameIndex;
+        if (offset > this.stateManager.packetPeriodFrames) {
+            throw new Error(`Received object action for frame #${frameIndex} at frame` +
+                            ` #${this.stateManager.currentFrameIndex} which is more than` +
+                            ` ${this.stateManager.packetPeriodFrames} behind`);
+        }
+
+
+        this._launchNewProjectileSequence(this.getInitialDataForProjectiles.bind(this, offset));
+    }
+
+    getInitialDataForProjectiles(timeOffsetFrames) {
+        let stateIndexToLaunchFrom = this.prevStateIndex - timeOffsetFrames;
+        const packetPeriodFrames = this.stateManager.packetPeriodFrames;
+        // mod operator
+        stateIndexToLaunchFrom = ((stateIndexToLaunchFrom % packetPeriodFrames) + packetPeriodFrames) % packetPeriodFrames;
+        const stateToLaunchProjectilesFrom = this.prevStates[stateIndexToLaunchFrom];
+
+        const target = stateToLaunchProjectilesFrom.nz.clone()
+            .multiplyScalar(-SpaceFighterBaseController.distanceToAimingPoint)
+            .add(stateToLaunchProjectilesFrom.position);
+
+        const positions = [
+            this.leftProjectileOffset.clone().applyMatrix4(stateToLaunchProjectilesFrom.matrix),
+            this.rightProjectileOffset.clone().applyMatrix4(stateToLaunchProjectilesFrom.matrix)
+        ];
+
+        return {target, positions};
+    }
+
+    _saveState() {
+        this.prevStateIndex = (this.prevStateIndex + 1) % this.stateManager.packetPeriodFrames;
+        this.prevStates[this.prevStateIndex] = this._serializeState();
+    }
+
+    _serializeState() {
+        return {
+            nz: this.gameObject.nz.clone(),
+            position: this.gameObject.position.clone(),
+            matrix: this.gameObject.object3d.matrix
+        }
     }
 
 }

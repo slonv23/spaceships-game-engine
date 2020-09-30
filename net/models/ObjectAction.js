@@ -3,6 +3,7 @@
  * @typedef {import('./space-fighter/SpaceFighterOpenFire').default} SpaceFighterOpenFire
  * @typedef {import('./space-fighter/SpaceFighterDestroy').default} SpaceFighterDestroy
  * @typedef {import('./space-fighter/SpaceFighterStopFire').default} SpaceFighterStopFire
+ * @typedef {import('./space-fighter/SpaceFighterGotHit').default} SpaceFighterGotHit
  */
 
 import AbstractModel from "./AbstractModel";
@@ -23,5 +24,7 @@ export default class ObjectAction extends AbstractModel {
     spaceFighterDestroy;
     /** @type {?SpaceFighterStopFire} */
     spaceFighterStopFire;
+    /** @type {?SpaceFighterGotHit} */
+    spaceFighterGotHit;
 
 }

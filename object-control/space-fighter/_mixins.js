@@ -1,4 +1,5 @@
 /**
+ * @typedef {import('./SpaceFighterBaseController').default} SpaceFighterBaseController
  * @typedef {import('../../net/models/ObjectState').default} ObjectState
  * @typedef {import('../../net/models/ObjectAction').default} ObjectAction
  * @typedef {import('../../net/models/space-fighter/SpaceFighterState').default} SpaceFighterState
@@ -7,6 +8,10 @@
 
 import SpaceFighterBaseController from "./SpaceFighterBaseController";
 
+/**
+ * @mixin SyncStateMixin
+ * @this SpaceFighterBaseController
+ */
 export const syncStateMixin = {
     /**
      * @param {ObjectState} objectState
@@ -64,7 +69,7 @@ export const syncStateMixin = {
         if (objectAction.spaceFighterInput) {
             this.handleInputAction(objectAction.spaceFighterInput);
         } else if (objectAction.spaceFighterOpenFire) {
-            // eslint-disable-next-line no-empty
+            this.handleOpenFireAction(objectAction.frameIndex, objectAction.spaceFighterOpenFire);
         } else if (objectAction.spaceFighterDestroy) {
             // eslint-disable-next-line no-empty
         } else if (objectAction.spaceFighterStopFire) {

@@ -59,7 +59,7 @@ export default class SpaceFighterBaseController extends AbstractObjectController
     /** @type {number} - HP percentage */
     health = 100;
 
-    _aimingPoint = null;
+    static distanceToAimingPoint = 60;
 
     static dependencies() {
         return ['logger', 'projectileSequenceControllerFactory', ...AbstractObjectController.dependencies()];
@@ -98,35 +98,35 @@ export default class SpaceFighterBaseController extends AbstractObjectController
      * @param {number} delta
      */
     updateControlParams(delta) {
-        this._resetAimingPoint(); // reset aiming point so it will be recalculated on demand
         this._updateControlsQuaternion(delta);
         this._calculateRotationDirection();
         this._calculateNormalToRotationDirection(); // used by camera manager
         this._updateAngularVelocities();
     }
 
-    getAimingPoint = () => {
-        if (!this._aimingPoint) {
-            this._aimingPoint = this.gameObject.nz.clone().multiplyScalar(-60).add(this.gameObject.position);
-        }
+    getInitialDataForProjectiles = () => {
+        const target = this.gameObject.nz.clone()
+            .multiplyScalar(-SpaceFighterBaseController.distanceToAimingPoint)
+            .add(this.gameObject.position);
 
-        return this._aimingPoint;
-    };
-
-    getPositions = () => {
-        return [
+        const positions = [
             this.leftProjectileOffset.clone().applyMatrix4(this.gameObject.object3d.matrix),
             this.rightProjectileOffset.clone().applyMatrix4(this.gameObject.object3d.matrix)
         ];
+
+        return {target, positions};
     };
 
     launchProjectiles() {
+        return this._launchNewProjectileSequence(this.getInitialDataForProjectiles);
+    }
+
+    _launchNewProjectileSequence(initialDataResolver) {
         /** @type {ProjectileSequenceController} */
         const projectileSequenceController = this.projectileSequenceControllerFactory.create();
         projectileSequenceController.renderer = this.renderer;
         projectileSequenceController.setReleaser(this.gameObject);
-        projectileSequenceController.setAimingPointResolver(this.getAimingPoint);
-        projectileSequenceController.setPositionsResolver(this.getPositions);
+        projectileSequenceController.setInitialDataResolver(initialDataResolver);
         // Object.defineProperty(projectileSequenceController, 'aimingPoint', {get: this.getAimingPoint});
 
         this.activeProjectileSequence = projectileSequenceController;
@@ -159,8 +159,8 @@ export default class SpaceFighterBaseController extends AbstractObjectController
 
     }
 
-    _resetAimingPoint() {
-        this._aimingPoint = null;
+    handleOpenFireAction() {
+        throw new Error("Not implemented");
     }
 
     _updateControlsQuaternion(delta) {
