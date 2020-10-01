@@ -4,7 +4,6 @@
  * @typedef {import('../../object-control/space-fighter/SpaceFighterMultiplayerController').default} SpaceFighterMultiplayerController
  * @typedef {import('../../net/models/WorldState').default} WorldState
  * @typedef {import('../../net/models/ObjectState').default} SpaceFighterState
- * @typedef {import('../net/models/InputAction').default} SpaceFighterInput
  * @typedef {import('../../net/service/MultiplayerService').default} MultiplayerService
  * @typedef {import('../../asset-management/AssetManager').default} AssetManager
  * @typedef {import('../../logging/AbstractLogger').default} AbstractLogger
@@ -12,6 +11,7 @@
  */
 
 import AuthoritativeStateManager from "../authoritative-state-manager/AuthoritativeStateManager";
+import SpaceFighterInput from "../../net/models/space-fighter/SpaceFighterInput";
 
 export default class MultiplayerStateManager extends AuthoritativeStateManager {
 
@@ -196,21 +196,28 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
         for (let i = 0; i < worldObjectsCount; i++) {
             /** @type {SpaceFighterState} */
             const objectState = worldState.objectStates[i];
+
+            if (!objectState.actions) {
+                continue;
+            }
+
+            let actions;
             if (this.playerObjectId === objectState.id) {
                 // we should not re-process input actions of player object retransmitted back from server
-                // TODO not true for all actions, should save open-fire action
-                continue;
+                // not true for all actions, should actions related to shooting
+                actions = objectState.actions.filter(action => {
+                    return action.spaceFighterOpenFire || action.spaceFighterGotHit || action.spaceFighterStopFire;
+                });
+            } else {
+                actions = objectState.actions;
             }
 
             if (!this.objectActionsByObjectId[objectState.id]) {
                 this.objectActionsByObjectId[objectState.id] = {};
             }
 
-            const actions = objectState.actions;
-            if (actions) {
-                for (let j = 0, actionsCount = actions.length; j < actionsCount; j++) {
-                    this.addObjectAction(objectState.id, actions[j]);
-                }
+            for (let j = 0, actionsCount = actions.length; j < actionsCount; j++) {
+                this.addObjectAction(objectState.id, actions[j]);
             }
         }
     };

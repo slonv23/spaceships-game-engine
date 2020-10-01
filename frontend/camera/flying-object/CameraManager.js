@@ -101,9 +101,10 @@ export default class CameraManager {
         }
     }
 
+
     calculateCameraDirection() {
         /** @type {THREE.Vector3} */
-        const aimingPoint = this.controller.getAimingPoint();
+        const aimingPoint = this.controller.calculateAimingPoint();
         const targetDirection = this.camera.position.clone().sub(aimingPoint).normalize(); //aimingPoint.clone().sub(this.camera.position).normalize();
 
         this.cameraQuaternion.multiplyQuaternions(createQuaternionForRotation(this.cameraZ, targetDirection),

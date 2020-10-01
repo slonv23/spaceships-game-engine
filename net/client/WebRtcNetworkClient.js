@@ -85,7 +85,7 @@ export default class WebRtcNetworkClient extends AbstractNetworkClient {
         };
 
         this.dataChannel.onmessage = event => {
-            this.logger.debug('DataChannel received message(s)');
+            //this.logger.debug('DataChannel received message(s)');
             this.dispatchEvent("messages", new Uint8Array(event.data));
         };
     }

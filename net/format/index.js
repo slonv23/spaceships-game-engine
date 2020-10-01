@@ -12,12 +12,15 @@ import SpaceFighterDestroy from "../models/space-fighter/SpaceFighterDestroy";
 import SpaceFighterInput from "../models/space-fighter/SpaceFighterInput";
 import SpaceFighterOpenFire from "../models/space-fighter/SpaceFighterOpenFire";
 import SpaceFighterState from "../models/space-fighter/SpaceFighterState";
+import SpaceFighterStopFire from "../models/space-fighter/SpaceFighterStopFire";
+import SpaceFighterGotHit from "../models/space-fighter/SpaceFighterGotHit";
 
 diContainer.registerClass("messageSerializerDeserializer", MessageSerializerDeserializer, {
     models: [
         // common models:
         ObjectAction, ObjectState, SpawnRequest, SpawnResponse, WorldState, RequestAck,
         // space fighter models:
-        SpaceFighterInput, SpaceFighterDestroy, SpaceFighterOpenFire, SpaceFighterState
+        SpaceFighterInput, SpaceFighterDestroy, SpaceFighterOpenFire, SpaceFighterState,
+        SpaceFighterStopFire, SpaceFighterGotHit
     ]
 });

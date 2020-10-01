@@ -23,6 +23,8 @@ export default class SpaceFighterMultiplayerController extends SpaceFighterSingl
 
     rollAnglePrev = 0;
 
+    shootingActionPending = false;
+
     /**
      * @param {number} delta
      */
@@ -51,11 +53,16 @@ export default class SpaceFighterMultiplayerController extends SpaceFighterSingl
     }
 
     getImmediateActions() {
-        const actions = [];
+        if (this.shootingActionPending) {
+            return [];
+        }
 
+        const actions = [];
         if (!this.activeProjectileSequence && this.mouse.lmbPressed) {
+            this.shootingActionPending = true;
             actions.push(new SpaceFighterOpenFire());
         } else if (this.activeProjectileSequence && !this.mouse.lmbPressed)  {
+            this.shootingActionPending = true;
             actions.push(new SpaceFighterStopFire());
         }
 
@@ -85,7 +92,9 @@ export default class SpaceFighterMultiplayerController extends SpaceFighterSingl
      * @param {number} frameIndex
      * @param {SpaceFighterOpenFire} spaceFighterOpenFire
      */
+    // eslint-disable-next-line no-unused-vars
     handleOpenFireAction(frameIndex, spaceFighterOpenFire) {
+        this.shootingActionPending = false;
         const offset = this.stateManager.currentFrameIndex - frameIndex;
         if (offset > this.stateManager.packetPeriodFrames) {
             throw new Error(`Received object action for frame #${frameIndex} at frame` +
@@ -94,6 +103,15 @@ export default class SpaceFighterMultiplayerController extends SpaceFighterSingl
         }
 
         this._launchNewProjectileSequence(this.getInitialDataForProjectiles.bind(this, offset));
+    }
+
+    /**
+     * @param {SpaceFighterStopFire} stopFireAction
+     */
+    // eslint-disable-next-line no-unused-vars
+    handleStopFireAction(stopFireAction) {
+        this.shootingActionPending = false;
+        this.stopFiring();
     }
 
     getInitialDataForProjectiles(timeOffsetFrames) {

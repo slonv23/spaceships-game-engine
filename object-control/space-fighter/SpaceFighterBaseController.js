@@ -105,9 +105,7 @@ export default class SpaceFighterBaseController extends AbstractObjectController
     }
 
     getInitialDataForProjectiles = () => {
-        const target = this.gameObject.nz.clone()
-            .multiplyScalar(-SpaceFighterBaseController.distanceToAimingPoint)
-            .add(this.gameObject.position);
+        const target = this.calculateAimingPoint();
 
         const positions = [
             this.leftProjectileOffset.clone().applyMatrix4(this.gameObject.object3d.matrix),
@@ -116,6 +114,12 @@ export default class SpaceFighterBaseController extends AbstractObjectController
 
         return {target, positions};
     };
+
+    calculateAimingPoint() {
+        return this.gameObject.nz.clone()
+            .multiplyScalar(-SpaceFighterBaseController.distanceToAimingPoint)
+            .add(this.gameObject.position);
+    }
 
     launchProjectiles() {
         return this._launchNewProjectileSequence(this.getInitialDataForProjectiles);
@@ -157,10 +161,6 @@ export default class SpaceFighterBaseController extends AbstractObjectController
 
     findHits() {
 
-    }
-
-    handleOpenFireAction() {
-        throw new Error("Not implemented");
     }
 
     _updateControlsQuaternion(delta) {

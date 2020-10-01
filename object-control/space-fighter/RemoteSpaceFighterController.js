@@ -1,5 +1,7 @@
 /**
  * @typedef {import('three')} THREE
+ * @typedef {import('../../net/models/space-fighter/SpaceFighterStopFire').default} SpaceFighterStopFire
+ * @typedef {import('../../net/models/space-fighter/SpaceFighterOpenFire').default} SpaceFighterOpenFire
  */
 
 import SpaceFighterBaseController from "./SpaceFighterBaseController";
@@ -26,6 +28,13 @@ export default class RemoteSpaceFighterController extends SpaceFighterBaseContro
             spaceFighterOpenFire.projectileSeqId = ++RemoteSpaceFighterController.prevProjectileSeqId;
         }
         this._launchNewProjectileSequence(this.getInitialDataForProjectiles);
+    }
+
+    /**
+     * @param {SpaceFighterStopFire} stopFireAction
+     */
+    handleStopFireAction(stopFireAction) {
+        this.stopFiring();
     }
 
 }
