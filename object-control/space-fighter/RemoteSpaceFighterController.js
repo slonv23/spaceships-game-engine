@@ -7,6 +7,8 @@ import {syncStateMixin} from "./_mixins";
 
 export default class RemoteSpaceFighterController extends SpaceFighterBaseController {
 
+    static prevProjectileSeqId = 0;
+
     rollAnglePrev = 0;
 
     // eslint-disable-next-line no-unused-vars
@@ -15,12 +17,15 @@ export default class RemoteSpaceFighterController extends SpaceFighterBaseContro
     }
 
     /**
-     * @param {number} angle
-     * @private
+     * @param {number} frameIndex
+     * @param {SpaceFighterOpenFire} spaceFighterOpenFire
      */
-    _rotateControlAxes(angle) {
-        super._rotateControlAxes(angle);
-        this.gameObject.rollAngleBtwCurrentAndTargetOrientation += angle;
+    handleOpenFireAction(frameIndex, spaceFighterOpenFire) {
+        if (spaceFighterOpenFire.projectileSeqId == null) {
+            // executed on server to generate unique projectile seq id
+            spaceFighterOpenFire.projectileSeqId = ++RemoteSpaceFighterController.prevProjectileSeqId;
+        }
+        this._launchNewProjectileSequence(this.getInitialDataForProjectiles);
     }
 
 }

@@ -4,6 +4,7 @@
  * @typedef {import('../../net/models/ObjectAction').default} ObjectAction
  * @typedef {import('../../net/models/space-fighter/SpaceFighterState').default} SpaceFighterState
  * @typedef {import('../../net/models/space-fighter/SpaceFighterInput').default} SpaceFighterInput
+ * @typedef {import('../../net/models/space-fighter/SpaceFighterStopFire').default} SpaceFighterStopFire
  */
 
 import SpaceFighterBaseController from "./SpaceFighterBaseController";
@@ -73,6 +74,7 @@ export const syncStateMixin = {
         } else if (objectAction.spaceFighterDestroy) {
             // eslint-disable-next-line no-empty
         } else if (objectAction.spaceFighterStopFire) {
+            this.handleOpenFireAction(objectAction.spaceFighterStopFire);
         }
     },
 
@@ -87,5 +89,12 @@ export const syncStateMixin = {
         this.wPitchTarget = inputAction.pitch;
         this.rotationSpeed = inputAction.rotationSpeed;
     },
+
+    /**
+     * @param {SpaceFighterStopFire} stopFireAction
+     */
+    handleStopFireAction(stopFireAction) {
+        this.stopFiring();
+    }
 
 };

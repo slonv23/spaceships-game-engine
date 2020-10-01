@@ -3,7 +3,6 @@
  * @typedef {import('../../state/multiplayer-state-manager/MultiplayerStateManager').default} MultiplayerStateManager
  * @typedef {import('../../frontend/input/Mouse').default} Mouse
  * @typedef {import('../../frontend/input/Keyboard').default} Keyboard
- * @typedef {import('../../net/models/space-fighter/SpaceFighterOpenFire').default} SpaceFighterOpenFire
  */
 
 import SpaceFighterSingleplayerController from "./SpaceFighterSingleplayerController";
@@ -11,6 +10,8 @@ import {syncStateMixin} from "./_mixins";
 import SpaceFighterInput from "../../net/models/space-fighter/SpaceFighterInput";
 import SpaceFighter from "../../physics/object/SpaceFighter";
 import SpaceFighterBaseController from "./SpaceFighterBaseController";
+import SpaceFighterOpenFire from "../../net/models/space-fighter/SpaceFighterOpenFire";
+import SpaceFighterStopFire from "../../net/models/space-fighter/SpaceFighterStopFire";
 
 /**
  * @property {MultiplayerStateManager} stateManager
@@ -26,18 +27,17 @@ export default class SpaceFighterMultiplayerController extends SpaceFighterSingl
      * @param {number} delta
      */
     updateControlParams(delta) {
-        this._resetAimingPoint(); // reset aiming point so it will be recalculated on demand
         this._updateControlsQuaternion(delta);
         this._calculateRotationDirection();
         this._calculateNormalToRotationDirection(); // used by camera manager
         this._updateAngularVelocities();
 
         this.updateProjectiles(delta);
-        if (!this.activeProjectileSequence && this.mouse.lmbPressed) {
+        /*if (!this.activeProjectileSequence && this.mouse.lmbPressed) {
             this.launchProjectiles();
         } else if (this.activeProjectileSequence && !this.mouse.lmbPressed)  {
             this.stopFiring();
-        }
+        }*/
     }
 
     update(delta) {
@@ -48,6 +48,18 @@ export default class SpaceFighterMultiplayerController extends SpaceFighterSingl
 
     sync(actualObjectState, futureObjectState) {
         this._sync(futureObjectState);
+    }
+
+    getImmediateActions() {
+        const actions = [];
+
+        if (!this.activeProjectileSequence && this.mouse.lmbPressed) {
+            actions.push(new SpaceFighterOpenFire());
+        } else if (this.activeProjectileSequence && !this.mouse.lmbPressed)  {
+            actions.push(new SpaceFighterStopFire());
+        }
+
+        return actions;
     }
 
     getInputActionForCurrentState() {
@@ -81,7 +93,6 @@ export default class SpaceFighterMultiplayerController extends SpaceFighterSingl
                             ` ${this.stateManager.packetPeriodFrames} behind`);
         }
 
-
         this._launchNewProjectileSequence(this.getInitialDataForProjectiles.bind(this, offset));
     }
 
@@ -106,14 +117,15 @@ export default class SpaceFighterMultiplayerController extends SpaceFighterSingl
 
     _saveState() {
         this.prevStateIndex = (this.prevStateIndex + 1) % this.stateManager.packetPeriodFrames;
-        this.prevStates[this.prevStateIndex] = this._serializeState();
+        this.prevStates[this.prevStateIndex] = this._serializeState(this.stateManager.currentFrameIndex);
     }
 
-    _serializeState() {
+    _serializeState(frameIndex) {
         return {
+            frameIndex, // for debug purpose
             nz: this.gameObject.nz.clone(),
             position: this.gameObject.position.clone(),
-            matrix: this.gameObject.object3d.matrix
+            matrix: this.gameObject.object3d.matrix.clone()
         }
     }
 

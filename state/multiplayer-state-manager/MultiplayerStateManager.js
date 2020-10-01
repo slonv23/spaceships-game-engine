@@ -99,22 +99,31 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
             return;
         }
 
+        const actions = this.playerController.getImmediateActions();
         if (this.currentFrameIndex - this.lastInputGatheringFrame >= this.inputGatheringPeriodFrames) {
             this.lastInputGatheringFrame = this.currentFrameIndex;
             const inputAction = this.playerController.getInputActionForCurrentState();
+            actions.push(inputAction);
+        }
 
+        if (actions.length) {
             // player object's state is one packet period (window) ahead, because we don't use interpolation on it
             // here we add one packet period length to currentFrameIndex (which is index of current interpolated frame)
             const frameOffset = this.currentFrameIndex + this.packetPeriodFrames;
 
-            const objectAction = this.multiplayerService.scheduleObjectAction(inputAction, frameOffset);
+            for (const action of actions) {
+                const objectAction = this.multiplayerService.scheduleObjectAction(action, frameOffset);
 
-            // we should apply input action in the preceding "window" for player's object
-            // because simulation for it runs without interpolation
-            objectAction.frameIndex -= this.packetPeriodFrames;
-
-            this.logger.debug(`Input action will be applied on frame #${objectAction.frameIndex}`);
-            this.addObjectAction(this.playerObjectId, objectAction);
+                if (action instanceof SpaceFighterInput) {
+                    // we should apply input action in the preceding "window" for player's object
+                    // because simulation for it runs without interpolation
+                    objectAction.frameIndex -= this.packetPeriodFrames;
+                    this.addObjectAction(this.playerObjectId, objectAction);
+                    this.logger.debug(`Input action will be applied on frame #${objectAction.frameIndex}`);
+                } else {
+                    // interpolation is used for other actions
+                }
+            }
         }
     }
 
