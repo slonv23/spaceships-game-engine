@@ -66,6 +66,9 @@ export default class ProjectileSequenceController extends AbstractController {
             const direction = position.clone().sub(target).normalize();
             /** @type {DirectionalProjectile} */
             const projectile = this.createProjectile();
+            if (!this.projectiles.length) {
+                console.log(`First projectile position x=${projectile.position.x},y=${projectile.position.y},z=${projectile.position.z}`);
+            }
             projectile.velocity.z = -0.1; //-0.05;
             projectile.position.copy(position);
             projectile.changeDirection(direction);
