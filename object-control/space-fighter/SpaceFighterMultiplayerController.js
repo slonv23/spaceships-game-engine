@@ -95,14 +95,7 @@ export default class SpaceFighterMultiplayerController extends SpaceFighterSingl
     // eslint-disable-next-line no-unused-vars
     handleOpenFireAction(frameIndex, spaceFighterOpenFire) {
         this.shootingActionPending = false;
-        const offset = this.stateManager.currentFrameIndex - frameIndex;
-        if (offset > this.stateManager.packetPeriodFrames) {
-            throw new Error(`Received object action for frame #${frameIndex} at frame` +
-                            ` #${this.stateManager.currentFrameIndex} which is more than` +
-                            ` ${this.stateManager.packetPeriodFrames} behind`);
-        }
-
-        this._launchNewProjectileSequence(this.getInitialDataForProjectiles.bind(this, offset));
+        this._launchNewProjectileSequence(this.getInitialDataForProjectiles);
     }
 
     /**
@@ -114,8 +107,8 @@ export default class SpaceFighterMultiplayerController extends SpaceFighterSingl
         this.stopFiring();
     }
 
-    getInitialDataForProjectiles(timeOffsetFrames) {
-        let stateIndexToLaunchFrom = this.prevStateIndex - timeOffsetFrames;
+    getInitialDataForProjectiles = () => {
+        let stateIndexToLaunchFrom = this.prevStateIndex - this.stateManager.packetPeriodFrames + 1; // plus one because current frame is not yet saved
         const packetPeriodFrames = this.stateManager.packetPeriodFrames;
         // mod operator
         stateIndexToLaunchFrom = ((stateIndexToLaunchFrom % packetPeriodFrames) + packetPeriodFrames) % packetPeriodFrames;
@@ -131,7 +124,7 @@ export default class SpaceFighterMultiplayerController extends SpaceFighterSingl
         ];
 
         return {target, positions};
-    }
+    };
 
     _saveState() {
         this.prevStateIndex = (this.prevStateIndex + 1) % this.stateManager.packetPeriodFrames;

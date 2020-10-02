@@ -69,7 +69,7 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
         }
 
         if (this.latestWorldState) {
-            // TODO maybe add some lag tolerance, because jitter can decrease and increase compensating each other
+            // TODO maybe add some lag tolerance, because jitter decrease and increase can compensate each other
             // time to speed up, more recent state received
             this.logger.debug(`Switching to next state on new state received`);
             if (this.nextWorldState.frameIndex - this.currentFrameIndex > 1) {
@@ -119,7 +119,7 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
                     // because simulation for it runs without interpolation
                     objectAction.frameIndex -= this.packetPeriodFrames;
                     this.addObjectAction(this.playerObjectId, objectAction);
-                    this.logger.debug(`Input action will be applied on frame #${objectAction.frameIndex}`);
+                    //this.logger.debug(`Input action will be applied on frame #${objectAction.frameIndex}`);
                 } else {
                     // interpolation is used for other actions
                 }
