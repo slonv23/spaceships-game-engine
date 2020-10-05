@@ -126,6 +126,7 @@ export default class SpaceFighterBaseController extends AbstractObjectController
     }
 
     _launchNewProjectileSequence(initialDataResolver) {
+        console.log('frame index to launch from: ' + this.stateManager.currentFrameIndex);
         /** @type {ProjectileSequenceController} */
         const projectileSequenceController = this.projectileSequenceControllerFactory.create();
         projectileSequenceController.renderer = this.renderer;

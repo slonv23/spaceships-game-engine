@@ -113,6 +113,7 @@ export default class SpaceFighterMultiplayerController extends SpaceFighterSingl
         // mod operator
         stateIndexToLaunchFrom = ((stateIndexToLaunchFrom % packetPeriodFrames) + packetPeriodFrames) % packetPeriodFrames;
         const stateToLaunchProjectilesFrom = this.prevStates[stateIndexToLaunchFrom];
+        console.log('Launch projectile from state: ' + stateToLaunchProjectilesFrom.frameIndex);
 
         const target = stateToLaunchProjectilesFrom.nz.clone()
             .multiplyScalar(-SpaceFighterBaseController.distanceToAimingPoint)
