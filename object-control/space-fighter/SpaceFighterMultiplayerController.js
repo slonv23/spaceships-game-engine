@@ -43,9 +43,9 @@ export default class SpaceFighterMultiplayerController extends SpaceFighterSingl
     }
 
     update(delta) {
+        this._savePrevState();
         this.gameObject.update(delta);
         this.updateControlParams(delta);
-        this._saveState();
     }
 
     sync(actualObjectState, futureObjectState) {
@@ -126,9 +126,9 @@ export default class SpaceFighterMultiplayerController extends SpaceFighterSingl
         return {target, positions};
     };
 
-    _saveState() {
+    _savePrevState() {
         this.prevStateIndex = (this.prevStateIndex + 1) % this.stateManager.packetPeriodFrames;
-        this.prevStates[this.prevStateIndex] = this._serializeState(this.stateManager.currentFrameIndex);
+        this.prevStates[this.prevStateIndex] = this._serializeState(this.stateManager.currentFrameIndex - 1);
     }
 
     _serializeState(frameIndex) {
