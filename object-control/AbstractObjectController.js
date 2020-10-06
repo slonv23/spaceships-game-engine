@@ -33,6 +33,7 @@ export default class AbstractObjectController extends AbstractController {
     update(delta) {
         this.gameObject.update(delta);
         this.updateControlParams(delta);
+        console.log(this.stateManager.currentFrameIndex + ' -> ' + this.gameObject.position.x);
     }
 
     /**

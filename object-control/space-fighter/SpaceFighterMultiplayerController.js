@@ -62,6 +62,7 @@ export default class SpaceFighterMultiplayerController extends SpaceFighterSingl
         //this._savePrevState();
         this.gameObject.update(delta);
         this.updateControlParams(delta);
+        console.log((this.stateManager.currentFrameIndex + 120) + ' -> ' + this.gameObject.position.x);
         this._saveState();
     }
 
