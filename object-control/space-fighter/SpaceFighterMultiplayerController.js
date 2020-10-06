@@ -1,6 +1,7 @@
 /**
  * @typedef {import('three')} THREE
  * @typedef {import('../../state/multiplayer-state-manager/MultiplayerStateManager').default} MultiplayerStateManager
+ * @typedef {import('../../frontend/Renderer').default} Renderer
  * @typedef {import('../../frontend/input/Mouse').default} Mouse
  * @typedef {import('../../frontend/input/Keyboard').default} Keyboard
  */
@@ -18,12 +19,27 @@ import SpaceFighterStopFire from "../../net/models/space-fighter/SpaceFighterSto
  */
 export default class SpaceFighterMultiplayerController extends SpaceFighterSingleplayerController {
 
+    /**
+     * Ideally we should have interfaces here, e.g. PreservesState interface if controller need to save all previous states
+     * but js not support interfaces
+     * */
+    static PRESERVES_STATE = true;
+
     prevStates = Array(this.stateManager.packetPeriodFrames);
     prevStateIndex = -1;
 
     rollAnglePrev = 0;
 
     shootingActionPending = false;
+
+    /**
+     * @param {number} objectId
+     * @param {Renderer} [renderer]
+     */
+    init(objectId, renderer) {
+        super.init(objectId, renderer);
+        this._saveState();
+    }
 
     /**
      * @param {number} delta
@@ -43,13 +59,15 @@ export default class SpaceFighterMultiplayerController extends SpaceFighterSingl
     }
 
     update(delta) {
-        this._savePrevState();
+        //this._savePrevState();
         this.gameObject.update(delta);
         this.updateControlParams(delta);
+        this._saveState();
     }
 
     sync(actualObjectState, futureObjectState) {
         this._sync(futureObjectState);
+        this._saveState();
     }
 
     getImmediateActions() {
@@ -58,6 +76,7 @@ export default class SpaceFighterMultiplayerController extends SpaceFighterSingl
         }
 
         const actions = [];
+        // TODO sometimes packets are dropped, handle this case
         if (!this.activeProjectileSequence && this.mouse.lmbPressed) {
             this.shootingActionPending = true;
             actions.push(new SpaceFighterOpenFire());
@@ -113,7 +132,7 @@ export default class SpaceFighterMultiplayerController extends SpaceFighterSingl
         // mod operator
         stateIndexToLaunchFrom = ((stateIndexToLaunchFrom % packetPeriodFrames) + packetPeriodFrames) % packetPeriodFrames;
         const stateToLaunchProjectilesFrom = this.prevStates[stateIndexToLaunchFrom];
-        console.log('Launch projectile from state: ' + stateToLaunchProjectilesFrom.frameIndex);
+        //console.log('Launch projectile from state: ' + stateToLaunchProjectilesFrom.frameIndex);
 
         const target = stateToLaunchProjectilesFrom.nz.clone()
             .multiplyScalar(-SpaceFighterBaseController.distanceToAimingPoint)
@@ -127,9 +146,14 @@ export default class SpaceFighterMultiplayerController extends SpaceFighterSingl
         return {target, positions};
     };
 
-    _savePrevState() {
+    /*_savePrevState() {
         this.prevStateIndex = (this.prevStateIndex + 1) % this.stateManager.packetPeriodFrames;
         this.prevStates[this.prevStateIndex] = this._serializeState(this.stateManager.currentFrameIndex - 1);
+    }*/
+
+    _saveState() {
+        this.prevStateIndex = (this.prevStateIndex + 1) % this.stateManager.packetPeriodFrames;
+        this.prevStates[this.prevStateIndex] = this._serializeState(this.stateManager.currentFrameIndex);
     }
 
     _serializeState(frameIndex) {

@@ -69,29 +69,10 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
         }
 
         if (this.latestWorldState) {
-            // TODO maybe add some lag tolerance, because jitter decrease and increase can compensate each other
-            // time to speed up, more recent state received
-            this.logger.debug(`Switching to next state on new state received`);
-            if (this.nextWorldState.frameIndex - this.currentFrameIndex > 1) {
-                const framesOmitted = this.nextWorldState.frameIndex - this.currentFrameIndex - 1;
-                this.logger.debug(`${framesOmitted} frame(s) will be omitted`);
-            }
-
-            if (this.ticksWaiting) {
-                this.logger.debug(`No update was made over ${this.ticksWaiting} ticks`);
-                this.ticksWaiting = 0;
-            }
-
-            this.currentFrameIndex = this.nextFrameIndex;
-            this._syncWorldState(this.nextWorldState, this.latestWorldState);
-
-            this.nextWorldState = this.latestWorldState;
-            this.nextFrameIndex = this.latestFrameIndex;
-            this.latestWorldState = null;
-            this._cleanup();
+            this._switchToNewState(delta);
         } else if ((this.currentFrameIndex + 1) < this.nextFrameIndex) {
-            this._applyInputActionsAndUpdateObjects(delta);
             this.currentFrameIndex++;
+            this._updateControllers(this.initializedControllers, delta);
         } else {
             // this.currentFrameIndex === this.nextFrameIndex
             // no more data about world state available, not possible to continue interpolation
@@ -99,6 +80,46 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
             return;
         }
 
+        this._dispatchActions();
+    }
+
+    _switchToNewState(delta) {
+        // TODO maybe add some lag tolerance, because jitter decrease and increase can compensate each other
+        // time to speed up, more recent state received
+        this.logger.debug(`Switching to next state on new state received`);
+
+        const framesBtwCurrentAndNextState = this.nextFrameIndex - this.currentFrameIndex;
+        if (framesBtwCurrentAndNextState > 1 && this.currentFrameIndex !== 0) {
+            // e.g. if current state frame index is 98 and next state frame index is 100 we omit 1 frame
+            let framesOmitted = framesBtwCurrentAndNextState - 1;
+            this.logger.debug(`${framesOmitted} frame(s) will be omitted`);
+
+            // calculate states in between
+            const controllersWhichPreserveState = this.initializedControllers.filter(controller => {
+                return controller.constructor.PRESERVES_STATE;
+            });
+            do {
+                this.currentFrameIndex++;
+                this._updateControllers(controllersWhichPreserveState, delta);
+                framesOmitted--;
+            } while (framesOmitted > 0);
+        }
+
+        if (this.ticksWaiting) {
+            this.logger.debug(`No update was made over ${this.ticksWaiting} ticks`);
+            this.ticksWaiting = 0;
+        }
+
+        this.currentFrameIndex = this.nextFrameIndex;
+        this._syncWorldState(this.nextWorldState, this.latestWorldState);
+
+        this.nextWorldState = this.latestWorldState;
+        this.nextFrameIndex = this.latestFrameIndex;
+        this.latestWorldState = null;
+        this._cleanup();
+    }
+
+    _dispatchActions() {
         const actions = this.playerController.getImmediateActions();
         if (this.currentFrameIndex - this.lastInputGatheringFrame >= this.inputGatheringPeriodFrames) {
             this.lastInputGatheringFrame = this.currentFrameIndex;

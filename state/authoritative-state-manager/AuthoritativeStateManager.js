@@ -47,25 +47,29 @@ export default class AuthoritativeStateManager extends Emitter {
 
     update(delta) {
         this.currentFrameIndex++;
-        this._applyInputActionsAndUpdateObjects(delta);
+        this._updateControllers(this.initializedControllers, delta);
         this._cleanup();
     }
 
-    _applyInputActionsAndUpdateObjects(delta) {
+    _updateControllers(controllers, delta) {
+        this._applyInputActionsAndUpdateObjects(controllers, delta);
+    }
+
+    _applyInputActionsAndUpdateObjects(controllers, delta) {
         const processedActions = [];
 
-        for (let i = 0; i < this.initializedControllersCount; i++) {
+        for (let i = 0, controllersCount = controllers.length; i < controllersCount; i++) {
             // TODO make separate lists for object controllers
-            if (this.initializedControllers[i] instanceof AbstractObjectController) {
-                const id = this.initializedControllers[i].gameObject.id;
+            if (controllers[i] instanceof AbstractObjectController) {
+                const id = controllers[i].gameObject.id;
                 const inputAction = this.objectActionsByObjectId[id][this.currentFrameIndex];
                 if (inputAction) {
-                    this.initializedControllers[i].processInput(inputAction);
+                    controllers[i].processInput(inputAction);
                     processedActions.push(inputAction);
                 }
             }
 
-            this.initializedControllers[i].update(delta);
+            controllers[i].update(delta);
         }
 
         this.dispatchEvent("actions-processed", processedActions);
