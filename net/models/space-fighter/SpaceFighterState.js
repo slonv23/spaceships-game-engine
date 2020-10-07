@@ -30,6 +30,8 @@ export default class SpaceFighterState extends AbstractModel {
     controlRotQuaternion;
     /** @type {boolean} */
     shooting;
+    /** @type {number} */
+    health;
 
     /** @type {ObjectAction[]} */
     actions;

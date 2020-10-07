@@ -8,10 +8,14 @@ import * as THREE from "three";
 import AbstractController from "../AbstractController";
 import DirectionalProjectile from "../../physics/object/DirectionalProjectile";
 import {binarySearchClosestInUniqueArray} from "../../util/array";
+import Hit from "./Hit";
 
 const FRAMES_BTW_SHOOTS = 10;
 
 export default class ProjectileSequenceController extends AbstractController {
+
+    /** @type {number} */
+    projectileSeqId;
 
     /** @type {DirectionalProjectile[]} */
     projectiles = []; // TODO create projectiles pool and re-use them instead of removing
@@ -112,24 +116,33 @@ export default class ProjectileSequenceController extends AbstractController {
         this.releaser = gameObject;
     }
 
-    findAndHandleHits() {
+    /**
+     * @returns {Hit[]}
+     */
+    findHitsAndRemoveIntersectedProjectiles() {
         if (!this.activeProjectilesCount) {
-            return;
+            return [];
         }
 
+        const hits = [];
         let minDistanceToObjects = Infinity;
         for (const objectId in this.stateManager.controllersByObjectId) {
             const gameObjectController = this.stateManager.controllersByObjectId[objectId];
             if (objectId !== this.releaser.id.toString()) {
-                const hits = this.findHitsWithObject(gameObjectController.gameObject);
-                for (const projectile of hits) {
-                    gameObjectController.health = Math.max(0, gameObjectController.health - 10);
+                const projectiles = this.findProjectilesIntersectedWithObject(gameObjectController.gameObject);
+                if (!projectiles.length) {
+                    continue;
+                }
+
+                for (const projectile of projectiles) {
+                    //gameObjectController.health = Math.max(0, gameObjectController.health - 10);
                     this._removeProjectile(projectile);
                 }
+                hits.push(new Hit(gameObjectController, ...projectiles.map(projectile => projectile.index)));
             }
 
             if (!this.activeProjectilesCount) {
-                return;
+                return hits;
             }
 
             const dist = this._distFromObjectToFirstProjectile(gameObjectController.gameObject);
@@ -141,12 +154,14 @@ export default class ProjectileSequenceController extends AbstractController {
         if (minDistanceToObjects > this.distanceToObjectLimitSq) {
             this._removeProjectile(this.projectiles[this.startIndex]);
         }
+
+        return hits;
     }
 
     /**
      * @param {AbstractObject} gameObject
      */
-    findHitsWithObject(gameObject) {
+    findProjectilesIntersectedWithObject(gameObject) {
         const firstPair = [this.projectiles[this.startIndex]];
         if (this.startIndex % 2 === 0) {
             firstPair.push(this.projectiles[this.startIndex+1]);
@@ -190,10 +205,7 @@ export default class ProjectileSequenceController extends AbstractController {
 
         const closestProjectile = binarySearchClosestInUniqueArray(
             projectilesToCheck,
-            projectile => {
-                projectile.position.distanceToSquared(gameObject.position)
-                console.log(projectilesToCheck);
-            },
+            projectile => projectile.position.distanceToSquared(gameObject.position),
             0,
             projectilesToCheck.length - 1
         );

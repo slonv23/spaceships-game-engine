@@ -1,2 +1,2 @@
-* Rename direction to 'controllers' (maybe add 'object-control' directory as subdirectory)
+* Rename directory to 'controllers' (maybe add 'object-control' directory as subdirectory)
 * Place "specific" controllers outside of engine and leave only "base" ones

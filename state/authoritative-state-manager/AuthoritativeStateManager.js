@@ -145,9 +145,13 @@ export default class AuthoritativeStateManager extends Emitter {
         return controller;
     }
 
-    addObjectAction(objectId, action) {
+    scheduleObjectAction(objectId, action) {
         const actionFrameIndex = action.frameIndex <= this.currentFrameIndex ? this.currentFrameIndex + 1 : action.frameIndex;
         this.objectActionsByObjectId[objectId][actionFrameIndex] = action;
+    }
+
+    addObjectAction(objectId, action) {
+        this.objectActionsByObjectId[objectId][this.currentFrameIndex] = action;
     }
 
     _cleanup() {

@@ -94,6 +94,15 @@ export default class SpaceFighterBaseController extends AbstractObjectController
         return new SpaceFighter(objectId, model);
     }
 
+    update(delta) {
+        super.update(delta);
+        this.updateProjectiles(delta);
+        this.afterUpdate();
+    }
+
+    afterUpdate() {
+    }
+
     /**
      * @param {number} delta
      */
@@ -121,15 +130,11 @@ export default class SpaceFighterBaseController extends AbstractObjectController
             .add(this.gameObject.position);
     }
 
-    launchProjectiles() {
-        return this._launchNewProjectileSequence(this.getInitialDataForProjectiles);
-    }
-
-    _launchNewProjectileSequence(initialDataResolver) {
-        console.log('frame index to launch from: ' + this.stateManager.currentFrameIndex);
+    _launchNewProjectileSequence(projectileSeqId, initialDataResolver) {
         /** @type {ProjectileSequenceController} */
         const projectileSequenceController = this.projectileSequenceControllerFactory.create();
         projectileSequenceController.renderer = this.renderer;
+        projectileSequenceController.projectileSeqId = projectileSeqId;
         projectileSequenceController.setReleaser(this.gameObject);
         projectileSequenceController.setInitialDataResolver(initialDataResolver);
         // Object.defineProperty(projectileSequenceController, 'aimingPoint', {get: this.getAimingPoint});
@@ -153,15 +158,11 @@ export default class SpaceFighterBaseController extends AbstractObjectController
         for (let i = 0; i < this.projectileSequences.length; i++) {
             const projectileSequence = this.projectileSequences[i];
             projectileSequence.update(delta);
-            projectileSequence.findAndHandleHits();
+            //projectileSequence.findAndHandleHits();
             if (projectileSequence.shouldBeRemoved()) {
                 this.projectileSequences.splice(i, 1);
             }
         }
-    }
-
-    findHits() {
-
     }
 
     _updateControlsQuaternion(delta) {

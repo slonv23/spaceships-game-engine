@@ -9,6 +9,7 @@
  */
 
 import SpaceFighterBaseController from "./SpaceFighterBaseController";
+import SpaceFighterGotHit from "../../net/models/space-fighter/SpaceFighterGotHit";
 
 /**
  * @mixin SyncStateMixin
@@ -89,6 +90,35 @@ export const syncStateMixin = {
         this.wYawTarget = inputAction.yaw;
         this.wPitchTarget = inputAction.pitch;
         this.rotationSpeed = inputAction.rotationSpeed;
+    },
+
+};
+
+/**
+ * @mixin HandleProjectileHitsMixin
+ * @this RemoteSpaceFighterController|SpaceFighterMultiplayerController
+ */
+export const handleProjectileHitsMixin = {
+
+    afterUpdate() {
+        this.processHits();
+    },
+
+    processHits() {
+        for (let i = 0; i < this.projectileSequences.length; i++) {
+            const projectileSequence = this.projectileSequences[i];
+            const hits = projectileSequence.findHitsAndRemoveIntersectedProjectiles();
+            for (const hit of hits) {
+                const intersectedProjectilesCount = !!hit.projectileIndex1 + !!hit.projectileIndex2;
+                hit.gameObjectController.health = Math.max(0, hit.gameObjectController.health - 10 * intersectedProjectilesCount);
+
+                const spaceFighterGotHitAction = new SpaceFighterGotHit();
+                spaceFighterGotHitAction.projectileSeqId = projectileSequence.projectileSeqId;
+                spaceFighterGotHitAction.projectileIndex1 = hit.projectileIndex1;
+                spaceFighterGotHitAction.projectileIndex2 = hit.projectileIndex2;
+                this.stateManager.addObjectAction(hit.gameObjectController.gameObject.id, spaceFighterGotHitAction);
+            }
+        }
     },
 
 };

@@ -49,20 +49,10 @@ export default class SpaceFighterMultiplayerController extends SpaceFighterSingl
         this._calculateRotationDirection();
         this._calculateNormalToRotationDirection(); // used by camera manager
         this._updateAngularVelocities();
-
-        this.updateProjectiles(delta);
-        /*if (!this.activeProjectileSequence && this.mouse.lmbPressed) {
-            this.launchProjectiles();
-        } else if (this.activeProjectileSequence && !this.mouse.lmbPressed)  {
-            this.stopFiring();
-        }*/
     }
 
     update(delta) {
-        //this._savePrevState();
-        this.gameObject.update(delta);
-        this.updateControlParams(delta);
-        console.log((this.stateManager.currentFrameIndex + 120) + ' -> ' + this.gameObject.position.x);
+        super.update(delta);
         this._saveState();
     }
 
@@ -112,10 +102,9 @@ export default class SpaceFighterMultiplayerController extends SpaceFighterSingl
      * @param {number} frameIndex
      * @param {SpaceFighterOpenFire} spaceFighterOpenFire
      */
-    // eslint-disable-next-line no-unused-vars
     handleOpenFireAction(frameIndex, spaceFighterOpenFire) {
         this.shootingActionPending = false;
-        this._launchNewProjectileSequence(this.getInitialDataForProjectiles);
+        this._launchNewProjectileSequence(spaceFighterOpenFire.projectileSeqId, this.getInitialDataForProjectiles);
     }
 
     /**

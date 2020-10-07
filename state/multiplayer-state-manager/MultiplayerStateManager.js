@@ -139,7 +139,7 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
                     // we should apply input action in the preceding "window" for player's object
                     // because simulation for it runs without interpolation
                     objectAction.frameIndex -= this.packetPeriodFrames;
-                    this.addObjectAction(this.playerObjectId, objectAction);
+                    this.scheduleObjectAction(this.playerObjectId, objectAction);
                     //this.logger.debug(`Input action will be applied on frame #${objectAction.frameIndex}`);
                 } else {
                     // interpolation is used for other actions
@@ -238,12 +238,12 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
             }
 
             for (let j = 0, actionsCount = actions.length; j < actionsCount; j++) {
-                this.addObjectAction(objectState.id, actions[j]);
+                this.scheduleObjectAction(objectState.id, actions[j]);
             }
         }
     };
 
-    addObjectAction(objectId, objectAction) {
+    scheduleObjectAction(objectId, objectAction) {
         this.objectActionsByObjectId[objectId][objectAction.frameIndex] = objectAction;
     }
 
