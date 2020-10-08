@@ -93,6 +93,7 @@ export default class SpaceFighterMultiplayerController extends SpaceFighterSingl
         inputAction.pitch = wPitchTarget;
         inputAction.yaw = wYawTarget;
         inputAction.rollAngle = targetRollAngleWithCorrection;
+        //inputAction.rollAngle = -Math.PI / 6 - currentSideAngle;
         inputAction.rotationSpeed = this._determineRotationSpeed();
 
         return inputAction;

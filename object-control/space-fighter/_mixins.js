@@ -6,6 +6,7 @@
  * @typedef {import('../../net/models/space-fighter/SpaceFighterState').default} SpaceFighterState
  * @typedef {import('../../net/models/space-fighter/SpaceFighterInput').default} SpaceFighterInput
  * @typedef {import('../../net/models/space-fighter/SpaceFighterStopFire').default} SpaceFighterStopFire
+ * @typedef {import('../../net/models/space-fighter/SpaceFighterGotHit').default} SpaceFighterGotHit
  */
 
 import SpaceFighterBaseController from "./SpaceFighterBaseController";
@@ -24,6 +25,7 @@ export const syncStateMixin = {
         const spaceFighterState = objectState.spaceFighterState;
         this._syncObject(spaceFighterState);
 
+        //this.health = spaceFighterState.health;
         this.controlsQuaternion.copy(spaceFighterState.controlQuaternion);
         this.controlsRotQuaternion.copy(spaceFighterState.controlRotQuaternion);
         this.controlZInWorldCoords.set(0, 0, 1).applyQuaternion(this.controlsQuaternion);
@@ -60,6 +62,7 @@ export const syncStateMixin = {
         this.gameObject.velocity.z = objectState.speed;
         this.gameObject.angularVelocity.copy(objectState.angularVelocity);
         //this.gameObject.angularAcceleration.copy(objectState.angularAcceleration);
+        console.log('Roll angles diff: ' + (this.gameObject.rollAngleBtwCurrentAndTargetOrientation - objectState.rollAngleBtwCurrentAndTargetOrientation))
         this.gameObject.rollAngleBtwCurrentAndTargetOrientation = objectState.rollAngleBtwCurrentAndTargetOrientation;
 
         this.gameObject.updateTransformationMatrix();
@@ -77,6 +80,8 @@ export const syncStateMixin = {
             // eslint-disable-next-line no-empty
         } else if (objectAction.spaceFighterStopFire) {
             this.handleStopFireAction(objectAction.spaceFighterStopFire);
+        } else if (objectAction.spaceFighterGotHit) {
+            this.handleGotHitAction(objectAction.spaceFighterGotHit);
         }
     },
 
@@ -91,6 +96,26 @@ export const syncStateMixin = {
         this.wPitchTarget = inputAction.pitch;
         this.rotationSpeed = inputAction.rotationSpeed;
     },
+
+    /**
+     * @param {SpaceFighterGotHit} spaceFighterGotHit
+     */
+    handleGotHitAction(spaceFighterGotHit) {
+        const projectileSequence = SpaceFighterBaseController.projectileSequencesById[spaceFighterGotHit.projectileSeqId];
+        if (projectileSequence) {
+            let deltaHealth = 10;
+            projectileSequence.removeProjectileByIndex(spaceFighterGotHit.projectileIndex1);
+            console.log('Remove projectile by index ' + spaceFighterGotHit.projectileIndex1);
+            if (spaceFighterGotHit.projectileIndex2) {
+                projectileSequence.removeProjectileByIndex(spaceFighterGotHit.projectileIndex2);
+                console.log('Remove projectile by index' + spaceFighterGotHit.projectileIndex2);
+                deltaHealth = 20;
+            }
+
+            const gameObjectController = this.stateManager.controllersByObjectId[projectileSequence.releaser.id];
+            this.stateManager.controllersByObjectId[projectileSequence.releaser.id].health = Math.max(0, gameObjectController.health - deltaHealth);
+        }
+    }
 
 };
 
@@ -109,6 +134,7 @@ export const handleProjectileHitsMixin = {
             const projectileSequence = this.projectileSequences[i];
             const hits = projectileSequence.findHitsAndRemoveIntersectedProjectiles();
             for (const hit of hits) {
+                console.log('Got hit!!!');
                 const intersectedProjectilesCount = !!hit.projectileIndex1 + !!hit.projectileIndex2;
                 hit.gameObjectController.health = Math.max(0, hit.gameObjectController.health - 10 * intersectedProjectilesCount);
 

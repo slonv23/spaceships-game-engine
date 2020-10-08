@@ -27,6 +27,7 @@ export default class RemoteSpaceFighterController extends SpaceFighterBaseContro
             // executed on server to generate unique projectile seq id
             spaceFighterOpenFire.projectileSeqId = ++RemoteSpaceFighterController.prevProjectileSeqId;
         }
+        console.log('Launch new projectile seq!');
         this._launchNewProjectileSequence(spaceFighterOpenFire.projectileSeqId, this.getInitialDataForProjectiles);
     }
 

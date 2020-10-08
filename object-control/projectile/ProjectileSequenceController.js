@@ -70,7 +70,7 @@ export default class ProjectileSequenceController extends AbstractController {
             const direction = position.clone().sub(target).normalize();
             /** @type {DirectionalProjectile} */
             const projectile = this.createProjectile();
-            projectile.velocity.z = -0.1; //-0.05;
+            projectile.velocity.z = -0.05; // -0.1 -0.05;
             projectile.position.copy(position);
             projectile.changeDirection(direction);
             if (!this.projectiles.length) {
@@ -240,13 +240,19 @@ export default class ProjectileSequenceController extends AbstractController {
         }
     }
 
+    removeProjectileByIndex(index) {
+        this._removeProjectile(this.projectiles[index]);
+    }
+
     /**
      * @param {DirectionalProjectile} projectile
      * @private
      */
     _removeProjectile(projectile) {
         this.projectiles[projectile.index] = null;
-        this.renderer.scene.remove(projectile.object3d);
+        if (this.renderer) {
+            this.renderer.scene.remove(projectile.object3d);
+        }
         this.activeProjectilesCount--;
         if (projectile.index === this.startIndex) {
             while (this.startIndex < this.projectiles.length && !this.projectiles[this.startIndex]) {

@@ -13,6 +13,8 @@ import SpaceFighter from "../../physics/object/SpaceFighter";
 
 export default class SpaceFighterBaseController extends AbstractObjectController {
 
+    static projectileSequencesById = {};
+
     /** @type {AbstractLogger} */
     logger;
     /** @type {ComponentFactory} */
@@ -141,6 +143,7 @@ export default class SpaceFighterBaseController extends AbstractObjectController
 
         this.activeProjectileSequence = projectileSequenceController;
         this.projectileSequences.push(projectileSequenceController);
+        SpaceFighterBaseController.projectileSequencesById[projectileSeqId] = projectileSequenceController;
 
         projectileSequenceController.launch();
         return projectileSequenceController;
@@ -161,6 +164,7 @@ export default class SpaceFighterBaseController extends AbstractObjectController
             //projectileSequence.findAndHandleHits();
             if (projectileSequence.shouldBeRemoved()) {
                 this.projectileSequences.splice(i, 1);
+                delete SpaceFighterBaseController.projectileSequencesById[projectileSequence.projectileSeqId];
             }
         }
     }
