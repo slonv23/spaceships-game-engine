@@ -86,7 +86,7 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
     _switchToNewState(delta) {
         // TODO maybe add some lag tolerance, because jitter decrease and increase can compensate each other
         // time to speed up, more recent state received
-        this.logger.debug(`Switching to next state on new state received`);
+        // this.logger.debug(`Switching to next state on new state received`);
 
         const framesBtwCurrentAndNextState = this.nextFrameIndex - this.currentFrameIndex;
         if (framesBtwCurrentAndNextState > 1 && this.currentFrameIndex !== 0) {

@@ -32,6 +32,8 @@ export default class SpaceFighterMultiplayerController extends SpaceFighterSingl
 
     shootingActionPending = false;
 
+    hasUnprocessedInputAction = false;
+
     /**
      * @param {number} objectId
      * @param {Renderer} [renderer]
@@ -80,6 +82,10 @@ export default class SpaceFighterMultiplayerController extends SpaceFighterSingl
     }
 
     getInputActionForCurrentState() {
+        if (this.hasUnprocessedInputAction) {
+            this.logger.error('Cannot create new input action because unprocessed input action exist');
+        }
+        this.hasUnprocessedInputAction = true;
         const mousePos = this._calcMousePosInDimlessUnits();
         const wPitchTarget =  -mousePos[1] * SpaceFighter.angularVelocityMax.y;
         const wYawTarget = mousePos[0] * SpaceFighter.angularVelocityMax.x;
@@ -97,6 +103,14 @@ export default class SpaceFighterMultiplayerController extends SpaceFighterSingl
         inputAction.rotationSpeed = this._determineRotationSpeed();
 
         return inputAction;
+    }
+
+    /**
+     * @param {SpaceFighterInput} inputAction
+     */
+    handleInputAction(inputAction) {
+        this.applyInputAction(inputAction);
+        this.hasUnprocessedInputAction = false;
     }
 
     /**
@@ -136,11 +150,6 @@ export default class SpaceFighterMultiplayerController extends SpaceFighterSingl
 
         return {target, positions};
     };
-
-    /*_savePrevState() {
-        this.prevStateIndex = (this.prevStateIndex + 1) % this.stateManager.packetPeriodFrames;
-        this.prevStates[this.prevStateIndex] = this._serializeState(this.stateManager.currentFrameIndex - 1);
-    }*/
 
     _saveState() {
         this.prevStateIndex = (this.prevStateIndex + 1) % this.stateManager.packetPeriodFrames;

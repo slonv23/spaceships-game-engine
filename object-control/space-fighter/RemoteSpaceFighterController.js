@@ -2,6 +2,7 @@
  * @typedef {import('three')} THREE
  * @typedef {import('../../net/models/space-fighter/SpaceFighterStopFire').default} SpaceFighterStopFire
  * @typedef {import('../../net/models/space-fighter/SpaceFighterOpenFire').default} SpaceFighterOpenFire
+ * @typedef {import('../../net/models/space-fighter/SpaceFighterInput').default} SpaceFighterInput
  */
 
 import SpaceFighterBaseController from "./SpaceFighterBaseController";
@@ -36,6 +37,13 @@ export default class RemoteSpaceFighterController extends SpaceFighterBaseContro
      */
     handleStopFireAction(stopFireAction) {
         this.stopFiring();
+    }
+
+    /**
+     * @param {SpaceFighterInput} inputAction
+     */
+    handleInputAction(inputAction) {
+        this.applyInputAction(inputAction);
     }
 
 }

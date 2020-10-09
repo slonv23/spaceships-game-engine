@@ -62,7 +62,6 @@ export const syncStateMixin = {
         this.gameObject.velocity.z = objectState.speed;
         this.gameObject.angularVelocity.copy(objectState.angularVelocity);
         //this.gameObject.angularAcceleration.copy(objectState.angularAcceleration);
-        console.log('Roll angles diff: ' + (this.gameObject.rollAngleBtwCurrentAndTargetOrientation - objectState.rollAngleBtwCurrentAndTargetOrientation))
         this.gameObject.rollAngleBtwCurrentAndTargetOrientation = objectState.rollAngleBtwCurrentAndTargetOrientation;
 
         this.gameObject.updateTransformationMatrix();
@@ -88,7 +87,7 @@ export const syncStateMixin = {
     /**
      * @param {SpaceFighterInput} inputAction
      */
-    handleInputAction(inputAction) {
+    applyInputAction(inputAction) {
         this.gameObject.rollAngleBtwCurrentAndTargetOrientation += inputAction.rollAngle;
         // inputAction.rollAngle - this.rollAnglePrev //;this.rollAnglePrev - inputAction.rollAngle;
         this.rollAnglePrev = inputAction.rollAngle;
