@@ -10,6 +10,7 @@ import SpawnRequest from '../../models/SpawnRequest';
 import Emitter from "../../../util/Emitter";
 import {unixTimestampMs} from "../../../util/date";
 import ObjectAction from "../../models/ObjectAction";
+import RequestAck from "./RequestAck";
 
 export default class MultiplayerService extends Emitter {
 
@@ -26,6 +27,11 @@ export default class MultiplayerService extends Emitter {
     /** @type {number} */
     frameLengthMs;
 
+    /**
+     * @type {object.<string, RequestAck>}
+     * @private
+     */
+    _pendingAcknowledgements;
     /**
      * @type {Function}
      * @private
@@ -82,6 +88,7 @@ export default class MultiplayerService extends Emitter {
         objectAction[objectAction.action] = specificAction;
 
         this.networkClient.sendMessage(this._buildMessage(objectAction, true));
+        //this._pendingAcknowledgements[] =
 
         return objectAction;
     }
