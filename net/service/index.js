@@ -1,4 +1,4 @@
 import {diContainer} from '../../globals';
-import MultiplayerService from "./MultiplayerService";
+import MultiplayerService from "./multiplayer-service/MultiplayerService";
 
 diContainer.registerClass("multiplayerService", MultiplayerService);

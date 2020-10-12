@@ -4,7 +4,7 @@
  * @typedef {import('../../object-control/space-fighter/SpaceFighterMultiplayerController').default} SpaceFighterMultiplayerController
  * @typedef {import('../../net/models/WorldState').default} WorldState
  * @typedef {import('../../net/models/ObjectState').default} SpaceFighterState
- * @typedef {import('../../net/service/MultiplayerService').default} MultiplayerService
+ * @typedef {import('../../net/service/multiplayer-service/MultiplayerService').default} MultiplayerService
  * @typedef {import('../../asset-management/AssetManager').default} AssetManager
  * @typedef {import('../../logging/AbstractLogger').default} AbstractLogger
  * @typedef {import('di-container-js').default} DiContainer

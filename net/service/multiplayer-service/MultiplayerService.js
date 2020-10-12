@@ -1,15 +1,15 @@
 /**
- * @typedef {import('../client/AbstractNetworkClient').default} AbstractNetworkClient
- * @typedef {import('../format/MessageSerializerDeserializer').default} MessageSerializerDeserializer
+ * @typedef {import('../../client/AbstractNetworkClient').default} AbstractNetworkClient
+ * @typedef {import('../../format/MessageSerializerDeserializer').default} MessageSerializerDeserializer
  * @typedef {import('di-container-js').default} DiContainer
- * @typedef {import('../models/SpawnResponse').default} SpawnResponse
- * @typedef {import('../models/WorldState').default} WorldState
- * @typedef {import('../models/AbstractModel').default} AbstractModel
+ * @typedef {import('../../models/SpawnResponse').default} SpawnResponse
+ * @typedef {import('../../models/WorldState').default} WorldState
+ * @typedef {import('../../models/AbstractModel').default} AbstractModel
  */
-import SpawnRequest from '../models/SpawnRequest';
-import Emitter from "../../util/Emitter";
-import {unixTimestampMs} from "../../util/date";
-import ObjectAction from "../models/ObjectAction";
+import SpawnRequest from '../../models/SpawnRequest';
+import Emitter from "../../../util/Emitter";
+import {unixTimestampMs} from "../../../util/date";
+import ObjectAction from "../../models/ObjectAction";
 
 export default class MultiplayerService extends Emitter {
 
@@ -75,7 +75,6 @@ export default class MultiplayerService extends Emitter {
     scheduleObjectAction(specificAction, currentFrameIndex) {
         const halfRttFramesLength = Math.ceil((this.ping / 2) / this.frameLengthMs); // half of rtt represented in number of frames
         const frameIndex = currentFrameIndex + halfRttFramesLength + 1; // + 10; // + N frames to make prediction more reliable
-        console.log('halfRttFramesLength: ' + halfRttFramesLength)
 
         const objectAction = new ObjectAction();
         objectAction.action = this.messageSerializerDeserializer.getFieldNameInsideOneOfForModel(specificAction);
