@@ -27,16 +27,12 @@ export default class MultiplayerService extends Emitter {
     /** @type {number} */
     frameLengthMs;
 
-    /**
-     * @type {object.<string, RequestAck>}
-     * @private
-     */
-    _pendingAcknowledgements;
-    /**
-     * @type {Function}
-     * @private
-     */
+    /** @type {object.<number, RequestAck>} */
+    _pendingAcknowledgements = {};
+    /** @type {Function} */
     _onSpawned;
+    /** @type {number} */
+    _nextRequestId = 0;
 
     /**
      * @param {DiContainer} diContainer
@@ -87,16 +83,21 @@ export default class MultiplayerService extends Emitter {
         objectAction.frameIndex = frameIndex;
         objectAction[objectAction.action] = specificAction;
 
-        this.networkClient.sendMessage(this._buildMessage(objectAction, true));
-        //this._pendingAcknowledgements[] =
+        this.networkClient.sendMessage(this._buildMessage(objectAction, true, this._nextRequestId));
+        const timestamp = unixTimestampMs();
+        const markUnacknowledgedAtTimestamp = timestamp + 2 * this.ping;
+        this._pendingAcknowledgements[this._nextRequestId] = new RequestAck(this._nextRequestId, timestamp, markUnacknowledgedAtTimestamp);
+        this._nextRequestId++;
 
         return objectAction;
     }
 
-    _buildMessage(data, ack = false) {
+    _buildMessage(data, ack = false, requestId = 0) {
         const wrapperProps = {};
         if (ack) {
+            console.log('Send message ' + requestId + ' with ack');
             wrapperProps.requestSentTimestamp = unixTimestampMs();
+            wrapperProps.requestId = requestId;
         }
         return this.messageSerializerDeserializer.serializeRequest(data, wrapperProps);
     }
@@ -111,6 +112,7 @@ export default class MultiplayerService extends Emitter {
                 this._onSpawned && this._onSpawned(this.assignedObjectId);
                 break;
             } else if (messageName === "RequestAck") {
+                console.log('Received message ack ' + messages[i]._requestId);
                 this.ping = unixTimestampMs() - messages[i].requestSentTimestamp;
                 this.dispatchEvent("ping", this.ping);
                 break;
@@ -129,6 +131,7 @@ export default class MultiplayerService extends Emitter {
                     this.dispatchEvent("worldStateUpdate", message);
                     break;
                 case "RequestAck":
+                    console.log('Received message ack ' + messages[i]._requestId);
                     this.ping = unixTimestampMs() - messages[i].requestSentTimestamp;
                     this.dispatchEvent("ping", this.ping);
                     break;
