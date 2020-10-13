@@ -24,6 +24,7 @@ export default class RemoteSpaceFighterController extends SpaceFighterBaseContro
      * @param {SpaceFighterOpenFire} spaceFighterOpenFire
      */
     handleOpenFireAction(frameIndex, spaceFighterOpenFire) {
+        console.log('Open Fire');
         if (spaceFighterOpenFire.projectileSeqId == null) {
             // executed on server to generate unique projectile seq id
             spaceFighterOpenFire.projectileSeqId = ++RemoteSpaceFighterController.prevProjectileSeqId;
