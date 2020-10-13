@@ -36,6 +36,7 @@ export default class RemoteSpaceFighterController extends SpaceFighterBaseContro
      * @param {SpaceFighterStopFire} stopFireAction
      */
     handleStopFireAction(stopFireAction) {
+        console.log('Stop firing');
         this.stopFiring();
     }
 
