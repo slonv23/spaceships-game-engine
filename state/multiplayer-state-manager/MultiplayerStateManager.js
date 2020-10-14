@@ -244,6 +244,10 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
     };
 
     scheduleObjectAction(objectId, objectAction) {
+        // two actions can be schedules at the same frameIndex (in world simulator)
+        if (this.objectActionsByObjectId[objectId][objectAction.frameIndex]) {
+           console.log('Already has action!!!!');
+        }
         this.objectActionsByObjectId[objectId][objectAction.frameIndex] = objectAction;
     }
 

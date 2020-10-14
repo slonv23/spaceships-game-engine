@@ -83,6 +83,10 @@ export default class MultiplayerService extends Emitter {
         objectAction.frameIndex = frameIndex;
         objectAction[objectAction.action] = specificAction;
 
+        if (objectAction.action === 'spaceFighterOpenFire' || objectAction.action === 'spaceFighterStopFire') {
+            console.log('send request !!!!! ' + this._nextRequestId);
+        }
+
         this.networkClient.sendMessage(this._buildMessage(objectAction, true, this._nextRequestId));
         const timestamp = unixTimestampMs();
         const markUnacknowledgedAtTimestamp = timestamp + 2 * this.ping;
@@ -95,7 +99,7 @@ export default class MultiplayerService extends Emitter {
     _buildMessage(data, ack = false, requestId = 0) {
         const wrapperProps = {};
         if (ack) {
-            console.log('Send message ' + requestId + ' with ack');
+            //console.log('Send message ' + requestId + ' with ack');
             wrapperProps.requestSentTimestamp = unixTimestampMs();
             wrapperProps.requestId = requestId;
         }
@@ -112,7 +116,7 @@ export default class MultiplayerService extends Emitter {
                 this._onSpawned && this._onSpawned(this.assignedObjectId);
                 break;
             } else if (messageName === "RequestAck") {
-                console.log('Received message ack ' + messages[i]._requestId);
+                //console.log('Received message ack ' + messages[i]._requestId);
                 this.ping = unixTimestampMs() - messages[i].requestSentTimestamp;
                 this.dispatchEvent("ping", this.ping);
                 break;
@@ -131,7 +135,7 @@ export default class MultiplayerService extends Emitter {
                     this.dispatchEvent("worldStateUpdate", message);
                     break;
                 case "RequestAck":
-                    console.log('Received message ack ' + messages[i]._requestId);
+                    //console.log('Received message ack ' + messages[i]._requestId);
                     this.ping = unixTimestampMs() - messages[i].requestSentTimestamp;
                     this.dispatchEvent("ping", this.ping);
                     break;
