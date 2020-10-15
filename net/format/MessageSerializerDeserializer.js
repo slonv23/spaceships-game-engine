@@ -8,6 +8,7 @@ import * as THREE from "three";
 import {lowerFirst} from "../../util/string";
 import {config} from "../../globals";
 import AbstractModel from "../models/AbstractModel";
+import ObjectAction from "../models/ObjectAction";
 
 // eslint-disable-next-line no-undef
 const protobuf = require("protobufjs");
@@ -229,6 +230,15 @@ export default class MessageSerializerDeserializer {
         }
 
         return wrappedMsg;
+    }
+
+    wrapAction(specificAction, frameIndex) {
+        const objectAction = new ObjectAction();
+        objectAction.action = this.getFieldNameInsideOneOfForModel(specificAction);
+        objectAction.frameIndex = frameIndex;
+        objectAction[objectAction.action] = specificAction;
+
+        return objectAction;
     }
 
     /**

@@ -12,6 +12,8 @@
 
 import AuthoritativeStateManager from "../authoritative-state-manager/AuthoritativeStateManager";
 import SpaceFighterInput from "../../net/models/space-fighter/SpaceFighterInput";
+import SpaceFighterOpenFire from "../../net/models/space-fighter/SpaceFighterOpenFire";
+import SpaceFighterStopFire from "../../net/models/space-fighter/SpaceFighterStopFire";
 
 export default class MultiplayerStateManager extends AuthoritativeStateManager {
 
@@ -48,8 +50,8 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
 
     ticksWaiting = 0;
 
-    constructor(diContainer, assetManager, multiplayerService, logger) {
-        super(diContainer, assetManager);
+    constructor(diContainer, assetManager, messageSerializerDeserializer, multiplayerService, logger) {
+        super(diContainer, assetManager, messageSerializerDeserializer);
         this.multiplayerService = multiplayerService;
         this.logger = logger;
     }
@@ -111,6 +113,8 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
         }
 
         this.currentFrameIndex = this.nextFrameIndex;
+        // THERE COULD BE ACTIONS AT this.nextFrameIndex
+        console.log('SWITCH TO NEXT STATE!!! ' + this.nextFrameIndex);
         this._syncWorldState(this.nextWorldState, this.latestWorldState);
 
         this.nextWorldState = this.latestWorldState;
@@ -134,12 +138,15 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
 
             for (const action of actions) {
                 const objectAction = this.multiplayerService.scheduleObjectAction(action, frameOffset);
+                if ((action instanceof SpaceFighterOpenFire) || (action instanceof SpaceFighterStopFire)) {
+                    console.log('Send open/stop fire action, scheduled at ' + objectAction.frameIndex);
+                }
 
                 if (action instanceof SpaceFighterInput) {
                     // we should apply input action in the preceding "window" for player's object
                     // because simulation for it runs without interpolation
                     objectAction.frameIndex -= this.packetPeriodFrames;
-                    this.scheduleObjectAction(this.playerObjectId, objectAction);
+                    this.addObjectAction(this.playerObjectId, objectAction);
                     //this.logger.debug(`Input action will be applied on frame #${objectAction.frameIndex}`);
                 } else {
                     // interpolation is used for other actions
@@ -238,18 +245,18 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
             }
 
             for (let j = 0, actionsCount = actions.length; j < actionsCount; j++) {
-                this.scheduleObjectAction(objectState.id, actions[j]);
+                this.addObjectAction(objectState.id, actions[j]);
             }
         }
     };
 
-    scheduleObjectAction(objectId, objectAction) {
+    /*scheduleObjectAction(objectId, objectAction) {
         // two actions can be schedules at the same frameIndex (in world simulator)
         if (this.objectActionsByObjectId[objectId][objectAction.frameIndex]) {
            console.log('Already has action!!!!');
         }
         this.objectActionsByObjectId[objectId][objectAction.frameIndex] = objectAction;
-    }
+    }*/
 
     /**
      * @param {number} playerObjectId

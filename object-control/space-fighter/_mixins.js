@@ -141,7 +141,7 @@ export const handleProjectileHitsMixin = {
                 spaceFighterGotHitAction.projectileSeqId = projectileSequence.projectileSeqId;
                 spaceFighterGotHitAction.projectileIndex1 = hit.projectileIndex1;
                 spaceFighterGotHitAction.projectileIndex2 = hit.projectileIndex2;
-                this.stateManager.addObjectAction(hit.gameObjectController.gameObject.id, spaceFighterGotHitAction);
+                this.stateManager.wrapAndAddSpecificAction(hit.gameObjectController.gameObject.id, spaceFighterGotHitAction);
             }
         }
     },

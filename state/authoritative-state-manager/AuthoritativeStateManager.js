@@ -33,10 +33,11 @@ export default class AuthoritativeStateManager extends Emitter {
     /** @type {object.<number, object.<number, SpaceFighterInput>>} */
     objectActionsByObjectId = {};
 
-    constructor(diContainer, assetManager) {
+    constructor(diContainer, assetManager, messageSerializerDeserializer) {
         super();
         this.diContainer = diContainer;
         this.assetManager = assetManager;
+        this.messageSerializerDeserializer = messageSerializerDeserializer;
     }
 
     async postConstruct() {
@@ -62,10 +63,12 @@ export default class AuthoritativeStateManager extends Emitter {
             // TODO make separate lists for object controllers
             if (controllers[i] instanceof AbstractObjectController) {
                 const id = controllers[i].gameObject.id;
-                const inputAction = this.objectActionsByObjectId[id][this.currentFrameIndex];
-                if (inputAction) {
-                    controllers[i].processInput(inputAction);
-                    processedActions.push(inputAction);
+                const inputActions = this.objectActionsByObjectId[id][this.currentFrameIndex];
+                if (inputActions) {
+                    for (const inputAction of inputActions) {
+                        controllers[i].processInput(inputAction);
+                        processedActions.push(inputAction);
+                    }
                 }
             }
 
@@ -145,13 +148,22 @@ export default class AuthoritativeStateManager extends Emitter {
         return controller;
     }
 
-    scheduleObjectAction(objectId, action) {
-        const actionFrameIndex = action.frameIndex <= this.currentFrameIndex ? this.currentFrameIndex + 1 : action.frameIndex;
-        this.objectActionsByObjectId[objectId][actionFrameIndex] = action;
+    wrapAndAddSpecificAction(objectId, specificAction, frameIndex) {
+        const objectAction = this.messageSerializerDeserializer.wrapAction(specificAction, frameIndex);
+        this.addObjectAction(objectId, objectAction);
     }
 
     addObjectAction(objectId, action) {
-        this.objectActionsByObjectId[objectId][this.currentFrameIndex] = action;
+        if (action.frameIndex <= this.currentFrameIndex) {
+            throw new Error('Action cannot be scheduled in past');
+        }
+
+        let actions = this.objectActionsByObjectId[objectId][action.frameIndex];
+        if (!actions) {
+            actions = [];
+            this.objectActionsByObjectId[objectId][action.frameIndex] = actions;
+        }
+        actions.push(action);
     }
 
     _cleanup() {
