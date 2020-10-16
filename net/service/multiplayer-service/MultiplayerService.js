@@ -76,7 +76,7 @@ export default class MultiplayerService extends Emitter {
      */
     scheduleObjectAction(specificAction, currentFrameIndex) {
         const halfRttFramesLength = Math.ceil((this.ping / 2) / this.frameLengthMs); // half of rtt represented in number of frames
-        const frameIndex = currentFrameIndex + halfRttFramesLength + 1; // + 10; // + N frames to make prediction more reliable
+        const frameIndex = currentFrameIndex + halfRttFramesLength + 3; // +1 // + 10; // + N frames to make prediction more reliable
 
         /*const objectAction = new ObjectAction();
         objectAction.action = this.messageSerializerDeserializer.getFieldNameInsideOneOfForModel(specificAction);

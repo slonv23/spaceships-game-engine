@@ -38,7 +38,7 @@ export default class ProjectileSequenceController extends AbstractController {
     releaser;
 
     /** @type {number} projectiles are removed if minimum squared distance to any game object is greater than this value */
-    distanceToObjectLimitSq = 1000;
+    distanceToObjectLimitSq = 10000;
 
     launch() {
         this._launchProjectiles();

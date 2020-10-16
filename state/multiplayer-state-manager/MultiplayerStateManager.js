@@ -90,31 +90,24 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
         // time to speed up, more recent state received
         // this.logger.debug(`Switching to next state on new state received`);
 
-        const framesBtwCurrentAndNextState = this.nextFrameIndex - this.currentFrameIndex;
+        let framesBtwCurrentAndNextState = this.nextFrameIndex - this.currentFrameIndex;
         if (framesBtwCurrentAndNextState > 1 && this.currentFrameIndex !== 0) {
             // e.g. if current state frame index is 98 and next state frame index is 100 we omit 1 frame
-            let framesOmitted = framesBtwCurrentAndNextState - 1;
-            this.logger.debug(`${framesOmitted} frame(s) will be omitted`);
-
-            // calculate states in between
-            const controllersWhichPreserveState = this.initializedControllers.filter(controller => {
-                return controller.constructor.PRESERVES_STATE;
-            });
-            do {
-                this.currentFrameIndex++;
-                this._updateControllers(controllersWhichPreserveState, delta);
-                framesOmitted--;
-            } while (framesOmitted > 0);
+            //this.logger.debug(`${framesBtwCurrentAndNextState - 1} frame(s) will be omitted`);
         }
 
         if (this.ticksWaiting) {
-            this.logger.debug(`No update was made over ${this.ticksWaiting} ticks`);
+            //this.logger.debug(`No update was made over ${this.ticksWaiting} ticks`);
             this.ticksWaiting = 0;
         }
 
-        this.currentFrameIndex = this.nextFrameIndex;
-        // THERE COULD BE ACTIONS AT this.nextFrameIndex
-        console.log('SWITCH TO NEXT STATE!!! ' + this.nextFrameIndex);
+        // do all preceding updates and apply all previous actions
+        do {
+            this.currentFrameIndex++;
+            this._updateControllers(this.initializedControllers, delta);
+            framesBtwCurrentAndNextState--;
+        } while (framesBtwCurrentAndNextState > 0);
+
         this._syncWorldState(this.nextWorldState, this.latestWorldState);
 
         this.nextWorldState = this.latestWorldState;
