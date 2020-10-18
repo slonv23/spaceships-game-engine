@@ -133,6 +133,7 @@ export default class SpaceFighterBaseController extends AbstractObjectController
     }
 
     _launchNewProjectileSequence(projectileSeqId, initialDataResolver) {
+        this.logger.debug(`Game object pos at launch x=${this.gameObject.position.x} y=${this.gameObject.position.y} z=${this.gameObject.position.z}`);
         /** @type {ProjectileSequenceController} */
         const projectileSequenceController = this.projectileSequenceControllerFactory.create();
         projectileSequenceController.renderer = this.renderer;
