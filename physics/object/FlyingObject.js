@@ -25,8 +25,6 @@ export default class FlyingObject extends AbstractObject {
 
     position = new THREE.Vector3(0, 0, 0);
 
-    rollAngleBtwCurrentAndTargetOrientation = 0;
-
      /**
       * @param {*} id
       * @param {THREE.Object3D} [object3d]
@@ -34,10 +32,6 @@ export default class FlyingObject extends AbstractObject {
     constructor(id, object3d) {
         super(id, object3d);
         this.quaternion.setFromAxisAngle(new THREE.Vector3(1, 1, 1), 0);
-    }
-
-    rollOnAngle(rollAngleChange) {
-        this.rollAngleBtwCurrentAndTargetOrientation = rollAngleChange;
     }
 
     update(dt) {

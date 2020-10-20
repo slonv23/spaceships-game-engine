@@ -31,8 +31,12 @@ export default class AbstractObjectController extends AbstractController {
      * @param {number} delta
      */
     update(delta) {
-        this.gameObject.update(delta);
+        this.updateObject(delta);
         this.updateControlParams(delta);
+    }
+
+    updateObject(delta) {
+        this.gameObject.update(delta);
     }
 
     /**

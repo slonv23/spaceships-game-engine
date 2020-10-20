@@ -23,7 +23,6 @@ export default class MouseInterface {
     };
 
     handleMouseDown = (e) => {
-        console.log('Mouse down!!');
         if (e.button === 0) {
             this.lmbPressed = true;
         } else if (e.button === 2) {
@@ -32,7 +31,6 @@ export default class MouseInterface {
     };
 
     handleMouseUp = (e) => {
-        console.log('Mouse up!!');
         if (e.button === 0) {
             this.lmbPressed = false;
         } else if (e.button === 2) {

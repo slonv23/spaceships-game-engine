@@ -25,7 +25,12 @@ export default class SpaceFighterMultiplayerController extends SpaceFighterSingl
      * */
     static PRESERVES_STATE = true;
 
-    prevStates = Array(this.stateManager.packetPeriodFrames);
+    prevStates =
+        // +1 because we need one more additional state in case of reconciliation (applyActions() happens before update())
+        // running update() before applyActions() will increase lag
+        Array(this.stateManager.packetPeriodFrames + 1);
+    prevStatesCount = this.stateManager.packetPeriodFrames + 1;
+
     prevStateIndex = -1;
 
     rollAnglePrev = 0;
@@ -33,6 +38,8 @@ export default class SpaceFighterMultiplayerController extends SpaceFighterSingl
     shootingActionPending = false;
 
     hasUnprocessedInputAction = false;
+
+    nextActionId = 0;
 
     /**
      * @param {number} objectId
@@ -53,14 +60,13 @@ export default class SpaceFighterMultiplayerController extends SpaceFighterSingl
         this._updateAngularVelocities();
     }
 
-    update(delta) {
-        super.update(delta);
+    updateObject(delta) {
+        super.updateObject(delta);
         this._saveState();
     }
 
     sync(actualObjectState, futureObjectState) {
         this._sync(futureObjectState);
-        this._saveState();
     }
 
     getImmediateActions() {
@@ -96,6 +102,7 @@ export default class SpaceFighterMultiplayerController extends SpaceFighterSingl
         const targetRollAngleWithCorrection = angleChange - this.gameObject.rollAngleBtwCurrentAndTargetOrientation;
 
         const inputAction = new SpaceFighterInput();
+        inputAction.actionId = this.nextActionId++;
         inputAction.pitch = wPitchTarget;
         inputAction.yaw = wYawTarget;
         inputAction.rollAngle = targetRollAngleWithCorrection;
@@ -132,12 +139,11 @@ export default class SpaceFighterMultiplayerController extends SpaceFighterSingl
     }
 
     getInitialDataForProjectiles = () => {
-        let stateIndexToLaunchFrom = this.prevStateIndex - this.stateManager.packetPeriodFrames + 1; // plus one because current frame is not yet saved
-        const packetPeriodFrames = this.stateManager.packetPeriodFrames;
+        // current frame is not saved yet, but we need to select state preceding to state at (currentFrameIndex - PP) because action applied before game objects updated
+        let stateIndexToLaunchFrom = this.prevStateIndex - this.stateManager.packetPeriodFrames;
         // mod operator
-        stateIndexToLaunchFrom = ((stateIndexToLaunchFrom % packetPeriodFrames) + packetPeriodFrames) % packetPeriodFrames;
+        stateIndexToLaunchFrom = ((stateIndexToLaunchFrom % this.prevStatesCount) + this.prevStatesCount) % this.prevStatesCount;
         const stateToLaunchProjectilesFrom = this.prevStates[stateIndexToLaunchFrom];
-        //console.log('Launch projectile from state: ' + stateToLaunchProjectilesFrom.frameIndex);
 
         const target = stateToLaunchProjectilesFrom.nz.clone()
             .multiplyScalar(-SpaceFighterBaseController.distanceToAimingPoint)
@@ -151,17 +157,40 @@ export default class SpaceFighterMultiplayerController extends SpaceFighterSingl
         return {target, positions};
     };
 
+    restoreObjectState(frameIndex) {
+        let stateToRestoreIndex = this.prevStateIndex - (this.stateManager.currentFrameIndex - frameIndex);
+        // mod operator
+        stateToRestoreIndex = ((stateToRestoreIndex % this.prevStatesCount) + this.prevStatesCount) % this.prevStatesCount;
+        this.prevStateIndex = stateToRestoreIndex;
+
+        const stateToRestore = this.prevStates[stateToRestoreIndex];
+
+        this.gameObject.nx.copy(stateToRestore.nx);
+        this.gameObject.ny.copy(stateToRestore.ny);
+        this.gameObject.nz.copy(stateToRestore.nz);
+        this.gameObject.position.copy(stateToRestore.position);
+        this.gameObject.quaternion.copy(stateToRestore.quaternion);
+        this.gameObject.rollAngleBtwCurrentAndTargetOrientation = stateToRestore.rollAngleBtwCurrentAndTargetOrientation;
+        this.gameObject.angularVelocity.copy(stateToRestore.angularVelocity);
+    }
+
     _saveState() {
-        this.prevStateIndex = (this.prevStateIndex + 1) % this.stateManager.packetPeriodFrames;
+        this.prevStateIndex = (this.prevStateIndex + 1) % this.prevStatesCount;
         this.prevStates[this.prevStateIndex] = this._serializeState(this.stateManager.currentFrameIndex);
     }
 
     _serializeState(frameIndex) {
         return {
             frameIndex, // for debug purpose
+            nx: this.gameObject.nx.clone(),
+            ny: this.gameObject.ny.clone(),
             nz: this.gameObject.nz.clone(),
             position: this.gameObject.position.clone(),
-            matrix: this.gameObject.object3d.matrix.clone()
+            quaternion: this.gameObject.quaternion.clone(),
+            rollAngleBtwCurrentAndTargetOrientation: this.gameObject.rollAngleBtwCurrentAndTargetOrientation,
+            angularVelocity: this.gameObject.angularVelocity.clone(),
+
+            matrix: this.gameObject.object3d.matrix.clone() // can be removed, we can calculate matrix using quaternion and position
         }
     }
 

@@ -63,11 +63,11 @@ export default class AuthoritativeStateManager extends Emitter {
             // TODO make separate lists for object controllers
             if (controllers[i] instanceof AbstractObjectController) {
                 const id = controllers[i].gameObject.id;
-                const inputActions = this.objectActionsByObjectId[id][this.currentFrameIndex];
-                if (inputActions) {
-                    for (const inputAction of inputActions) {
-                        controllers[i].processInput(inputAction);
-                        processedActions.push(inputAction);
+                const objectActions = this.objectActionsByObjectId[id][this.currentFrameIndex];
+                if (objectActions) {
+                    for (const objectAction of objectActions) {
+                        controllers[i].processInput(objectAction);
+                        processedActions.push(objectAction);
                     }
                 }
             }
@@ -158,12 +158,23 @@ export default class AuthoritativeStateManager extends Emitter {
             throw new Error('Action cannot be scheduled in past');
         }
 
+        this.addObjectActionUnsafe(objectId, action);
+    }
+
+    addObjectActionUnsafe(objectId, action) {
         let actions = this.objectActionsByObjectId[objectId][action.frameIndex];
         if (!actions) {
             actions = [];
             this.objectActionsByObjectId[objectId][action.frameIndex] = actions;
         }
         actions.push(action);
+    }
+
+    replaceObjectAction(objectId, actionToReplace, replacementAction) {
+        const actions = this.objectActionsByObjectId[objectId][actionToReplace.frameIndex];
+        const actionToReplaceIndex = actions.findIndex(action => action === actionToReplace);
+        actions.splice(actionToReplaceIndex, 1);
+        this.addObjectActionUnsafe(objectId, replacementAction);
     }
 
     _cleanup() {
@@ -174,7 +185,9 @@ export default class AuthoritativeStateManager extends Emitter {
 
     _cleanActions(actions) {
         for (const actionFrameIndex in actions) {
-            if (actionFrameIndex <= this.currentFrameIndex) {
+            // we save past states for player object, so we use some offset to remove old actions
+            const lastSavedFrameIndex = this.currentFrameIndex - this.packetPeriodFrames;
+            if (actionFrameIndex < lastSavedFrameIndex) {
                 delete actions[actionFrameIndex];
             }
         }

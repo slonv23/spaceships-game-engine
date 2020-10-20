@@ -15,6 +15,10 @@ export default class SpaceFighter extends FlyingObject {
 
     rollAngleBtwCurrentAndTargetOrientation = 0;
 
+    rollOnAngle(rollAngleChange) {
+        this.rollAngleBtwCurrentAndTargetOrientation = rollAngleChange;
+    }
+
     /**
      * @param {number} dt - timestep
      * @returns {THREE.Vector3} angle change

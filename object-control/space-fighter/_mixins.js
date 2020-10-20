@@ -25,7 +25,7 @@ export const syncStateMixin = {
         const spaceFighterState = objectState.spaceFighterState;
         this._syncObject(spaceFighterState);
 
-        //this.health = spaceFighterState.health;
+        this.health = spaceFighterState.health;
         this.controlsQuaternion.copy(spaceFighterState.controlQuaternion);
         this.controlsRotQuaternion.copy(spaceFighterState.controlRotQuaternion);
         this.controlZInWorldCoords.set(0, 0, 1).applyQuaternion(this.controlsQuaternion);
@@ -50,8 +50,8 @@ export const syncStateMixin = {
      * @protected
      */
     _syncObject(objectState) {
-        const lastPosDiffNewPos = this.gameObject.position.distanceTo(this.gameObject.position);
-        if (lastPosDiffNewPos !== 0) {
+        const lastPosDiffNewPos = this.gameObject.position.distanceTo(objectState.position);
+        if (lastPosDiffNewPos >= 0.001) {
             this.logger.debug(`Current and new object positions diverge on ${lastPosDiffNewPos}`);
         }
 
@@ -104,15 +104,13 @@ export const syncStateMixin = {
         if (projectileSequence) {
             let deltaHealth = 10;
             projectileSequence.removeProjectileByIndex(spaceFighterGotHit.projectileIndex1);
-            console.log('Remove projectile by index ' + spaceFighterGotHit.projectileIndex1);
             if (spaceFighterGotHit.projectileIndex2) {
                 projectileSequence.removeProjectileByIndex(spaceFighterGotHit.projectileIndex2);
-                console.log('Remove projectile by index' + spaceFighterGotHit.projectileIndex2);
                 deltaHealth = 20;
             }
 
             const gameObjectController = this.stateManager.controllersByObjectId[projectileSequence.releaser.id];
-            this.stateManager.controllersByObjectId[projectileSequence.releaser.id].health = Math.max(0, gameObjectController.health - deltaHealth);
+            gameObjectController.health = Math.max(0, gameObjectController.health - deltaHealth);
         }
     }
 
@@ -133,7 +131,6 @@ export const handleProjectileHitsMixin = {
             const projectileSequence = this.projectileSequences[i];
             const hits = projectileSequence.findHitsAndRemoveIntersectedProjectiles();
             for (const hit of hits) {
-                console.log('Got hit!!!');
                 const intersectedProjectilesCount = !!hit.projectileIndex1 + !!hit.projectileIndex2;
                 hit.gameObjectController.health = Math.max(0, hit.gameObjectController.health - 10 * intersectedProjectilesCount);
 

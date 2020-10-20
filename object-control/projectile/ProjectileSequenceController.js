@@ -73,9 +73,9 @@ export default class ProjectileSequenceController extends AbstractController {
             projectile.velocity.z = -0.05; // -0.1 -0.05;
             projectile.position.copy(position);
             projectile.changeDirection(direction);
-            if (!this.projectiles.length) {
-                console.log(`First projectile position x=${projectile.position.x},y=${projectile.position.y},z=${projectile.position.z}`);
-            }
+            //if (!this.projectiles.length) {
+            //    console.log(`First projectile position x=${projectile.position.x},y=${projectile.position.y},z=${projectile.position.z}`);
+            //}
 
             this.addObjectToScene(projectile);
             this.projectiles.push(projectile);
@@ -274,7 +274,10 @@ export default class ProjectileSequenceController extends AbstractController {
             return false;
         }
         const rayCaster = new THREE.Raycaster(projectile.position, projectile.direction);
+        // there is a bug? in three js, when object don't have parent matrixWorld not equal to matrix as stated in docs
+        gameObject.object3d.matrixWorld.copy(gameObject.object3d.matrix);
         const intersections = rayCaster.intersectObject(gameObject.object3d);
+
         return (intersections.length / 2) % 2 !== 0
     }
 

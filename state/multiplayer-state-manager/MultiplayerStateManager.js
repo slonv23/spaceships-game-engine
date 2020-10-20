@@ -4,6 +4,7 @@
  * @typedef {import('../../object-control/space-fighter/SpaceFighterMultiplayerController').default} SpaceFighterMultiplayerController
  * @typedef {import('../../net/models/WorldState').default} WorldState
  * @typedef {import('../../net/models/ObjectState').default} SpaceFighterState
+ * @typedef {import('../../net/models/ObjectAction').default} ObjectAction
  * @typedef {import('../../net/service/multiplayer-service/MultiplayerService').default} MultiplayerService
  * @typedef {import('../../asset-management/AssetManager').default} AssetManager
  * @typedef {import('../../logging/AbstractLogger').default} AbstractLogger
@@ -12,8 +13,6 @@
 
 import AuthoritativeStateManager from "../authoritative-state-manager/AuthoritativeStateManager";
 import SpaceFighterInput from "../../net/models/space-fighter/SpaceFighterInput";
-import SpaceFighterOpenFire from "../../net/models/space-fighter/SpaceFighterOpenFire";
-import SpaceFighterStopFire from "../../net/models/space-fighter/SpaceFighterStopFire";
 
 export default class MultiplayerStateManager extends AuthoritativeStateManager {
 
@@ -30,6 +29,8 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
 
     /** @type {WorldState} */
     latestWorldState;
+    /** @type {SpaceFighterState} */
+    latestPlayerGameObjectState;
     /** @type {number} */
     latestFrameIndex;
 
@@ -37,6 +38,8 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
     playerObjectId;
     /** @type {SpaceFighterMultiplayerController} */
     playerController;
+    /** @type {ObjectAction[]} */
+    predictedPlayerActions = [];
 
     /** @type {number} */
     inputGatheringPeriodFrames;
@@ -83,6 +86,8 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
         }
 
         this._dispatchActions();
+
+        this._cleanup();
     }
 
     _switchToNewState(delta) {
@@ -101,6 +106,7 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
             this.ticksWaiting = 0;
         }
 
+        this._reconcilePlayerState(delta);
         // do all preceding updates and apply all previous actions
         do {
             this.currentFrameIndex++;
@@ -114,6 +120,60 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
         this.nextFrameIndex = this.latestFrameIndex;
         this.latestWorldState = null;
         this._cleanup();
+    }
+
+    _reconcilePlayerState(delta) {
+        const actions = this.latestPlayerGameObjectState.actions.filter(action => {
+            return !!action.spaceFighterInput;
+        });
+
+        let reconcileFromFrameIndex = Infinity;
+        const lastSavedFrameIndex = this.currentFrameIndex - this.packetPeriodFrames;
+        for (let i = 0, count = this.predictedPlayerActions.length; i < count; i++) {
+            const predictedAction = this.predictedPlayerActions[i];
+            if (predictedAction.frameIndex < lastSavedFrameIndex) {
+                this.logger.debug(`Input action dropped`);
+                this.predictedPlayerActions[i] = null;
+                continue;
+            }
+
+            const actualAction = actions.find(action => action.spaceFighterInput.actionId === predictedAction.spaceFighterInput.actionId);
+            if (actualAction) {
+                this.predictedPlayerActions[i] = null;
+                const actualActionRelativeFrameIndex = actualAction.frameIndex - this.packetPeriodFrames;
+                if (actualActionRelativeFrameIndex !== predictedAction.frameIndex) {
+                    this.logger.debug(`Input action was schedule at frame ` + (predictedAction.frameIndex + this.packetPeriodFrames) +
+                                      ` but executed at frame ` + (actualActionRelativeFrameIndex + this.packetPeriodFrames));
+                    reconcileFromFrameIndex = Math.min(predictedAction.frameIndex, reconcileFromFrameIndex);
+                    actualAction.frameIndex = actualActionRelativeFrameIndex;
+                    this.replaceObjectAction(this.playerObjectId, predictedAction, actualAction);
+                }
+            }
+        }
+        // cleanup
+        this.predictedPlayerActions = this.predictedPlayerActions.filter(Boolean);
+
+        if (reconcileFromFrameIndex !== Infinity) {
+            this.logger.debug('Reconcile from frame ' + (reconcileFromFrameIndex - 1) + ' Current frame index ' + this.currentFrameIndex);
+            this.playerController.restoreObjectState(reconcileFromFrameIndex - 1);
+
+            const reconcileToState = this.currentFrameIndex;
+            this.currentFrameIndex = reconcileFromFrameIndex - 1;
+            while (this.currentFrameIndex !== reconcileToState) {
+                this.currentFrameIndex++;
+                const objectActions = this.objectActionsByObjectId[this.playerObjectId][this.currentFrameIndex];
+                if (objectActions) {
+                    for (const objectAction of objectActions) {
+                        if (objectAction.spaceFighterInput) {
+                            // applyInputAction directly updates gameObject with no side effects
+                            this.playerController.applyInputAction(objectAction.spaceFighterInput);
+                        }
+                    }
+                }
+
+                this.playerController.updateObject(delta);
+            }
+        }
     }
 
     _dispatchActions() {
@@ -131,14 +191,15 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
 
             for (const action of actions) {
                 const objectAction = this.multiplayerService.scheduleObjectAction(action, frameOffset);
-                if ((action instanceof SpaceFighterOpenFire) || (action instanceof SpaceFighterStopFire)) {
+                /*if ((action instanceof SpaceFighterOpenFire) || (action instanceof SpaceFighterStopFire)) {
                     console.log('Send open/stop fire action, scheduled at ' + objectAction.frameIndex);
-                }
+                }*/
 
                 if (action instanceof SpaceFighterInput) {
                     // we should apply input action in the preceding "window" for player's object
                     // because simulation for it runs without interpolation
                     objectAction.frameIndex -= this.packetPeriodFrames;
+                    this.predictedPlayerActions.push(objectAction);
                     this.addObjectAction(this.playerObjectId, objectAction);
                     //this.logger.debug(`Input action will be applied on frame #${objectAction.frameIndex}`);
                 } else {
@@ -189,10 +250,16 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
             this.nextFrameIndex = this.nextWorldState.frameIndex;
             this.lastInputGatheringFrame = this.nextFrameIndex;
 
-            this.latestFrameIndex = worldState.frameIndex;
-            this.latestWorldState = worldState;
-            this.multiplayerService.removeEventListener('worldStateUpdate', this.handleInitialWorldStateUpdates);
-            this.multiplayerService.addEventListener('worldStateUpdate', this.handleWorldStateUpdates)
+            if (worldState.objectStates) {
+                const playerGameObjectState = worldState.objectStates.find(objectState => objectState.id === this.playerObjectId);
+                if (playerGameObjectState) {
+                    this.latestPlayerGameObjectState = playerGameObjectState;
+                    this.latestFrameIndex = worldState.frameIndex;
+                    this.latestWorldState = worldState;
+                    this.multiplayerService.removeEventListener('worldStateUpdate', this.handleInitialWorldStateUpdates);
+                    this.multiplayerService.addEventListener('worldStateUpdate', this.handleWorldStateUpdates)
+                }
+            }
         }
     };
 
@@ -219,18 +286,18 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
             const objectState = worldState.objectStates[i];
 
             if (!objectState.actions) {
-                continue;
+                objectState.actions = [];
             }
 
-            let actions;
+            let actions = objectState.actions;
             if (this.playerObjectId === objectState.id) {
+                this.latestPlayerGameObjectState = objectState;
+
                 // we should not re-process input actions of player object retransmitted back from server
                 // not true for all actions, should actions related to shooting
-                actions = objectState.actions.filter(action => {
+                actions = actions.filter(action => {
                     return action.spaceFighterOpenFire || action.spaceFighterGotHit || action.spaceFighterStopFire;
                 });
-            } else {
-                actions = objectState.actions;
             }
 
             if (!this.objectActionsByObjectId[objectState.id]) {
