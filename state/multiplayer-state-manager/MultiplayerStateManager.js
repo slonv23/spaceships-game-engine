@@ -223,7 +223,7 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
                 if (futureWorldState.objectStates[j].id === objectId) {
                     futureObjectState = futureWorldState.objectStates[j];
                     break;
-                } else if (j === futureWorldStateObjectsCount || objectId < futureWorldStateObjectsCount[objectId]) {
+                } else if (j === futureWorldStateObjectsCount || objectId < futureWorldState.objectStates[j]) {
                     break;
                 }
                 j++;

@@ -11,11 +11,16 @@ export default class AssetManager {
 
     spritesDir;
 
+    texturesDir;
+
     /** @type {object.<string, object>} */
     assets3d = {};
 
     /** @type {object.<string, THREE.Sprite>} */
     sprites = {};
+
+    /** @type {object.<string, THREE.Texture>} */
+    textures = {};
 
     /** @type {GLTFLoader} */
     gltfLoader;
@@ -35,16 +40,26 @@ export default class AssetManager {
         assetsRootDir = "assets",
         assets3dDirSubpath = "models",
         spritesDirSubpath = "sprites",
+        texturesDirSubpath = "textures",
         filepaths = {}
     } = {}) {
         this.assetsDir = assetsRootDir;
         this.assets3dDir = this.assetsDir + '/' + assets3dDirSubpath;
         this.spritesDir = this.assetsDir + '/' + spritesDirSubpath;
+        this.texturesDir = this.assetsDir + '/' + texturesDirSubpath;
 
-        return Promise.all([
-            this._load3dAssets(filepaths.assets3d),
-            this._loadSprites(filepaths.sprites)
-        ]);
+        const loadingPromises = [];
+        if (filepaths.assets3d) {
+            loadingPromises.push(this._load3dAssets(filepaths.assets3d));
+        }
+        if (filepaths.sprites) {
+            loadingPromises.push(this._loadSprites(filepaths.sprites));
+        }
+        if (filepaths.textures) {
+            loadingPromises.push(this._loadTextures(filepaths.textures));
+        }
+
+        return Promise.all(loadingPromises);
     }
 
     modelFilepath(subpath) {
@@ -53,6 +68,10 @@ export default class AssetManager {
 
     spriteFilepath(subpath) {
         return this.spritesDir + '/' + subpath;
+    }
+
+    textureFilepath(subpath) {
+        return this.texturesDir + '/' + subpath;
     }
 
     /**
@@ -79,20 +98,29 @@ export default class AssetManager {
         return this.sprites[spriteName];
     }
 
+    getTexture(textureName) {
+        if (!(textureName in this.textures)) {
+            throw new Error(`Texture '${textureName}' is not loaded`);
+        }
+
+        return this.textures[textureName];
+    }
+
+    async _loadTextures(textureFilepathsByName) {
+        for (let textureName in textureFilepathsByName) {
+            this.textures[textureName] = await this._loadTexture(textureFilepathsByName[textureName]);
+        }
+    }
+
     async _loadSprites(spritesFilepathsByName) {
-        if (spritesFilepathsByName) {
-            for (let spriteName in spritesFilepathsByName) {
-                const sprite = await this._loadSprite(spritesFilepathsByName[spriteName]);
-                this.sprites[spriteName] = sprite;
-            }
+        for (let spriteName in spritesFilepathsByName) {
+            this.sprites[spriteName] = await this._loadSprite(spritesFilepathsByName[spriteName]);
         }
     }
 
     async _load3dAssets(assets3dFilepathsByName) {
-        if (assets3dFilepathsByName) {
-            for (let name in assets3dFilepathsByName) {
-                this.assets3d[name] = await this._load3dAsset(assets3dFilepathsByName[name]);
-            }
+        for (let name in assets3dFilepathsByName) {
+            this.assets3d[name] = await this._load3dAsset(assets3dFilepathsByName[name]);
         }
     }
 
@@ -139,7 +167,15 @@ export default class AssetManager {
                 resolve(new THREE.Sprite(material));
             }, null, (e) => {
                 console.error(e);
+                reject(e);
+            });
+        });
+    }
 
+    _loadTexture(subpath) {
+        return new Promise((resolve, reject) => {
+            this.textureLoader.load(this.textureFilepath(subpath), resolve, null, (e) => {
+                console.error(e);
                 reject(e);
             });
         });

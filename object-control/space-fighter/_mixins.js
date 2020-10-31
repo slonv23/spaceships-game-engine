@@ -76,7 +76,7 @@ export const syncStateMixin = {
         } else if (objectAction.spaceFighterOpenFire) {
             this.handleOpenFireAction(objectAction.frameIndex, objectAction.spaceFighterOpenFire);
         } else if (objectAction.spaceFighterDestroy) {
-            // eslint-disable-next-line no-empty
+            this.handleSpaceFighterDestroy();
         } else if (objectAction.spaceFighterStopFire) {
             this.handleStopFireAction(objectAction.spaceFighterStopFire);
         } else if (objectAction.spaceFighterGotHit) {
@@ -112,6 +112,13 @@ export const syncStateMixin = {
             const gameObjectController = this.stateManager.controllersByObjectId[projectileSequence.releaser.id];
             gameObjectController.health = Math.max(0, gameObjectController.health - deltaHealth);
         }
+    },
+
+    handleSpaceFighterDestroy() {
+        console.log('Destroy!!!');
+        this.update = () => {
+            this.stateManager.removeController(this);
+        };
     }
 
 };
@@ -142,5 +149,17 @@ export const handleProjectileHitsMixin = {
             }
         }
     },
+
+};
+
+export const explosionMixin = {
+
+    handleSpaceFighterDestroy() {
+        console.log('Destroy with explosion!!!');
+        super.handleSpaceFighterDestroy();
+        /*const spaceFighterExplosionController = this.spaceFighterExplosionControllerFactory.create();
+        spaceFighterExplosionController.init();
+        this.stateManager.addController(spaceFighterExplosionController);*/
+    }
 
 };

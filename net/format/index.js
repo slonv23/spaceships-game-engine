@@ -14,11 +14,12 @@ import SpaceFighterOpenFire from "../models/space-fighter/SpaceFighterOpenFire";
 import SpaceFighterState from "../models/space-fighter/SpaceFighterState";
 import SpaceFighterStopFire from "../models/space-fighter/SpaceFighterStopFire";
 import SpaceFighterGotHit from "../models/space-fighter/SpaceFighterGotHit";
+import Disconnect from "../models/Disconnect";
 
 diContainer.registerClass("messageSerializerDeserializer", MessageSerializerDeserializer, {
     models: [
         // common models:
-        ObjectAction, ObjectState, SpawnRequest, SpawnResponse, WorldState, RequestAck,
+        ObjectAction, ObjectState, SpawnRequest, SpawnResponse, WorldState, RequestAck, Disconnect,
         // space fighter models:
         SpaceFighterInput, SpaceFighterDestroy, SpaceFighterOpenFire, SpaceFighterState,
         SpaceFighterStopFire, SpaceFighterGotHit

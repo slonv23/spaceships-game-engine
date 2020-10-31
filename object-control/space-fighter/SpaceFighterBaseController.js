@@ -76,6 +76,12 @@ export default class SpaceFighterBaseController extends AbstractObjectController
         super(...args);
         this.logger = logger;
         this.projectileSequenceControllerFactory = projectileSequenceControllerFactory;
+        // TODO
+        // workaround, call postConstruct because component factories don't call it
+        this.postConstruct();
+    }
+
+    postConstruct() {
     }
 
     /**

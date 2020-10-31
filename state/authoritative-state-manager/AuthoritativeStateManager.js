@@ -17,6 +17,9 @@ export default class AuthoritativeStateManager extends Emitter {
     initializedControllers = [];
     /** @type {number} */
     initializedControllersCount = 0;
+    /** @type {boolean} */
+    controllersRemoved = false;
+
     /** @type {object.<string, AbstractObjectController>} */
     controllersByObjectId = {};
     /** @type {object.<string, object>} */
@@ -75,6 +78,12 @@ export default class AuthoritativeStateManager extends Emitter {
             controllers[i].update(delta);
         }
 
+        if (this.controllersRemoved) {
+            this.initializedControllers = this.initializedControllers.filter(Boolean);
+            this.initializedControllersCount = this.initializedControllers.length;
+            this.controllersRemoved = false;
+        }
+
         this.dispatchEvent("actions-processed", processedActions);
     }
 
@@ -91,6 +100,18 @@ export default class AuthoritativeStateManager extends Emitter {
     addController(controller) {
         this.initializedControllers.push(controller);
         this.initializedControllersCount++;
+    }
+
+    removeController(controllerToRemove) {
+        const index = this.initializedControllers.findIndex(controller => controller === controllerToRemove);
+        if (!index) {
+            throw new Error('Trying to remove controller which is not registered');
+        }
+        if (controllerToRemove instanceof AbstractObjectController) {
+            delete this.controllersByObjectId[controllerToRemove.gameObject.id];
+        }
+        this.initializedControllers[index] = null;
+        this.controllersRemoved = true;
     }
 
     /**
