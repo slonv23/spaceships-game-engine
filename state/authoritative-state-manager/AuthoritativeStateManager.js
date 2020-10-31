@@ -72,6 +72,8 @@ export default class AuthoritativeStateManager extends Emitter {
                         controllers[i].processInput(objectAction);
                         processedActions.push(objectAction);
                     }
+
+                    this.dispatchEvent("actions-processed", objectActions);
                 }
             }
 
@@ -84,7 +86,7 @@ export default class AuthoritativeStateManager extends Emitter {
             this.controllersRemoved = false;
         }
 
-        this.dispatchEvent("actions-processed", processedActions);
+        //this.dispatchEvent("actions-processed", processedActions);
     }
 
     // update method for single player mode:
@@ -170,6 +172,9 @@ export default class AuthoritativeStateManager extends Emitter {
     }
 
     wrapAndAddSpecificAction(objectId, specificAction, frameIndex) {
+        if (!frameIndex) {
+            frameIndex = this.currentFrameIndex + 1;
+        }
         const objectAction = this.messageSerializerDeserializer.wrapAction(specificAction, frameIndex);
         this.addObjectAction(objectId, objectAction);
     }
