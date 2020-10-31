@@ -176,6 +176,7 @@ export default class AuthoritativeStateManager extends Emitter {
             frameIndex = this.currentFrameIndex + 1;
         }
         const objectAction = this.messageSerializerDeserializer.wrapAction(specificAction, frameIndex);
+        objectAction.objectId = objectId;
         this.addObjectAction(objectId, objectAction);
     }
 
