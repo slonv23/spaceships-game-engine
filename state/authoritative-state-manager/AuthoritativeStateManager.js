@@ -106,7 +106,7 @@ export default class AuthoritativeStateManager extends Emitter {
 
     removeController(controllerToRemove) {
         const index = this.initializedControllers.findIndex(controller => controller === controllerToRemove);
-        if (!index) {
+        if (index === -1) {
             throw new Error('Trying to remove controller which is not registered');
         }
         if (controllerToRemove instanceof AbstractObjectController) {
