@@ -109,8 +109,9 @@ export const syncStateMixin = {
                 deltaHealth = 20;
             }
 
-            const gameObjectController = this.stateManager.controllersByObjectId[projectileSequence.releaser.id];
-            gameObjectController.health = Math.max(0, gameObjectController.health - deltaHealth);
+            //const gameObjectController = this.stateManager.controllersByObjectId[projectileSequence.releaser.id];
+            //gameObjectController.health = Math.max(0, gameObjectController.health - deltaHealth);
+            this.health = Math.max(0, this.health - deltaHealth);
         }
     },
 
