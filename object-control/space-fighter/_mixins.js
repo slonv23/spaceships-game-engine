@@ -100,6 +100,7 @@ export const syncStateMixin = {
      * @param {SpaceFighterGotHit} spaceFighterGotHit
      */
     handleGotHitAction(spaceFighterGotHit) {
+        console.log('Object with id ' + this.gameObject.id + ' got hit!!!');
         const projectileSequence = SpaceFighterBaseController.projectileSequencesById[spaceFighterGotHit.projectileSeqId];
         if (projectileSequence) {
             let deltaHealth = 10;
@@ -139,8 +140,8 @@ export const handleProjectileHitsMixin = {
             const projectileSequence = this.projectileSequences[i];
             const hits = projectileSequence.findHitsAndRemoveIntersectedProjectiles();
             for (const hit of hits) {
-                const intersectedProjectilesCount = !!hit.projectileIndex1 + !!hit.projectileIndex2;
-                hit.gameObjectController.health = Math.max(0, hit.gameObjectController.health - 10 * intersectedProjectilesCount);
+                //const intersectedProjectilesCount = !!hit.projectileIndex1 + !!hit.projectileIndex2;
+                //hit.gameObjectController.health = Math.max(0, hit.gameObjectController.health - 10 * intersectedProjectilesCount);
 
                 const spaceFighterGotHitAction = new SpaceFighterGotHit();
                 spaceFighterGotHitAction.projectileSeqId = projectileSequence.projectileSeqId;
