@@ -241,6 +241,10 @@ export default class ProjectileSequenceController extends AbstractController {
     }
 
     removeProjectileByIndex(index) {
+        if (!this.projectiles[index]) {
+            // already removed
+            return;
+        }
         this._removeProjectile(this.projectiles[index]);
     }
 
