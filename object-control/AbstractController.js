@@ -28,10 +28,11 @@ export default class AbstractController {
 
     /**
      * @param {number} delta
+     * @param {number} frameIndex
      * @abstract
      */
     // eslint-disable-next-line no-unused-vars
-    update(delta) {
+    update(delta, frameIndex) {
         throw new Error("Not implemented");
     }
 

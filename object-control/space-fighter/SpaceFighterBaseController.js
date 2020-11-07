@@ -103,8 +103,8 @@ export default class SpaceFighterBaseController extends AbstractObjectController
         return new SpaceFighter(objectId, model);
     }
 
-    update(delta) {
-        super.update(delta);
+    update(delta, frameIndex) {
+        super.update(delta, frameIndex);
         this.updateProjectiles(delta);
         this.afterUpdate();
     }

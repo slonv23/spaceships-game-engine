@@ -29,13 +29,14 @@ export default class AbstractObjectController extends AbstractController {
 
     /**
      * @param {number} delta
+     * @param {number} frameIndex
      */
-    update(delta) {
-        this.updateObject(delta);
+    update(delta, frameIndex) {
+        this.updateObject(delta, frameIndex);
         this.updateControlParams(delta);
     }
 
-    updateObject(delta) {
+    updateObject(delta, frameIndex) {
         this.gameObject.update(delta);
     }
 

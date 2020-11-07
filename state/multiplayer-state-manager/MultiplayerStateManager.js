@@ -106,6 +106,7 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
             this.ticksWaiting = 0;
         }
 
+        // TODO don't reconcile player state if it have no saved states, initialize prev states instead (move logic from _syncWorldState here)
         this._reconcilePlayerState(delta);
         // do all preceding updates and apply all previous actions
         do {
@@ -114,7 +115,7 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
             framesBtwCurrentAndNextState--;
         } while (framesBtwCurrentAndNextState > 0);
 
-        this._syncWorldState(this.nextWorldState, this.latestWorldState);
+        this._syncWorldState(this.nextWorldState, this.latestWorldState, delta);
 
         this.nextWorldState = this.latestWorldState;
         this.nextFrameIndex = this.latestFrameIndex;
@@ -132,6 +133,7 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
         for (let i = 0, count = this.predictedPlayerActions.length; i < count; i++) {
             const predictedAction = this.predictedPlayerActions[i];
             if (predictedAction.frameIndex < lastSavedFrameIndex) {
+                // TODO this shouldn't happen if fix is implemented (*)
                 this.logger.debug(`Input action dropped`);
                 this.predictedPlayerActions[i] = null;
                 continue;
@@ -142,6 +144,10 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
                 this.predictedPlayerActions[i] = null;
                 const actualActionRelativeFrameIndex = actualAction.frameIndex - this.packetPeriodFrames;
                 if (actualActionRelativeFrameIndex !== predictedAction.frameIndex) {
+                    if (predictedAction.frameIndex > this.currentFrameIndex) {
+                        this.logger.debug('Predicted frameIndex doesn\'t match with actual but we are not processed predicted action yet');
+                        continue;
+                    }
                     this.logger.debug(`Input action was schedule at frame ` + (predictedAction.frameIndex + this.packetPeriodFrames) +
                                       ` but executed at frame ` + (actualActionRelativeFrameIndex + this.packetPeriodFrames));
                     reconcileFromFrameIndex = Math.min(predictedAction.frameIndex, reconcileFromFrameIndex);
@@ -149,9 +155,8 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
                     this.replaceObjectAction(this.playerObjectId, predictedAction, actualAction);
                 }
             }
+            // *TODO handle case when there predictedAction not scheduled at predicted frame, but we don't have actualAction yet
         }
-        // cleanup
-        this.predictedPlayerActions = this.predictedPlayerActions.filter(Boolean);
 
         if (reconcileFromFrameIndex !== Infinity) {
             this.logger.debug('Reconcile from frame ' + (reconcileFromFrameIndex - 1) + ' Current frame index ' + this.currentFrameIndex);
@@ -171,9 +176,12 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
                     }
                 }
 
-                this.playerController.updateObject(delta);
+                this.playerController.updateObject(delta, this.currentFrameIndex);
             }
         }
+
+        // cleanup
+        this.predictedPlayerActions = this.predictedPlayerActions.filter(Boolean);
     }
 
     _dispatchActions() {
@@ -209,33 +217,45 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
         }
     }
 
-    _syncWorldState(actualWorldState, futureWorldState) {
+    _syncWorldState(actualWorldState, futureWorldState, delta) {
         const actualWorldStateObjectsCount = actualWorldState.objectStates.length;
-        const futureWorldStateObjectsCount = futureWorldState.objectStates.length;
-
-        for (let i = 0, j = 0; i < actualWorldStateObjectsCount; i++) {
+        for (let i = 0; i < actualWorldStateObjectsCount; i++) {
             const actualObjectState = actualWorldState.objectStates[i];
-            let futureObjectState = null;
-
             const objectId = actualObjectState.id;
-            // eslint-disable-next-line no-constant-condition
-            while (true) {
-                if (futureWorldState.objectStates[j].id === objectId) {
-                    futureObjectState = futureWorldState.objectStates[j];
-                    break;
-                } else if (j === futureWorldStateObjectsCount || objectId < futureWorldState.objectStates[j]) {
-                    break;
-                }
-                j++;
-            }
+            let futureObjectState = futureWorldState.objectStates.find(objectState => objectState.id === objectId);
 
             /** @type {RemoteSpaceFighterController} */
             let controller = this.controllersByObjectId[objectId];
-            if (!controller || !controller.initialized) {
-                controller = this.createGameObject(objectId, actualObjectState.objectType);
+            // if controller is null it means it was removed
+            if (controller !== null) {
+                if ((!controller || !controller.initialized) && actualObjectState.spaceFighterState.health/* if it is not alive don't create it */) {
+                    controller = this.createGameObject(objectId, actualObjectState.objectType);
+                }
+                if (controller) {
+                    if (controller.constructor.PRESERVES_STATE && !controller.prevStatesInitialized()) {
+                        const actualWorldStateFrameIndex = actualWorldState.frameIndex;
+                        const futureWorldStateFrameIndex = futureWorldState.frameIndex;
+                        this.initializePrevStates(controller, actualObjectState, actualWorldStateFrameIndex, futureObjectState, futureWorldStateFrameIndex, delta);
+                    }
+                    controller.sync(actualObjectState, futureObjectState, this.currentFrameIndex);
+                }
+            }
+        }
+    }
+
+    initializePrevStates(controller, actualObjectState, actualWorldStateFrameIndex, futureObjectState, futureWorldStateFrameIndex, delta) {
+        controller.sync(null, actualObjectState, actualWorldStateFrameIndex);
+
+        const pastActions = futureObjectState.actions.filter(action => {
+            return action.spaceFighterInput;
+        });
+        for (let frameIndex = actualWorldStateFrameIndex + 1; frameIndex <= futureWorldStateFrameIndex; frameIndex++) {
+            const actionAtFrame = pastActions.find(action => action.frameIndex === frameIndex);
+            if (actionAtFrame) {
+                this._applyObjectActions(controller, [actionAtFrame]);
             }
 
-            controller.sync(actualObjectState, futureObjectState);
+            controller.update(delta, frameIndex);
         }
     }
 
@@ -245,21 +265,34 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
 
         if (!this.nextWorldState) {
             this.nextWorldState = worldState;
+        } else if (worldState.frameIndex - this.nextWorldState.frameIndex > this.packetPeriodFrames) {
+            this.nextWorldState = worldState;
+            this.logger.debug('World state in btw dropped before two consecutive states received');
         } else {
+            let playerGameObjectState;
+            if (worldState.objectStates) {
+                playerGameObjectState = worldState.objectStates.find(objectState => objectState.id === this.playerObjectId);
+            }
+
+            if (!playerGameObjectState) {
+                // don't react on world state updates until player's game object spawned
+                this.nextWorldState = worldState;
+                return;
+            }
+
+            if (this.playerController.initialized) {
+                this.playerController.resetPrevStates();
+            }
+
             // game loop will start update objects when currentFrameIndex != nextFrameIndex
             this.nextFrameIndex = this.nextWorldState.frameIndex;
             this.lastInputGatheringFrame = this.nextFrameIndex;
 
-            if (worldState.objectStates) {
-                const playerGameObjectState = worldState.objectStates.find(objectState => objectState.id === this.playerObjectId);
-                if (playerGameObjectState) {
-                    this.latestPlayerGameObjectState = playerGameObjectState;
-                    this.latestFrameIndex = worldState.frameIndex;
-                    this.latestWorldState = worldState;
-                    this.multiplayerService.removeEventListener('worldStateUpdate', this.handleInitialWorldStateUpdates);
-                    this.multiplayerService.addEventListener('worldStateUpdate', this.handleWorldStateUpdates)
-                }
-            }
+            this.latestPlayerGameObjectState = playerGameObjectState;
+            this.latestFrameIndex = worldState.frameIndex;
+            this.latestWorldState = worldState;
+            this.multiplayerService.removeEventListener('worldStateUpdate', this.handleInitialWorldStateUpdates);
+            this.multiplayerService.addEventListener('worldStateUpdate', this.handleWorldStateUpdates);
         }
     };
 
@@ -269,6 +302,17 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
 
         if (worldState.frameIndex <= this.nextFrameIndex) {
             // old state received
+            return;
+        } else if (worldState.frameIndex - this.nextFrameIndex > this.packetPeriodFrames) {
+            // world state in btw dropped, we should wait until two consecutive world state received
+            this.logger.debug('World state in btw dropped');
+            // TODO block action dispatching, because at this moment currentFrameIndex can be less than nextFrameIndex
+            //  also stop state reconciliation? or don't run state reconciliation if prev states not saved
+            this.nextWorldState = worldState;
+            //this.nextFrameIndex = worldState.frameIndex; // don't update nextFrameIndex to stop further state updates
+            this.latestWorldState = null;
+            this.multiplayerService.removeEventListener('worldStateUpdate', this.handleWorldStateUpdates);
+            this.multiplayerService.addEventListener('worldStateUpdate', this.handleInitialWorldStateUpdates);
             return;
         } else if (!this.latestWorldState) {
             this.latestWorldState = worldState;
@@ -309,14 +353,6 @@ export default class MultiplayerStateManager extends AuthoritativeStateManager {
             }
         }
     };
-
-    /*scheduleObjectAction(objectId, objectAction) {
-        // two actions can be schedules at the same frameIndex (in world simulator)
-        if (this.objectActionsByObjectId[objectId][objectAction.frameIndex]) {
-           console.log('Already has action!!!!');
-        }
-        this.objectActionsByObjectId[objectId][objectAction.frameIndex] = objectAction;
-    }*/
 
     /**
      * @param {number} playerObjectId

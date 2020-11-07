@@ -45,6 +45,7 @@ export class SpaceFighterExplosionController extends AbstractController {
      * @param {SpaceFighter} spaceFighter
      */
     init(spaceFighter) {
+        this.particleEngineParameters.positionBase.copy(spaceFighter.position)
         this.particleEngine = new ParticleEngine(this.renderer.scene);
         this.particleEngine.setValues(this.particleEngineParameters);
         this.particleEngine.initialize();
@@ -52,11 +53,14 @@ export class SpaceFighterExplosionController extends AbstractController {
         // all children have same material, instead of creating new ShaderMaterial we will extend existing
         this.decompositionMaterial = this.fragmentedModel.children[0].material;
 
-        this.fragmentedModel.position.set(0, 0, -100);
+        //this.fragmentedModel.position.set(0, 0, -100);
+        this.fragmentedModel.matrixAutoUpdate = false;
+        this.fragmentedModel.matrix.copy(spaceFighter.object3d.matrixWorld);
         this.renderer.scene.add(this.fragmentedModel);
     }
 
-    update(delta) {
+    // eslint-disable-next-line no-unused-vars
+    update(delta, frameIndex) {
         if (this.decompositionMaterial.userData.shader/*this.decompositionMaterialReady*/) {
             this.decompositionMaterial.userData.shader.uniforms.progress.value += delta;
         }

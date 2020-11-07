@@ -25,13 +25,9 @@ export default class SpaceFighterMultiplayerController extends SpaceFighterSingl
      * */
     static PRESERVES_STATE = true;
 
-    prevStates =
-        // +1 because we need one more additional state in case of reconciliation (applyActions() happens before update())
-        // running update() before applyActions() will increase lag
-        Array(this.stateManager.packetPeriodFrames + 1);
-    prevStatesCount = this.stateManager.packetPeriodFrames + 1;
-
-    prevStateIndex = -1;
+    prevStates;
+    prevStatesCount;
+    prevStateIndex;
 
     rollAnglePrev = 0;
 
@@ -47,7 +43,21 @@ export default class SpaceFighterMultiplayerController extends SpaceFighterSingl
      */
     init(objectId, renderer) {
         super.init(objectId, renderer);
-        this._saveState();
+        //this._saveState();
+        this.resetPrevStates();
+    }
+
+    resetPrevStates() {
+        this.prevStates = Array(this.stateManager.packetPeriodFrames + 1);
+            // +1 because we need one more additional state in case of reconciliation (applyActions() happens before update())
+            // running update() before applyActions() will increase lag
+
+        this.prevStatesCount = this.stateManager.packetPeriodFrames + 1;
+        this.prevStateIndex = -1;
+    }
+
+    prevStatesInitialized() {
+        return !!this.prevStates[0];
     }
 
     /**
@@ -60,13 +70,16 @@ export default class SpaceFighterMultiplayerController extends SpaceFighterSingl
         this._updateAngularVelocities();
     }
 
-    updateObject(delta) {
-        super.updateObject(delta);
-        this._saveState();
+    updateObject(delta, frameIndex) {
+        super.updateObject(delta, frameIndex);
+        this._saveState(frameIndex);
     }
 
-    sync(actualObjectState, futureObjectState) {
+    sync(actualObjectState, futureObjectState, frameIndex) {
         this._sync(futureObjectState);
+        if (!actualObjectState) {
+            this._saveState(frameIndex);
+        }
     }
 
     getImmediateActions() {
@@ -93,7 +106,7 @@ export default class SpaceFighterMultiplayerController extends SpaceFighterSingl
         }
         this.hasUnprocessedInputAction = true;
         const mousePos = this._calcMousePosInDimlessUnits();
-        const wPitchTarget =  -mousePos[1] * SpaceFighter.angularVelocityMax.y;
+        const wPitchTarget = -mousePos[1] * SpaceFighter.angularVelocityMax.y;
         const wYawTarget = mousePos[0] * SpaceFighter.angularVelocityMax.x;
 
         const currentSideAngle = this._calcSideAngle(wYawTarget, wPitchTarget);
@@ -174,9 +187,9 @@ export default class SpaceFighterMultiplayerController extends SpaceFighterSingl
         this.gameObject.angularVelocity.copy(stateToRestore.angularVelocity);
     }
 
-    _saveState() {
+    _saveState(frameIndex) {
         this.prevStateIndex = (this.prevStateIndex + 1) % this.prevStatesCount;
-        this.prevStates[this.prevStateIndex] = this._serializeState(this.stateManager.currentFrameIndex);
+        this.prevStates[this.prevStateIndex] = this._serializeState(frameIndex/*this.stateManager.currentFrameIndex*/);
     }
 
     _serializeState(frameIndex) {

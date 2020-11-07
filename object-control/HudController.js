@@ -87,6 +87,11 @@ class GameObjectHud {
     }
 
     updatePositionAndScales() {
+        if (!this.gameObjectController.gameObject) {
+            // TODO add property that controller removed
+            // controller removed
+            this.renderer.scene.remove(this.healthBarContainer, this.healthBar);
+        }
         const cameraZAxis = new THREE.Vector3();
         const cameraYAxis = new THREE.Vector3();
         const cameraXAxis = new THREE.Vector3();

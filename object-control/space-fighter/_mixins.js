@@ -1,6 +1,7 @@
 /**
  * @typedef {import('./SpaceFighterMultiplayerController').default} SpaceFighterMultiplayerController
  * @typedef {import('./RemoteSpaceFighterController').default} RemoteSpaceFighterController
+ * @typedef {import('../effects/SpaceFighterExplosionControllerFactory').default} SpaceFighterExplosionControllerFactory
  * @typedef {import('../../net/models/ObjectState').default} ObjectState
  * @typedef {import('../../net/models/ObjectAction').default} ObjectAction
  * @typedef {import('../../net/models/space-fighter/SpaceFighterState').default} SpaceFighterState
@@ -117,7 +118,6 @@ export const syncStateMixin = {
     },
 
     handleSpaceFighterDestroy() {
-        console.log('Destroy!!!');
         this.update = () => {
             this.stateManager.removeController(this);
         };
@@ -154,14 +154,22 @@ export const handleProjectileHitsMixin = {
 
 };
 
+/**
+ * @mixin ExplosionMixin
+ * @this RemoteSpaceFighterController|SpaceFighterMultiplayerController
+ * @property {SpaceFighterExplosionControllerFactory} spaceFighterExplosionControllerFactory
+ */
 export const explosionMixin = {
 
     handleSpaceFighterDestroy() {
-        console.log('Destroy with explosion!!!');
-        super.handleSpaceFighterDestroy();
-        /*const spaceFighterExplosionController = this.spaceFighterExplosionControllerFactory.create();
-        spaceFighterExplosionController.init();
-        this.stateManager.addController(spaceFighterExplosionController);*/
+        this.update = () => {
+            const spaceFighterExplosionController = this.spaceFighterExplosionControllerFactory.create();
+            spaceFighterExplosionController.init(this.gameObject);
+            this.renderer.scene.remove(this.gameObject.object3d);
+            this.gameObject = null;
+            this.stateManager.removeController(this);
+            this.stateManager.addController(spaceFighterExplosionController);
+        };
     }
 
 };

@@ -56,37 +56,34 @@ export default class AuthoritativeStateManager extends Emitter {
     }
 
     _updateControllers(controllers, delta) {
-        this._applyInputActionsAndUpdateObjects(controllers, delta);
-    }
-
-    _applyInputActionsAndUpdateObjects(controllers, delta) {
-        const processedActions = [];
-
         for (let i = 0, controllersCount = controllers.length; i < controllersCount; i++) {
             // TODO make separate lists for object controllers
             if (controllers[i] instanceof AbstractObjectController) {
                 const id = controllers[i].gameObject.id;
                 const objectActions = this.objectActionsByObjectId[id][this.currentFrameIndex];
-                if (objectActions) {
-                    for (const objectAction of objectActions) {
-                        controllers[i].processInput(objectAction);
-                        processedActions.push(objectAction);
-                    }
 
-                    this.dispatchEvent("actions-processed", objectActions);
+                if (objectActions) {
+                    this._applyObjectActions(controllers[i], objectActions);
                 }
             }
 
-            controllers[i].update(delta);
+            controllers[i].update(delta, this.currentFrameIndex);
         }
 
-        if (this.controllersRemoved) {
-            this.initializedControllers = this.initializedControllers.filter(Boolean);
-            this.initializedControllersCount = this.initializedControllers.length;
-            this.controllersRemoved = false;
+        this._cleanupRemovedControllers();
+    }
+
+    /**
+     * @param {AbstractObjectController} controller
+     * @param {Array} objectActions
+     * @protected
+     */
+    _applyObjectActions(controller, objectActions) {
+        for (const objectAction of objectActions) {
+            controller.processInput(objectAction);
         }
 
-        //this.dispatchEvent("actions-processed", processedActions);
+        this.dispatchEvent("actions-processed", objectActions);
     }
 
     // update method for single player mode:
@@ -110,7 +107,7 @@ export default class AuthoritativeStateManager extends Emitter {
             throw new Error('Trying to remove controller which is not registered');
         }
         if (controllerToRemove instanceof AbstractObjectController) {
-            delete this.controllersByObjectId[controllerToRemove.gameObject.id];
+            this.controllersByObjectId[controllerToRemove.gameObject.id] = null;
         }
         this.initializedControllers[index] = null;
         this.controllersRemoved = true;
@@ -207,6 +204,19 @@ export default class AuthoritativeStateManager extends Emitter {
     _cleanup() {
         for (const objectId in this.objectActionsByObjectId) {
             this._cleanActions(this.objectActionsByObjectId[objectId]);
+        }
+    }
+
+    _cleanupRemovedControllers() {
+        if (this.controllersRemoved) {
+            this.initializedControllers = this.initializedControllers.filter(Boolean);
+            this.initializedControllersCount = this.initializedControllers.length;
+            for (const objectId in this.controllersByObjectId) {
+                if (this.controllersByObjectId[objectId] == null) {
+                    delete this.controllersByObjectId[objectId];
+                }
+            }
+            this.controllersRemoved = false;
         }
     }
 
